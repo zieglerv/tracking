@@ -1,0 +1,227 @@
+package org.jlab.rec.dc.banks;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+
+import org.jlab.data.io.DataEvent;
+import org.jlab.evio.clas12.EvioDataBank;
+import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.hit.Hit;
+
+import org.jlab.rec.dc.Constants;
+
+import cnuphys.snr.NoiseReductionParameters;
+import cnuphys.snr.clas12.Clas12NoiseAnalysis;
+import cnuphys.snr.clas12.Clas12NoiseResult;
+
+/**
+ * A class to fill in lists of hits  corresponding to DC reconstructed hits characterized by the wire, its location in the detector (superlayer,
+ * layer, sector), its reconstructed time.  The class also returns a MC hit, which has truth-information (i.e. Left-Right ambiguity)
+ * @author ziegler
+ *
+ */
+public class HitReader {
+
+
+	
+	
+	Random rn = new Random();
+	public static double HITPOSSMEARING = Constants.CELLRESOL*0.5;
+	
+	private List<Hit> _DCHits;
+
+	private List<FittedHit> _HBHits; //hit-based tracking hit information
+	
+	/**
+	 *
+	 * @return a list of DC hits
+	 */
+	public List<Hit> get_DCHits() {
+		return _DCHits;
+	}
+
+	/**
+	 *  sets the list of DC hits
+	 * @param _DCHits list of DC hits
+	 */
+	public void set_DCHits(List<Hit> _DCHits) {
+		this._DCHits = _DCHits;
+	}
+
+	
+	/**
+	 *
+	 * @return list of DCHB hits 
+	 */
+	public List<FittedHit> get_HBHits() {
+		return _HBHits;
+	}
+
+	/**
+	 * sets the list of HB DC hits 
+	 * @param _HBHits list of DC hits 
+	 */
+	public void set_HBHits(List<FittedHit> _HBHits) {
+		this._HBHits = _HBHits;
+	}
+	/**
+	 * reads the hits using clas-io methods to get the EvioBank for the DC and fill the values to instantiate the DChit and MChit classes.
+	 * This methods fills the DChit and MChit list of hits.  If the data is not MC, the MChit list remains empty
+	 * @param event DataEvent
+	 */
+	public void fetch_DCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,NoiseReductionParameters parameters,
+			Clas12NoiseResult results) {
+
+		if(event.hasBank("DC::dgtz")==false) {
+			//System.err.println("there is no dc bank ");
+			_DCHits= new ArrayList<Hit>();
+			
+			return;
+		}
+ 
+				
+		
+		EvioDataBank bankDGTZ = (EvioDataBank) event.getBank("DC::dgtz");
+        
+        int[] sector = bankDGTZ.getInt("sector");
+		int[] slayer = bankDGTZ.getInt("superlayer");
+		int[] layer = bankDGTZ.getInt("layer");
+		int[] wire = bankDGTZ.getInt("wire");
+		
+		double[] stime = bankDGTZ.getDouble("time");
+		
+		if(Constants.useNoiseAlgo == true) {
+			results.clear();
+			noiseAnalysis.clear();
+			
+			noiseAnalysis.findNoise(sector, slayer, layer, wire, results);
+		
+		}
+		int size = layer.length;
+
+		List<Hit> hits = new ArrayList<Hit>();
+		
+		for(int i = 0; i<size; i++) {
+
+			double timeErrorSigma = Constants.CELLRESOL/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];  // this is the error put into the simulation 
+			
+			// Smear the time by the time resolution assumed for MC
+			//if(Constants.isSimulation == true)
+				 // Smear the z coordinate of the hit position
+			//	stime[i]= stime[i] + (HITPOSSMEARING/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1]) * rn.nextGaussian();
+			
+			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], stime[i],timeErrorSigma, i);
+			
+			//use only hits with signal on wires
+			
+			if(Constants.useNoiseAlgo == true)
+				if(wire[i]!=-1 && results.noise[i]==false){		
+					hit.set_Id(hits.size());
+					hits.add(hit); 
+				}	
+			
+			if(Constants.useNoiseAlgo == false)
+				if(wire[i]!=-1){
+					hit.set_Id(hits.size());
+					hits.add(hit); 
+				}
+				
+			}
+			
+			this.set_DCHits(hits);
+
+		}
+		
+	/**
+	 * 
+	 * @param hit
+	 * @param event
+	 * @return MC time at present - this method will return the corrected time using TOF information and corrected time information
+	 */
+	public double[] get_Time(FittedHit hit,DataEvent event) {
+		
+		double[] Time = new double[2]; //(t, t_err);
+		double GEMCtime = -1;
+		double timeErrorSigma = -1;
+		
+		EvioDataBank bankDGTZ = (EvioDataBank) event.getBank("DC::dgtz");
+        
+        int[] sector = bankDGTZ.getInt("sector");
+		int[] slayer = bankDGTZ.getInt("superlayer");
+		int[] layer = bankDGTZ.getInt("layer");
+		int[] wire = bankDGTZ.getInt("wire");
+		double[] stime = bankDGTZ.getDouble("time");
+		
+		int size = layer.length;
+		
+		for(int i = 0; i<size; i++) {
+			
+			if(sector[i]==hit.get_Sector() && slayer[i]==hit.get_Superlayer() && layer[i]==hit.get_Layer() && wire[i]==hit.get_Wire()) {
+				
+				timeErrorSigma = Constants.CELLRESOL/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];  // this is the error put into the simulation 
+				
+				if(Constants.isSimulation == true)
+					 // Smear the z coordinate of the hit position
+					//stime[i]= stime[i] + (HITPOSSMEARING/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1]) * rn.nextGaussian();
+				GEMCtime = stime[i];
+				
+			}
+		}
+		Time[0] = GEMCtime;
+		Time[1] = timeErrorSigma;
+		
+		return Time;
+		
+	}
+	/**
+	 * Reads HB DC hits written to the DC bank
+	 * @param event
+	 */
+	public void read_HBHits(DataEvent event) {
+		
+		if(event.hasBank("HitBasedTrkg::HBHits")==false) {
+			//System.err.println("there is no HB dc bank ");
+			_HBHits = new ArrayList<FittedHit>();
+			return;
+		}
+ 
+		EvioDataBank bank = (EvioDataBank) event.getBank("HitBasedTrkg::HBHits");
+        
+		int[]  id = bank.getInt("id");
+		
+        int[] sector = bank.getInt("sector");
+		int[] slayer = bank.getInt("superlayer");
+		int[] layer = bank.getInt("layer");
+		int[] wire = bank.getInt("wire");
+		
+		int[] LR = bank.getInt("LR");		
+		int[] clusterID = bank.getInt("clusterID");
+		
+		int size = layer.length;
+
+		List<FittedHit> hits = new ArrayList<FittedHit>();
+		for(int i = 0; i<size; i++) {
+			//use only hits that have been fit to a track
+			if(clusterID[i]==-1)
+				continue;
+			double[] T = get_Time(new FittedHit(sector[i], slayer[i], layer[i], wire[i], 0, 0, id[i]), event);
+			FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], T[0], T[1], id[i]);
+
+			hit.set_AssociatedClusterID(clusterID[i]);
+			
+			hit.set_LeftRightAmb(LR[i]);
+			hit.set_TrkgStatus(0);
+			hits.add(hit);
+			
+		}
+		
+		
+		
+		this.set_HBHits(hits);
+	}
+	
+
+   
+}
