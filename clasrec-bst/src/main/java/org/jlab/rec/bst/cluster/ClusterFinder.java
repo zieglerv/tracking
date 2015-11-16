@@ -49,8 +49,9 @@ public class ClusterFinder  {
 			int s = hit.get_Sector();
 			
 			if(w>0 && w<=nstrip && l>0 && l<=nlayr)	{	
-				if(s>0 && s<=nsectors[l-1])
+				if(s>0 && s<=nsectors[l-1]) {
 					HitArray[w-1][l-1][s-1] = hit;
+				}
 				
 			}
 			
@@ -80,8 +81,10 @@ public class ClusterFinder  {
 						
 						try {
 							while(HitArray[si][l][s] != null  && si<nstrip)
-							{
-								hits.add(new FittedHit(HitArray[si][l][s].get_Sector(),HitArray[si][l][s].get_Layer(),HitArray[si][l][s].get_Strip(),HitArray[si][l][s].get_Edep()));
+							{   
+								FittedHit clusteredHit = new FittedHit(HitArray[si][l][s].get_Sector(),HitArray[si][l][s].get_Layer(),HitArray[si][l][s].get_Strip(),HitArray[si][l][s].get_Edep());
+								clusteredHit.set_Id(HitArray[si][l][s].get_Id());
+								hits.add(clusteredHit);
 								si++;
 							}
 						}
@@ -100,7 +103,7 @@ public class ClusterFinder  {
 						//make arraylist
 						
 						for(FittedHit hit : this_cluster) {
-							hit.set_AssociatedClusterID(cid);
+							hit.set_AssociatedClusterID(this_cluster.get_Id());
 						}
 						clusters.add(this_cluster);
 						

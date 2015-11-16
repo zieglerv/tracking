@@ -6,13 +6,11 @@ import java.util.List;
 import trackfitter.fitter.HelicalTrackFitter;
 
 import org.jMath.Vector.threeVec;
-import org.jlab.evio.clas12.EvioDataBank;
-import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
 import org.jlab.rec.bst.cross.Cross;
 import org.jlab.rec.bst.cross.CrossList;
-import org.jlab.rec.bst.trajectory.BSTSwimmer;
+
 import org.jlab.rec.bst.trajectory.Trajectory;
 import org.jlab.rec.bst.trajectory.TrajectoryFinder;
 
@@ -23,8 +21,6 @@ import org.jlab.rec.bst.trajectory.TrajectoryFinder;
  */
 
 public class TrackCandListFinder {
-	
-	private BSTSwimmer bstSwim = new BSTSwimmer();
 	
 	public TrackCandListFinder() {					
 	}
@@ -184,7 +180,7 @@ public class TrackCandListFinder {
 
 
 
-	public List<CosmicTrack> getCosmicsTracks(CrossList crossList, Geometry geo) {
+	public List<CosmicTrack> getCosmicsTracks(CrossList crossList, Geometry geo, int excludeRegion) {
 		ArrayList<CosmicTrack> cands = new ArrayList<CosmicTrack>();
 		
 		int index =-1;  
@@ -196,26 +192,34 @@ public class TrackCandListFinder {
 		
 		for(int j = 0; j<crossList.size(); j++) {
 			ArrayList<Cross> cosmicsCrosses = crossList.get(j);
+			ArrayList<Cross> excludedCrosses = new ArrayList<Cross>();
 			
 			CosmicTrack ctrk = new CosmicTrack();
+			// remove the crosses from the exluded region to fit the track
+			for(Cross crossInTrackToFit : cosmicsCrosses) {
+				if(crossInTrackToFit.get_Region()==excludeRegion) {
+					excludedCrosses.add(crossInTrackToFit);
+				}
+			}
+			
+			removeCrosses(cosmicsCrosses, excludedCrosses, geo);
+
 			ctrk.addAll(cosmicsCrosses);
 			ctrk.fitCosmicTrack(geo);
 			
             ArrayList<Cross> cosmicsCrossesToRemove = new ArrayList<Cross>();
-            
+            //System.out.println(" track siz "+ctrk.size());
             for(int i = 0; i<ctrk.get_xzresiduals().size(); i++) {
-            	
             	// throw out the outliers
-                    if(Math.abs(ctrk.get_xzresiduals().get(i)[0])>Constants.COSMICSMINRESIDUAL ) 
-                            cosmicsCrossesToRemove.add(cosmicsCrosses.get(i));
-            
+                if(Math.abs(ctrk.get_xzresiduals().get(i)[0])>Constants.COSMICSMINRESIDUAL ) 
+                        cosmicsCrossesToRemove.add(cosmicsCrosses.get(i));   
             }
            
             removeCrosses(cosmicsCrosses, cosmicsCrossesToRemove, geo);
             ctrk = new CosmicTrack();
 			ctrk.addAll(cosmicsCrosses);
 			
-            if(cosmicsCrosses.size()<2)
+            if(cosmicsCrosses.size()<3)
                     continue;
             
             cosmicsCrossesToRemove = new ArrayList<Cross>();
@@ -225,13 +229,14 @@ public class TrackCandListFinder {
             // update crosses with trakdir            
             for(int i = 0; i<ctrk.size(); i++) {
             	ctrk.update_Crosses(ctrk.get_yxslope(),ctrk.get_yzslope(), geo) ;
+            	
             }	
            //refit
             ctrk.fitCosmicTrack(geo);
             
             for(int i = 0; i<ctrk.get_xzresiduals().size(); i++) {
             	// throw out the outliers
-            	
+            	//System.out.println("z resolution for " +cosmicsCrosses.get(i).printInfo() +" = "+ ctrk.get_xzresiduals().get(i)[1]);
                     if(Math.abs(ctrk.get_xzresiduals().get(i)[0])>Constants.COSMICSMINRESIDUAL || 
                     		Math.abs(ctrk.get_xzresiduals().get(i)[1])>Constants.COSMICSMINRESIDUALZ) 
                             cosmicsCrossesToRemove.add(cosmicsCrosses.get(i));
@@ -242,7 +247,7 @@ public class TrackCandListFinder {
             ctrk = new CosmicTrack();
 			ctrk.addAll(cosmicsCrosses);
 			
-            if(cosmicsCrosses.size()<2)
+            if(cosmicsCrosses.size()<3)
                     continue;
            
            //refit
@@ -254,13 +259,11 @@ public class TrackCandListFinder {
             }
           //refit
             ctrk.fitCosmicTrack(geo);
-            
-            ctrk.calcHitsSpatialResolution(geo);
-            
+            ctrk.refitCosmicTrack(geo);
             index++;
             ctrk.setIdx(index);
             
-           
+        
            // now make the list
           if(!(cands.containsAll(ctrk))) {                                                                                      
         	  cands.add(index, ctrk);       
@@ -282,6 +285,10 @@ public class TrackCandListFinder {
 				}
 			}
 		}
+		for(int i = 0; i<cosmicsCrosses.size(); i++) {
+			if(cosmicsCrosses.size()<3)
+				resetUnusedCross(cosmicsCrosses.get(i), geo);
+		}
 	}
 
 	private void resetUnusedCross(Cross cross, Geometry geo) {
@@ -290,95 +297,6 @@ public class TrackCandListFinder {
 		
 		cross.set_CrossParams(null, geo);
 	}
-
-	
-	private Cross thetaCorrection(EvioDataEvent event, Track trk) {
-		
-		double p_rec = trk.get_P();
-		double phi_rec = Math.toDegrees(trk.get_Helix().get_phi_at_dca());
-		if(phi_rec<-0)
-			phi_rec+=360;
-		double theta_rec = Math.toDegrees(Math.atan(trk.get_Helix().get_tandip()));
-		if(theta_rec<-0)
-			theta_rec+=360;
-		Cross cross = null;
-        
-		if(event.hasBank("GenPart::true")==true) {
-			EvioDataBank bankTRUE = (EvioDataBank) event.getBank("GenPart::true");
-	       
-	        double[] px = bankTRUE.getDouble("px");
-	        double[] py = bankTRUE.getDouble("py");
-	        double[] pz = bankTRUE.getDouble("pz");
-	        int[] pid = bankTRUE.getInt("pid");
-	        double[] vx = bankTRUE.getDouble("vx");
-	        double[] vy = bankTRUE.getDouble("vy");
-	        double[] vz = bankTRUE.getDouble("vz");
-	        
-	        double delta_p = Double.POSITIVE_INFINITY;
-	        double delta_phi = Double.POSITIVE_INFINITY;
-	        double delta_theta = Double.POSITIVE_INFINITY;
-	        
-	        for(int i = 0; i<px.length; i++){
-	        	double p = Math.sqrt(px[i]*px[i]+py[i]*py[i]+pz[i]*pz[i])/1000.;
-	        	double phi = Math.toDegrees(Math.atan2(py[i],px[i]));
-	        	if(phi<-0)
-	    			phi+=360;
-	            double theta = Math.toDegrees(Math.acos((pz[i]/1000.)/p));
-	            if(theta<0)
-	            	theta+=360;
-	        	if(theta<45 || theta>120 || pid[i]==22)
-	        		continue;
-	        	
-	        			
-	        	if(Math.abs((p_rec-p)*100/p)<delta_p && Math.abs(Math.toDegrees(phi_rec)-phi)<delta_phi && 
-        				Math.abs(Math.toDegrees(theta_rec)-theta)<delta_theta) {
-	        		
-	        		delta_p = Math.abs((p_rec-p)*100/p);
-		        	delta_phi = Math.abs(phi_rec-phi);
-		        	delta_theta = Math.abs(theta_rec-theta);
-		        	
-		        	double x0 = vx[i];
-		        	double y0 = vy[i];
-		        	double z0 = vz[i];
-		        	int charge = (int) Math.signum(pid[i]);
-		        	
-		        	bstSwim.SetSwimParameters( x0,  y0,  z0,  px[i]/1000.,  py[i]/1000.,  pz[i]/1000., 5,  charge);
-		        	double[] matchingPoint = bstSwim.SwimToCylinder(trk.get(0).get_Point().rt());
-		        	
-		        	if(Math.abs(matchingPoint[0]-trk.get(0).get_Point().x())>1 || Math.abs(matchingPoint[1]-trk.get(0).get_Point().y())>1 
-		        			|| Math.abs(matchingPoint[2]-trk.get(0).get_Point().z())>5)
-		        			continue;
-		        	//double[] pointAtCylRad = bstSwim.SwimToCylinder(200);
-		        	Cross ci = new Cross(-1,-1,-1);
-		        	ci.set_Point(new threeVec(matchingPoint[0],matchingPoint[1],matchingPoint[2]));
-		        	ci.set_Dir(new threeVec(matchingPoint[3],matchingPoint[4],matchingPoint[5]));
-		        	ci.set_PointErr(new threeVec(0.1,0.1,0.1));
-		        	ci.set_Id(-1);
-		        	
-		        	cross = ci;
-	        	}
-	        }
-		}
-		
-		return cross;
-		
-	}
-
-      public Track thetaCorrection(EvioDataEvent event, Track trk, Geometry geo) {
-    	
-		Cross MMcrs =  thetaCorrection( event, trk);
-		
-		if(MMcrs==null)
-			return trk;
-		
-		
-		
-		Track cand = trk;
-		
-		cand.get_Helix().set_tandip(MMcrs.get_Point().rt()/MMcrs.get_Point().z());
-		cand.set_HelicalTrack(cand.get_Helix());
-		return cand;
-      }
 
 		
 }

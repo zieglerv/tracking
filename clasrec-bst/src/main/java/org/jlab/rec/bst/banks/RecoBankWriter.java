@@ -2,9 +2,11 @@ package org.jlab.rec.bst.banks;
 
 import java.util.List;
 
+import org.jMath.Vector.threeVec;
 import org.jlab.data.io.DataBank;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
+import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.cluster.Cluster;
 import org.jlab.rec.bst.cross.Cross;
 import org.jlab.rec.bst.hit.FittedHit;
@@ -29,12 +31,14 @@ public class RecoBankWriter {
 		          event.getDictionary().createBank("BSTRec::Hits", hitlist.size());
 
 		for(int i =0; i< hitlist.size(); i++) {
+			
+			bank.setInt("ID", i, hitlist.get(i).get_Id());
 			bank.setInt("layer",i, hitlist.get(i).get_Layer());
 			bank.setInt("sector",i, hitlist.get(i).get_Sector());
 			bank.setInt("strip",i, hitlist.get(i).get_Strip());
 			
 			bank.setDouble("fitResidual",i, hitlist.get(i).get_Residual());
-			bank.setInt("trkingStat",i, 1);
+			bank.setInt("trkingStat",i, hitlist.get(i).get_TrkgStatus());
 			
 			bank.setInt("clusterID", i, hitlist.get(i).get_AssociatedClusterID());
           
@@ -219,11 +223,19 @@ public class RecoBankWriter {
 			}
 			
 			bank.setInt("ID", i, cosmics.get(i).getIdx());
+			bank.setDouble("KF_chi2", i, cosmics.get(i).get_chi2());
+			bank.setInt("KF_ndf", i, (int) cosmics.get(i).get_ndf());
 			bank.setDouble("trkline_yx_slope", i, cosmics.get(i).get_yxslope());
 			bank.setDouble("trkline_yx_interc", i, cosmics.get(i).get_yxinterc());
 			bank.setDouble("trkline_yz_slope", i, cosmics.get(i).get_yzslope());
 			bank.setDouble("trkline_yz_interc", i, cosmics.get(i).get_yzinterc());
 			
+			double norm = Math.sqrt(cosmics.get(i).get_yxslope()*cosmics.get(i).get_yxslope()+cosmics.get(i).get_yzslope()*cosmics.get(i).get_yzslope()+1);		    
+		    threeVec u = new threeVec(cosmics.get(i).get_yxslope()/norm, 1/norm, cosmics.get(i).get_yzslope()/norm);
+		    
+		    bank.setDouble("theta", i, Math.toDegrees(u.theta()));
+		    bank.setDouble("phi", i, Math.toDegrees(u.phi()));
+		    
 			for(int j = 0; j<cosmics.get(i).size(); j++) {		
 				
 				crossIdxArray[cosmics.get(i).get(j).getCosmicsRegion()-1] = cosmics.get(i).get(j).get_Id();
@@ -235,37 +247,44 @@ public class RecoBankWriter {
 				hitStrg+="_ID";
 				bank.setInt(hitStrg, i, crossIdxArray[j]);
 			}
-			
 		}
-       
-		return bank;
-		
-		
+		return bank;	
 	}
+	
 	public static DataBank fillTrajectoryBank(EvioDataEvent event,
 			List<CosmicTrack> cosmics) {
 		
-		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BSTRec::Trajectory",cosmics.size());
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BSTRec::Trajectory",16*cosmics.size());
 	
+		int k =0;
 		for(int i =0; i< cosmics.size(); i++) {
 			if(cosmics.get(i).get_trackInterModulePlanes()==null)
-				return bank;
-			bank.setInt("ID", i, cosmics.get(i).getIdx());
-			for(int j = 0; j< 16; j++) { // 16 BST planes
-					
-				String intersX = "XtrackIntersPlane";
-				intersX+=j+1;
-				String intersY = "YtrackIntersPlane";
-				intersY+=j+1;
-				String intersZ = "ZtrackIntersPlane";
-				intersZ+=j+1;
-				bank.setDouble(intersX, i, cosmics.get(i).get_trackInterModulePlanes().get(j).x());
-				bank.setDouble(intersY, i, cosmics.get(i).get_trackInterModulePlanes().get(j).y());
-				bank.setDouble(intersZ, i, cosmics.get(i).get_trackInterModulePlanes().get(j).z());
-				
+				continue;
+			
+			double[][][] result = cosmics.get(i).get_trackInterModulePlanes();
+			
+			
+			for(int l =0; l< Constants.NLAYR; l++) {
+		    	for (int s = 0; s<Constants.NSECT[l]; s++) {
+		    		
+		    		if(result[l][s][0] != -999) {
+		    			
+		    			bank.setInt("ID", k, cosmics.get(i).getIdx());
+		    			bank.setInt("LayerTrackIntersPlane", k, (l+1));
+		    			bank.setInt("SectorTrackIntersPlane", k, (s+1));
+						bank.setDouble("XtrackIntersPlane", k, result[l][s][0]);
+						bank.setDouble("YtrackIntersPlane", k, result[l][s][1]);
+						bank.setDouble("ZtrackIntersPlane", k, result[l][s][2]);
+						bank.setDouble("PhiTrackIntersPlane", k, result[l][s][3]);
+						bank.setDouble("ThetaTrackIntersPlane", k, result[l][s][4]);
+						bank.setDouble("trkToMPlnAngl", k, result[l][s][5]);
+						bank.setDouble("CalcCentroidStrip", k, result[l][s][6]);
+						k++;
+		    		}	
+		    	}
 			}
 		}
-   
+    
 	return bank;
 	}
 }

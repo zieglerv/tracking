@@ -101,6 +101,7 @@ public class TrajectoryFinder {
 	private void updateFittedHitList(Trajectory traj, Geometry geo) {
 		if(traj == null)
 			return;
+		
 		//update FittedHits list
 		for(int l = 0; l< Constants.NLAYR; l++) {
 		

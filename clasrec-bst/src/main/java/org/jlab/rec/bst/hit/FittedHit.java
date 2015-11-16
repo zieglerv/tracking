@@ -88,9 +88,9 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	
 	
 	public double get_Residual() {
-		if(get_stripResolutionAtDoca()==0)
+		if(get_docaToTrk()==0)
 			return Double.NaN;
-		return get_docaToTrk()/get_stripResolutionAtDoca();
+		return get_docaToTrk();
 	}
 	
 	private int _AssociatedClusterID;

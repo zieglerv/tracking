@@ -1,10 +1,16 @@
 package org.jlab.rec.bst.cross;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.jMath.Vector.threeVec;
 import org.jlab.rec.bst.Constants;
+import org.jlab.rec.bst.Geometry;
+
+import trackfitter.fitter.LineFitPars;
+import trackfitter.fitter.LineFitter;
+
 /**
  * A class with methods used to find lists of crosses.  This is the Pattern Recognition step used in track seeding, to 
  * find the points that are consistent with belonging to the same track.  
@@ -14,9 +20,8 @@ import org.jlab.rec.bst.Constants;
  */
 
 
-public class CrossListFinder  {
-	
-	
+public class CrossListFinder {
+		
 	public CrossListFinder() {					
 	}
 	
@@ -343,13 +348,69 @@ public class CrossListFinder  {
 		return arrayInfo;
 	}
  		     
+	class Doublet extends ArrayList<Cross> implements Comparable<Doublet> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		private Cross _sourceNode;
+		private Cross _sinkNode;
+		private threeVec _dirVec;
+		
+		public int sourceIndex;
+		public int sinkIndex;
+		
+		public Doublet(Cross sourceNode, Cross sinkNode) {
+			this._sourceNode = sourceNode;
+			this._sinkNode = sinkNode;
+			
+			double ix = sourceNode.get_Point().x();
+			double fx = sinkNode.get_Point().x();
+			double iy = sourceNode.get_Point().y();
+			double fy = sinkNode.get_Point().y();
+			
+			double x = fx-ix;
+			double y = fy-iy;
+			
+			double u = Math.sqrt(x*x+y*y);
+			double ux = x/u;
+			double uy = y/u;
+			
+			threeVec dirVec = new threeVec(ux,uy,0);
+			
+			this._dirVec = dirVec;
+		}
+		
+		
+		
+		public Cross getSourceNode() {
+			return _sourceNode;
+		}
+		public void setSourceNode(Cross sourceNode) {
+			this._sourceNode = sourceNode;
+		}
+		public Cross getSinkNode() {
+			return _sinkNode;
+		}
+		public void setSinkNode(Cross sinkNode) {
+			this._sinkNode = sinkNode;
+		}
+		public threeVec getDirVec() {
+			return _dirVec;
+		}
+		public void setDirVec(threeVec dirVec) {
+			this._dirVec = dirVec;
+		}
 
-	/**
-	 * 
-	 * @param crosses the list of crosses in the event
-	 * @return the list of crosses determined to be consistent with belonging to a track in the bst
-	 */
-	public CrossList findCosmicsCandidateCrossLists(List<Cross> crosses) {
+		@Override
+		public int compareTo(Doublet o) {
+			return this.getDirVec().phi() < o.getDirVec().phi() ? -1 : this.getDirVec().phi() == o.getDirVec().phi() ? 0 : 1;		
+		}
+		
+		
+	}
+
+	public CrossList findTrackSeeds(List<Cross> crosses) {
 		
 		/// The principle of Hough Transform in pattern recognition is as follows.
 		/// For every point (rho, z) on a line there exists an infinite number of
@@ -392,8 +453,10 @@ public class CrossListFinder  {
 		double ThetaMax = 360.;
 		
 		// Define the dimension of the r accumulator array
-		int N_t = 90;
-		int N_r = 9;
+		//int N_t = 180;
+		//int N_r = 180;
+		int N_t = 180;
+		int N_r = 45;
 		// From this calculate the bin size in the theta accumulator array
 		double RMin = -180;
 		double RMax =  180;
@@ -507,7 +570,7 @@ public class CrossListFinder  {
 					}
 				}
 			}
-			int[] theRegionsCount = new int[8];
+			/*int[] theRegionsCount = new int[8];
 			boolean passList = true;
 			
 			for(Cross thecross : crossList) {
@@ -518,7 +581,8 @@ public class CrossListFinder  {
 					passList = false;
 				if(crossList.size()>3 && theRegionsCount[thecross.getCosmicsRegion()-1]>2)
 					passList = false;
-			}
+			}*/
+			boolean passList = this.regionUniquenessFlag(crossList);
 			if(passList) {
 				if(!crossLists.contains(crossList)) {					
 					crossLists.add(index, crossList);
@@ -548,8 +612,7 @@ public class CrossListFinder  {
 		int newListIndex =0;
 		for(int i = 0; i<crossLists.size(); i++) {
 			if(crossLists.get(i).size()>0) {
-				newcrossLists.add(newListIndex, crossLists.get(i));
-				
+				newcrossLists.add(newListIndex, crossLists.get(i));				
 				newListIndex++;
 			}
 		}
@@ -560,5 +623,160 @@ public class CrossListFinder  {
         return crossListFinal;
 	
 	}
+	
+	private boolean regionUniquenessFlag(ArrayList<Cross> crossList) {
+		int[] theRegionsCount = new int[8];
+		boolean passList = true;
+		
+		for(Cross thecross : crossList) {
+			
+			theRegionsCount[thecross.getCosmicsRegion()-1]++;
+			
+			if(crossList.size()==3 && theRegionsCount[thecross.getCosmicsRegion()-1]>1)
+				passList = false;
+			if(crossList.size()>3 && theRegionsCount[thecross.getCosmicsRegion()-1]>2)
+				passList = false;
+		}
+		return passList;
+	}
 
+	public CrossList findCosmicsCandidateCrossLists(List<Cross> crosses, Geometry geo) {
+		
+		CrossList crossLists = this.findTrackSeeds(crosses);
+		
+		CrossList crossListFinal = new CrossList();
+		ArrayList<ArrayList <Cross> > newCrossLists = new ArrayList<ArrayList <Cross> >();
+		
+		
+		for(int i = 0; i<crossLists.size(); i++) {
+			if(crossLists.get(i).size()>0) {
+				ArrayList<Cross> crossList = new ArrayList<Cross>();
+				
+				ArrayList<Cross> TrajPoints = get_XYTrajectory(crossLists.get(i), geo);
+				Collections.sort(crosses);
+				for(Cross p : TrajPoints) {	
+					
+					double doca = 1000;
+					
+					Cross closestCross = null;
+					
+					// find the crosses which are closest to the trajectory obtained from the seed
+					for(Cross c : crosses) {				
+								
+						if(c.get_Sector()!= p.get_Sector() || c.get_Region()!= p.get_Region())
+							continue;
+						//System.out.println(" delta x "+ (Math.abs(c.get_Point0().x()-p.get_Point0().x())) + " delta y " +(Math.abs(c.get_Point0().y()-p.get_Point0().y())) );
+						double d = Math.sqrt((c.get_Point0().x()-p.get_Point0().x())*(c.get_Point0().x()-p.get_Point0().x())+
+								(c.get_Point0().y()-p.get_Point0().y())*(c.get_Point0().y()-p.get_Point0().y()));
+						if(d<doca) { 
+							doca = d;
+							closestCross=c;
+						}
+					}
+					if(closestCross!=null)
+						if(Math.abs(closestCross.get_Point0().x()-p.get_Point0().x())<Constants.MAXDISTTOTRAJXY && Math.abs(closestCross.get_Point0().y()-p.get_Point0().y())<Constants.MAXDISTTOTRAJXY) { 
+							crossList.add(closestCross);
+							
+						}
+				}
+				newCrossLists.add(i,crossList);
+				
+			}
+		}
+		
+		crossListFinal.addAll(newCrossLists);
+		
+        return crossListFinal;
+	}
+
+	private ArrayList<Cross>  get_XYTrajectory(List<Cross> crosses, Geometry geo) {
+		
+		ArrayList<Cross> projectedCrosses = new ArrayList<Cross>();
+		
+		List<Cross> _hitsOnTrack = crosses;
+		 
+		 LineFitter linefitYX = new LineFitter();
+		 if(_hitsOnTrack==null) 
+			 return projectedCrosses;
+			
+			double[] X = new double[_hitsOnTrack.size()]; 
+			double[] Y = new double[_hitsOnTrack.size()]; 
+			
+			double[] errX = new double[_hitsOnTrack.size()];
+			double[] errY = new double[_hitsOnTrack.size()];
+			
+			
+			for(int j =0; j< _hitsOnTrack.size(); j++) {
+				
+				X[j] = _hitsOnTrack.get(j).get_Point().x();
+				errX[j] = _hitsOnTrack.get(j).get_PointErr().x();
+				Y[j] = _hitsOnTrack.get(j).get_Point().y();
+				errY[j] = _hitsOnTrack.get(j).get_PointErr().y();
+			
+			}
+		
+		// do the fit
+			// to do : create a dedicated method in CosmicTrack (maybe) to do this
+		
+	  		boolean linefitresultYX = linefitYX.fitStatus(Y, X, errY, errX, _hitsOnTrack.size());
+	  		
+	        //  Get the results of the fits
+	  		if(!linefitresultYX) 
+	  			return projectedCrosses;
+	  		
+  			LineFitPars linefitparsYX = linefitYX.getFit();
+  			
+  			double yxslope=linefitparsYX.slope();
+  			double yxinterc = linefitparsYX.intercept();
+  			
+  			projectedCrosses = this.get_CalcHitsOnTrackXY(yxslope,yxinterc, geo) ;
+  			
+	    	return projectedCrosses;
+	}
+
+	private ArrayList<Cross> get_CalcHitsOnTrackXY(double yxslope,
+			double yxinterc, Geometry geo) {
+		
+		ArrayList<Cross> projectedCrosses = new ArrayList<Cross>();
+		//Layer 1-8:
+    	for(int l =0; l< Constants.NLAYR; l++) {
+    		if(l%2!=0)
+    			continue;
+    		
+	    	for (int s = 0; s<Constants.NSECT[l]; s++) {
+    		
+	  			double epsilon=1e-6;
+				//double angle = (double)2.*Math.PI*(s/(double)Constants.NSECT[l]);
+				
+			    //threeVec n =  new threeVec(-Math.sin(angle), Math.cos(angle), 0);
+
+			    //double dot = -Math.sin(angle)*yxslope+Math.cos(angle);
+	  			
+	  			threeVec n = geo.findBSTPlaneNormal(s+1, l+1);
+	  			
+	  			double dot = (n.x()*yxslope+n.y());
+	  			
+			    if(Math.abs(dot)<epsilon) 
+			    	continue;
+			    double R = (Constants.MODULERADIUS[l][0] + Constants.MODULERADIUS[l+1][0])/2.;
+		    	//threeVec w = new threeVec(yxinterc+R*Math.sin(angle), -R*Math.cos(angle), 0);
+			    threeVec w = new threeVec(yxinterc-R*n.x(), -R*n.y(), 0);
+			    
+		    	double fac = -(n.x()*w.x()+n.y()*w.y()+n.z()*w.z())/dot;
+		    	//threeVec Delt = new threeVec(fac*yxslope+yxinterc+R*Math.sin(angle),fac-R*Math.cos(angle),0);
+		    	threeVec Delt = new threeVec(fac*yxslope+yxinterc-R*n.x(),fac-R*n.y(),0);
+		    	
+		    	if(Delt.len()<Constants.ACTIVESENWIDTH/2) {
+		    		double tX =fac*yxslope+yxinterc;
+		    		double tY=fac;
+		    		Cross cross2D = new Cross(s+1, (int) (l+2)/2, -1);
+		    		cross2D.set_Point0(new threeVec(tX,tY,0));
+		    		projectedCrosses.add(cross2D);		
+		    	}
+	    	}
+    	}
+		return projectedCrosses;
+	}
+	
+	
 }

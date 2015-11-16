@@ -3,7 +3,9 @@ package org.jlab.rec.bst.track;
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
 import org.jlab.rec.bst.trajectory.BSTSwimmer;
+
 import trackfitter.track.Helix;
+
 
 
 public class EnergyLossCorr {
@@ -42,6 +44,8 @@ public class EnergyLossCorr {
 		if(trkcand==null)
 			return;
 		
+		massHypo = trkcand.get_PID();
+		
 		OrigTrack = new Helix(trkcand.get_Helix().get_dca(), trkcand.get_Helix().get_phi_at_dca() ,trkcand.get_Helix().get_curvature(), 
 				trkcand.get_Helix().get_Z0(), trkcand.get_Helix().get_tandip(), null);
 		
@@ -52,6 +56,7 @@ public class EnergyLossCorr {
 	
 	
 	public void doCorrection(Track trkcand, Geometry geo) {
+		
 		double B = bstSwim.Bfield(Points[0][0]/10, Points[0][0]/10, Points[0][0]/10).z();
 		double ELossMax = 600; //600Mev 
 		double stepSize = 0.001; //1 MeV
@@ -112,6 +117,7 @@ public class EnergyLossCorr {
 			
 			double cosEntranceAngle = Math.abs((x*ux+y*uy+z*uz)/Math.sqrt(x*x+y*y+z*z));
 			cosEntAnglesPlanes[m] = cosEntranceAngle;   
+			
 				
 			}		
 
@@ -128,8 +134,9 @@ public class EnergyLossCorr {
 		
 		double tanL = this.OrigTrack.get_tandip();
 		
-		// pz = pt/tanL
-		double p = pt*Math.sqrt(1+(1./tanL)*(1./tanL));
+		// pz = pt*tanL
+		double pz = pt*tanL;
+		double p = Math.sqrt(pt*pt+pz*pz);
 		
 	    double mass = MassHypothesis(massHypo); // assume given mass hypothesis 
 	    
@@ -148,7 +155,7 @@ public class EnergyLossCorr {
  		double delta = 0.;
  		
  		//double dEdx = 0.0001535*(Constants.detMatZ/Constants.detMatA)*(Math.log(logterm)-2*beta*beta-delta)/(beta*beta);
- 		double dEdx = 0.0001535*Constants.detMatZ_ov_A_timesThickn*(Math.log(logterm)-2*beta*beta-delta)/(beta*beta);
+ 		double dEdx = 0.00001535*Constants.detMatZ_ov_A_timesThickn*(Math.log(logterm)-2*beta*beta-delta)/(beta*beta);
  		
  		double tmpPtot = p;
 		
@@ -158,7 +165,7 @@ public class EnergyLossCorr {
  	    
 	    double tmpPtotCorrSq = tmpEtotCorrected*tmpEtotCorrected-MassHypothesis(massHypo)*MassHypothesis(massHypo); 
 	   
- 	    double newPt = Math.sqrt(tmpPtotCorrSq/(1+(1./tanL)*(1./tanL)));
+ 	    double newPt = Math.sqrt(tmpPtotCorrSq/(1+tanL*tanL));
  	   
  	    double  newCurv = (Constants.LIGHTVEL*Math.abs(B))*Math.signum(this.OrigTrack.get_curvature())/newPt;
  	    

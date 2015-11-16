@@ -67,7 +67,7 @@ public class Trajectory extends ArrayList<Cross> {
 	public double calc_Field(double x_cm, double y_cm, double z_cm) {
 
 		if(bstSwim.Bfield(x_cm, y_cm, z_cm)!=null) {
-			double B = bstSwim.Bfield(0, 0, 10).z();
+			double B = bstSwim.Bfield(0, 0, 0).z();
 			return Math.abs(B);
 		} else {
 			System.err.println("FATAL ERROR MAG FIELD NOT FOUND!!!");

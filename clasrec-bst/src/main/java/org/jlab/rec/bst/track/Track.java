@@ -5,11 +5,11 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
+import org.jlab.rec.bst.cross.Cross;
+import org.jlab.rec.bst.trajectory.Trajectory;
 
 import trackfitter.track.Helix;
 
-import org.jlab.rec.bst.cross.Cross;
-import org.jlab.rec.bst.trajectory.Trajectory;
 
 /**
  * A class representing track candidates in the BST.  A track has a trajectory represented by an ensemble of geometrical state vectors along its path, 
@@ -23,9 +23,6 @@ public class Track extends Trajectory {
 	 * serialVersionUID
 	 */	
 	
-
-	
-	
 	
 	private static final long serialVersionUID = 1763744434903318419L;
 
@@ -38,6 +35,7 @@ public class Track extends Trajectory {
 	private double _P;
 	private Helix _Helix;
 	private double _Bz =5; // Default
+	private String _PID;
 	/**
 	 * 
 	 * @return the charge
@@ -102,11 +100,8 @@ public class Track extends Trajectory {
 		
 		double calcPz =0;
 		
-		if(get_Helix().get_tandip()==0) 
-			set_Pz(0);
-		
-		if(get_Helix().get_tandip()!=0)
-			calcPz = calcPt/get_Helix().get_tandip();
+	
+		calcPz = calcPt*get_Helix().get_tandip();
 		
 		double calcP = Math.sqrt(calcPt*calcPt+calcPz*calcPz);
 		
@@ -123,6 +118,13 @@ public class Track extends Trajectory {
 			for (int i =0; i<this.size(); i++) {
 					threeVec helixTanVecAtLayer = helix.getTrackDirectionAtRadius(this.get(i).get_Point().rt());
 					this.get(i).set_CrossParams(helixTanVecAtLayer, geo);
+					if(this.get(i).get_Cluster2().get_Centroid()<=1) {
+						//recalculate z using track pars:
+						double z = helix.getPointAtRadius(this.get(i).get_Point().rt()).z();
+						double x = this.get(i).get_Point().x();
+						double y = this.get(i).get_Point().y();
+						this.get(i).set_Point(new threeVec(x,y,z));
+					}
 					
 				}
 			
@@ -138,6 +140,7 @@ public class Track extends Trajectory {
 	private Point3D _TrackPointAtCTOFRadius;
 	private Vector3D _TrackDirAtCTOFRadious;
 	private  double _pathLength;
+	public boolean passCand;
 	
 	public double get_circleFitChi2Prob() {
 		return _circleFitChi2Prob;
@@ -188,6 +191,12 @@ public class Track extends Trajectory {
 	}
 	public void set_Bz(double _Bz) {
 		this._Bz = _Bz;
+	}
+	public String get_PID() {
+		return _PID;
+	}
+	public void set_PID(String _PID) {
+		this._PID = _PID;
 	}
 
 

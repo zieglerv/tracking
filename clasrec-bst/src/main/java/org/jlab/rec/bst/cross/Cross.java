@@ -196,20 +196,6 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 		return serialVersionUID;
 	}
 
-
-	/**
-	 * Sorts crosses by azimuth angle values
-	 */
-	@Override
-	public int compareTo(Cross arg) {
-		
-		if(this.get_Point().phi()<arg.get_Point().phi()) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}
-
 	private Cluster _clus1;
 	private Cluster _clus2;
 	
@@ -256,6 +242,10 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 		double[] Params = geo.getCrossPars(outlayerclus.get_Sector(), outlayerclus.get_Layer(), 
 				inlayerclus.get_Centroid(), outlayerclus.get_Centroid(), "lab", dirAtBstPlane);
 		
+		double val = Params[0];		
+		if(Double.isNaN(val))
+			return; // cross not withing fiducial region
+		
 		threeVec interPoint = new threeVec(Params[0], Params[1], Params[2]);
 				
 		threeVec interPointErr = new threeVec(Params[3], Params[4], Params[5]);
@@ -264,6 +254,7 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 			this.set_Point0(interPoint);		
 			this.set_PointErr0(interPointErr);
 		}
+		
 		this.set_Point(interPoint);	
 		this.set_Dir(dirAtBstPlane);
 		this.set_PointErr(interPointErr);
@@ -320,5 +311,19 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 	
 		return theRegion;
 	}
+	/**
+	 * Sorts crosses by azimuth angle values
+	 */
+	@Override
+	public int compareTo(Cross arg) {
+		
+		 int RegComp = this.getCosmicsRegion() < arg.getCosmicsRegion()  ? -1 : this.getCosmicsRegion()  == arg.getCosmicsRegion()  ? 0 : 1;
+		 int IDComp = this.get_Id() < arg.get_Id()  ? -1 : this.get_Id()  == arg.get_Id()  ? 0 : 1;
+		 
+		 return ((RegComp ==0) ? IDComp : RegComp);
+			 
+		
+	}
+
 	
 }

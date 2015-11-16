@@ -39,7 +39,7 @@ public class BSTReconstruction extends DetectorReconstruction{
 
    
     public BSTReconstruction() {
-    	super("BST", "ziegler", "1.0");
+    	super("BST", "ziegler", "2.0");
 
     }
 	
@@ -101,23 +101,29 @@ public class BSTReconstruction extends DetectorReconstruction{
 		CrossMaker crossMake = new CrossMaker();
 		crosses = crossMake.findCrosses(clusters,geo);
 		List<Cross> crossesToRm = crossMake.crossLooperCands(crosses);
+		
 		for(int j =0; j< crosses.size(); j++) {
 			for(int j2 =0; j2< crossesToRm.size(); j2++) {
 				if(crosses.get(j).get_Id()==crossesToRm.get(j2).get_Id())
 					crosses.remove(j);
+				
 			}
 		}
 		
 		if(debugMode)
-			System.out.println("number of reconstructed crosses = "+crosses.size());
+			System.out.println("number of reconstructed crosses = "+ (crosses.size()+ crossesToRm.size()));
 				
 		
 		if(crosses.size()==0 ) {
 			// create the clusters and fitted hits banks
 			DataBank bank1 = RecoBankWriter.fillHitsBank((EvioDataEvent) event, fhits);		
 			DataBank bank2 = RecoBankWriter.fillClustersBank((EvioDataEvent) event, clusters);
-			
-			event.appendBanks(bank1,bank2);
+			if(crossesToRm.size()==0)
+				event.appendBanks(bank1,bank2);
+			if(crossesToRm.size()!=0) {
+				DataBank bank3 = RecoBankWriter.fillCrossesBank((EvioDataEvent) event, crossesToRm);
+				event.appendBanks(bank1,bank2,bank3);
+			}
 			return; //exiting
 		}
 		
@@ -125,11 +131,30 @@ public class BSTReconstruction extends DetectorReconstruction{
 		if(Constants.isCosmicsData == true) {
 			//4) make list of crosses consistent with a track candidate
 			CrossListFinder crossLister = new CrossListFinder();
-			CrossList crosslist = crossLister.findCosmicsCandidateCrossLists(crosses);
+			CrossList crosslist = crossLister.findCosmicsCandidateCrossLists(crosses, geo);
 			
 			
 			if(crosslist.size()==0) {
 				// create the clusters and fitted hits banks
+				DataBank bank1 = RecoBankWriter.fillHitsBank((EvioDataEvent) event, fhits);		
+				DataBank bank2 = RecoBankWriter.fillClustersBank((EvioDataEvent) event, clusters);				
+				// found crosses 
+				crosses.addAll(crossesToRm);
+				DataBank bank3 = RecoBankWriter.fillCrossesBank((EvioDataEvent) event, crosses);
+				if(debugMode)
+					System.out.println("Saving crosses ... no track candidates found!");
+				event.appendBanks(bank1,bank2,bank3);
+				return;
+			}
+			if(debugMode)
+				System.out.println("looking for trks from cross lists...."+ crosslist.size());
+			
+			//5) find the list of  track candidates
+			TrackCandListFinder trkcandFinder = new TrackCandListFinder();
+			cosmics = trkcandFinder.getCosmicsTracks(crosslist,geo,Constants.BSTEXCLUDEDFITREGION) ;
+			
+			
+			if(cosmics.size()==0) {
 				DataBank bank1 = RecoBankWriter.fillHitsBank((EvioDataEvent) event, fhits);		
 				DataBank bank2 = RecoBankWriter.fillClustersBank((EvioDataEvent) event, clusters);				
 				// found crosses 
@@ -139,24 +164,10 @@ public class BSTReconstruction extends DetectorReconstruction{
 				event.appendBanks(bank1,bank2,bank3);
 				return;
 			}
-			if(debugMode)
-				System.out.println("looking for trks from cross lists...."+ crosslist.size());
-			//5) find the list of  track candidates
-			TrackCandListFinder trkcandFinder = new TrackCandListFinder();
-			cosmics = trkcandFinder.getCosmicsTracks(crosslist,geo) ;
-			
-			
-			if(cosmics.size()==0) {
-				return;
-			}
-				if(debugMode){ 
+				
+			if(debugMode){ 
 					System.out.println("number of reconstructed tracks = "+cosmics.size());
 				
-				for(CosmicTrack ctrk : cosmics) {
-					//System.out.println("event "+eventNb);
-					ctrk.get_LayerEfficiencies(hits);
-					
-				}
 			}
 				// create the clusters and fitted hits banks
 			DataBank bank1 = RecoBankWriter.fillHitsBank((EvioDataEvent) event, fhits);		
@@ -205,12 +216,7 @@ public class BSTReconstruction extends DetectorReconstruction{
 				return;
 			}
 			
-			//refit 
-			/*
-			for(Track trk: trkcands) {				
-				trk =trkcandFinder.thetaCorrection( event,  trk,  geo);				
-			}
-			*/
+			
 			//This last part does ELoss C
 			TrackListFinder trkFinder = new TrackListFinder();
 			trks = trkFinder.getTracks(trkcands, geo) ;
@@ -228,26 +234,7 @@ public class BSTReconstruction extends DetectorReconstruction{
 			//4)  ---  write out the banks
 			
 			event.appendBanks(bank1,bank2,bank3,bank4);
-			/*
-			if(event.hasBank("GenPart::true")==true) {
-				EvioDataBank bankTRUE = (EvioDataBank) event.getBank("GenPart::true");
-		       
-		        double[] px = bankTRUE.getDouble("px");
-		        double[] py = bankTRUE.getDouble("py");
-		        double[] pz = bankTRUE.getDouble("pz");
-		        int[] pid = bankTRUE.getInt("pid");
-		       // double[] vx = bankTRUE.getDouble("vx");
-		       // double[] vy = bankTRUE.getDouble("vy");
-		       // double[] vz = bankTRUE.getDouble("vz");
-		        
-		        for(int i = 0; i<px.length; i++){
-		        	double p = Math.sqrt(px[i]*px[i]+py[i]*py[i]+pz[i]*pz[i])/1000.;
-		        
-		        System.out.println(p+"  "+trks.get(0).get_P());
-		        }
-			}
 			
-			*/
 			if(debugMode) {
 				
 				double[] p_rec = new double[trks.size()];	
@@ -259,7 +246,7 @@ public class BSTReconstruction extends DetectorReconstruction{
 					
 					p_rec[i] = trks.get(i).get_P();
 					phi_rec[i] = trks.get(i).get_Helix().get_phi_at_dca();
-					theta_rec[i] = Math.atan(trks.get(i).get_Helix().get_tandip());
+					theta_rec[i] = Math.acos(trks.get(i).get_Helix().costheta());
 				}
 				
 				if(event.hasBank("GenPart::true")==true) {
@@ -326,6 +313,13 @@ public class BSTReconstruction extends DetectorReconstruction{
 			boolean kFlag = Boolean.parseBoolean(CosmicFlag);
 			Constants.isCosmicsData = kFlag;
 			System.out.println("\n\n********** RUNNING COSMICS RECONSTRUCTION ? " + kFlag + "  *************");
+
+		}
+		if(config.hasItem("SVT", "excludeRegion")) {
+			String ExReg = config.asString("SVT", "excludeRegion");
+			int exR = Integer.parseInt(ExReg);
+			Constants.BSTEXCLUDEDFITREGION = exR;
+			System.out.println("\n\n********** Region excluded from fit " + exR + "  *************");
 
 		}
 		

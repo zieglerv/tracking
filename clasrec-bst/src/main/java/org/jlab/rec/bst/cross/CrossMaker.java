@@ -6,7 +6,6 @@ import java.util.List;
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
 import org.jlab.rec.bst.cluster.Cluster;
-import org.jlab.rec.bst.hit.Hit;
 
 /**
  * Driver class to make BST crosses
@@ -45,6 +44,7 @@ public class CrossMaker {
 					continue;
 				if(outlayerclus.get_Sector()!=inlayerclus.get_Sector())
 					continue;
+				
 				if( (inlayerclus.get_MinStrip()+outlayerclus.get_MinStrip() > Constants.sumStpNumMin) 
 						&& (inlayerclus.get_MaxStrip()+outlayerclus.get_MaxStrip() < Constants.sumStpNumMax) ) { // the intersection is valid
 					
@@ -52,12 +52,11 @@ public class CrossMaker {
 					Cross this_cross = new Cross(inlayerclus.get_Sector(), inlayerclus.get_Region(),rid++);
 					this_cross.set_Cluster1(inlayerclus);
 					this_cross.set_Cluster2(outlayerclus);
-					this_cross.set_Id(crosses.size()-1);
+					this_cross.set_Id(rid);
 					this_cross.set_CrossParams(null, geo);
-					
+					if(this_cross.get_Point0()!=null)
 					//make arraylist
-					crosses.add(this_cross);
-
+						crosses.add(this_cross);
 				}
 			}
 		}
@@ -91,7 +90,7 @@ public class CrossMaker {
 		for(int i = 0; i< nlayr; i++) {			
 			for(int j = 0; j<Constants.NSECT[i]; j++) {
 				
-				if(secList.get(i).get(j).size()>3)
+				if(secList.get(i).get(j).size()>Constants.MAXNUMCROSSESINMODULE)
 					listOfCrossesToRm.addAll(secList.get(i).get(j));
 			}
 			

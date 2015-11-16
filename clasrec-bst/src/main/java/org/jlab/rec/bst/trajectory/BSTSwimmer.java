@@ -228,8 +228,9 @@ public class BSTSwimmer {
 				e.printStackTrace();
 			}
 						
-
+		
 			if (solenoid != null) {
+				/*
 				if(Constants.SOLSCALE<0) {
 					if(solenoid.isInvertField()==false)
 						solenoid.setInvertField(true);
@@ -239,13 +240,14 @@ public class BSTSwimmer {
 					if(solenoid.isInvertField()==true)
 						solenoid.setInvertField(false);
 				}
-				solenoid.setScaleField(true);
+				
+				solenoid.setScaleField(true); */
 				solenoid.setScaleFactor(Constants.SOLSCALE);
 				System.out.println("***** ****** ****** THE SOLENOID IS BEING SCALED BY "+ (Constants.SOLSCALE*100) +"  %   *******  ****** **** ");
 				sField = solenoid;
 			}
 			areFieldsLoaded = true;
-			System.out.println("Fields are Loaded! with solenoid inverted ? "+solenoid.isInvertField());
+			//System.out.println("Fields are Loaded! with solenoid inverted ? "+solenoid.isInvertField());
 		}	
 			
 	public static Solenoid getField() {

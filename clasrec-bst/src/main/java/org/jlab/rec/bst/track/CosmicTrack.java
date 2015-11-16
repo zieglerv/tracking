@@ -5,11 +5,8 @@ import java.util.List;
 
 import org.jMath.Vector.threeVec;
 import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Point3D;
-import org.jlab.geom.prim.Shape3D;
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
-import org.jlab.rec.bst.cluster.Cluster;
 import org.jlab.rec.bst.cross.Cross;
 import org.jlab.rec.bst.hit.FittedHit;
 import org.jlab.rec.bst.hit.Hit;
@@ -32,15 +29,20 @@ public class CosmicTrack extends ArrayList<Cross> {
 	    private int _id;
 	    private double _yxchi2;
 	    private double _yzchi2;
+	    private double _chi2;
+	    private double _ndf;
 		private double _yxslope;
 	    private double _yzslope;
 	    private double _yxinterc;
 	    private double _yzinterc;
-	    private List<Point3D> _trackInterModulePlanes;
+		private double _yxslopeErr;
+	    private double _yzslopeErr;
+	    private double _yxintercErr;
+	    private double _yzintercErr;
+	    private double[][][] _trackInterModulePlanes;
 	    
 	    private ArrayList<double[]> _xzresiduals;
-	    
-		
+	   
 		public int getIdx() {
 			return _id;
 		}
@@ -50,17 +52,53 @@ public class CosmicTrack extends ArrayList<Cross> {
 			this._id = id;
 		}
 		
-		public double get_yxchi2() {
+	    public double get_yxchi2() {
 			return _yxchi2;
 		}
+
+
+		public void set_yxchi2(double _yxchi2) {
+			this._yxchi2 = _yxchi2;
+		}
+
 
 		public double get_yzchi2() {
 			return _yzchi2;
 		}
 
-		
+
+		public void set_yzchi2(double _yzchi2) {
+			this._yzchi2 = _yzchi2;
+		}
+
+
+		public double get_chi2() {
+			return _chi2;
+		}
+
+
+		public void set_chi2(double _chi2) {
+			this._chi2 = _chi2;
+		}
+
+
+		public double get_ndf() {
+			return _ndf;
+		}
+
+
+		public void set_ndf(double _ndf) {
+			this._ndf = _ndf;
+		}
+
+
 		public double get_yxslope() {
 			return _yxslope;
+		}
+
+
+		public void set_yxslope(double _yxslope) {
+			this._yxslope = _yxslope;
 		}
 
 
@@ -69,8 +107,18 @@ public class CosmicTrack extends ArrayList<Cross> {
 		}
 
 
+		public void set_yzslope(double _yzslope) {
+			this._yzslope = _yzslope;
+		}
+
+
 		public double get_yxinterc() {
 			return _yxinterc;
+		}
+
+
+		public void set_yxinterc(double _yxinterc) {
+			this._yxinterc = _yxinterc;
 		}
 
 
@@ -79,9 +127,52 @@ public class CosmicTrack extends ArrayList<Cross> {
 		}
 
 
+		public void set_yzinterc(double _yzinterc) {
+			this._yzinterc = _yzinterc;
+		}
 
-	    
-	    public ArrayList<double[]> get_xzresiduals() {
+
+		public double get_yxslopeErr() {
+			return _yxslopeErr;
+		}
+
+
+		public void set_yxslopeErr(double _yxslopeErr) {
+			this._yxslopeErr = _yxslopeErr;
+		}
+
+
+		public double get_yzslopeErr() {
+			return _yzslopeErr;
+		}
+
+
+		public void set_yzslopeErr(double _yzslopeErr) {
+			this._yzslopeErr = _yzslopeErr;
+		}
+
+
+		public double get_yxintercErr() {
+			return _yxintercErr;
+		}
+
+
+		public void set_yxintercErr(double _yxintercErr) {
+			this._yxintercErr = _yxintercErr;
+		}
+
+
+		public double get_yzintercErr() {
+			return _yzintercErr;
+		}
+
+
+		public void set_yzintercErr(double _yzintercErr) {
+			this._yzintercErr = _yzintercErr;
+		}
+
+
+		public ArrayList<double[]> get_xzresiduals() {
 			return _xzresiduals;
 		}
 
@@ -124,6 +215,7 @@ public class CosmicTrack extends ArrayList<Cross> {
 			  			_yxslope=linefitparsYX.slope();
 			  			_yxinterc = linefitparsYX.intercept();
 			  			
+			  			
 		  			}
 		  		}
 		  		
@@ -135,12 +227,16 @@ public class CosmicTrack extends ArrayList<Cross> {
 		public void fitCosmicTrack(Geometry geo) {
 			 fitXYProjection( geo);
 			 
-			 ArrayList<Cross> _hitsOnTrack = this;
+			 ArrayList<Cross> _hitsOnTrack = new ArrayList<Cross>();
 		 
+			 for(int j =0; j< this.size(); j++) {
+				 if(this.get(j).get_Cluster1().get_Centroid()>2 &&  this.get(j).get_Cluster2().get_Centroid()>2) 
+					 _hitsOnTrack.add(this.get(j));			 
+			 }
 			 LineFitter linefitYX = new LineFitter();
 			 LineFitter linefitYZ = new LineFitter();
 		
-		
+			 
 			 if(_hitsOnTrack!=null) {
 				
 				double[] X = new double[_hitsOnTrack.size()]; 
@@ -155,6 +251,7 @@ public class CosmicTrack extends ArrayList<Cross> {
 				
 				
 				for(int j =0; j< _hitsOnTrack.size(); j++) {
+					
 					X[j] = _hitsOnTrack.get(j).get_Point().x();
 					errX[j] = _hitsOnTrack.get(j).get_PointErr().x();
 					Y[j] = _hitsOnTrack.get(j).get_Point().y();
@@ -176,7 +273,8 @@ public class CosmicTrack extends ArrayList<Cross> {
 		  			_yxchi2=linefitparsYX.chisq();
 		  			_yxslope=linefitparsYX.slope();
 		  			_yxinterc = linefitparsYX.intercept();
-		  			
+		  			_yxslopeErr = linefitparsYX.slopeErr();
+		  			_yxintercErr = linefitparsYX.interceptErr();		
 	  			}
 	  		}
 	  		
@@ -188,56 +286,236 @@ public class CosmicTrack extends ArrayList<Cross> {
 	  				_yzchi2=linefitparsYZ.chisq();
 	  				_yzslope=linefitparsYZ.slope();
 	  				_yzinterc= linefitparsYZ.intercept(); 
+	  				_yzslopeErr = linefitparsYZ.slopeErr();
+		  			_yzintercErr = linefitparsYZ.interceptErr();	
 	  			}
 	  		}
 	  		this.update_Crosses(_yxslope, _yzslope, geo);
-	  		// set residuals
-	  		for(int j =0; j< _hitsOnTrack.size(); j++) {
-	  			
-	  			resid[j][0] = (X[j]-_yxslope*Y[j]-_yxinterc); //x residual at y	  		
-	  			resid[j][1] = (Z[j]-_yzslope*Y[j]-_yzinterc); //z residual at y
-				
-				double[] pointResid = new double[2];
-				pointResid[0] = resid[j][0];
-				pointResid[1] = resid[j][1];
-				
-				xzresid.add(pointResid);
-				
-			}
-				
+	  		
 	  		 _xzresiduals = xzresid; 
 		}
-			 
-			 this.set_trackInterModulePlanes(calc_trackInterModulePlanes())	; 
+			
 	 }
 
-	    public List<Point3D> calc_trackInterModulePlanes() {
-	    	ArrayList<Point3D> pointsAtPlanes = new ArrayList<Point3D>(16); // 16 layer corresponding to 8 modules
-	    	for(int j = -7; j<=0; j++) {
-	    		double y = -Constants.MODULERADIUS[-j][0];
-	    		double x = this._yxinterc + this._yxslope*y;
-				double z = this._yzinterc + this._yzslope*y;
+		// clean this up....
+		public void refitCosmicTrack(Geometry geo) {
+			CosmicTrack trk = this;
+			KalFitCosmics kf = new KalFitCosmics(trk, geo);
+			kf.runKalFit(trk, geo);
+			this.update_Crosses(_yxslope, _yzslope, geo);
+			
+			ArrayList<Cross> _hitsOnTrack = this;
+	  		//set trajectory
+	  		double[][][] trajResults = this.calc_trackInterModule(geo);
+			this.set_trackInterModulePlanes(trajResults)	; 
+			
+	  		for(int j =0; j< _hitsOnTrack.size(); j++) {
+	  			
+	  			int l1 = _hitsOnTrack.get(j).get_Cluster1().get_Layer();
+	  			int s = _hitsOnTrack.get(j).get_Cluster1().get_Sector();
+	  			double s1 = _hitsOnTrack.get(j).get_Cluster1().get_Centroid();
+	  			int l2 = _hitsOnTrack.get(j).get_Cluster2().get_Layer();
+	  			double s2 = _hitsOnTrack.get(j).get_Cluster2().get_Centroid();
+	  			
+	  			double trajX1 = trajResults[l1-1][s-1][0] ;
+				double trajY1 = trajResults[l1-1][s-1][1] ;
+				double trajZ1 = trajResults[l1-1][s-1][2] ;
+				double trajX2 = trajResults[l2-1][s-1][0] ;
+				double trajY2 = trajResults[l2-1][s-1][1] ;
+				double trajZ2 = trajResults[l2-1][s-1][2] ;
 				
-				pointsAtPlanes.add(new Point3D(x,y,z));
-	    	}
-	    	for(int j = 0; j<=7; j++) {
-	    		double y = Constants.MODULERADIUS[j][0];
-	    		double x = this._yxinterc + this._yxslope*y;
-				double z = this._yzinterc + this._yzslope*y;
+				if(trajX1 == -999 || trajX2 == -999)
+					continue;
 				
-				pointsAtPlanes.add(new Point3D(x,y,z));
+				threeVec LocPoint1 = geo.transformToFrame(s, l1, trajX1, trajY1, trajZ1, "local", "");	
+				threeVec LocPoint2 = geo.transformToFrame(s, l2, trajX2, trajY2, trajZ2, "local", "");	
+				double m = (LocPoint1.x() - LocPoint2.x())/(LocPoint1.z() - LocPoint2.z());
+				double b = LocPoint1.x() - m*LocPoint1.z();
+				
+				double ialpha1 = (s1-1)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1); 
+				//the active area starts at the first strip 	
+				double interc1 = (s1)*Constants.PITCH;
+				double ialpha2 = (s2-1)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1); 
+				//the active area starts at the first strip 	
+				double interc2 = (s2)*Constants.PITCH;
+
+				// Equation for strip line is x = mz + b [i.e. z is the direction of the length of the module]
+				// -------------------------------------
+				double m1 = -Math.tan(ialpha1);
+				double m2 =  Math.tan(ialpha2);
+				double b1 = Constants.ACTIVESENWIDTH - interc1 ;
+				double b2 = interc2;
+				
+				double z1 = (b-b1)/(m1-m);
+				double x1 = m1*z1 +b1;
+				double z2 = (b-b2)/(m2-m);
+				double x2 = m2*z2 +b2;
+				
+				threeVec Point1 = geo.transformToFrame(s, l1, x1, 0, z1, "lab", "");
+				threeVec Point2 = geo.transformToFrame(s, l2, x2, 0, z2, "lab", "");
+				// unit vec along dir of track
+				threeVec t = Point2.diff(Point1);
+				t.multi(1./t.len());
+				//normal to plane of module
+				threeVec n = geo.findBSTPlaneNormal(s, l1);
+				//path length tranversed inbetween modules
+				double l = (Constants.MODULERADIUS[l2-1][0]-Constants.MODULERADIUS[l1-1][0])/(n.dot(t));
+				//Point inbetween the modules			
+				threeVec Point = Point1.add(t.mult(l/2));
+				
+				//set the cross to that point
+				//System.out.println(" trajX1 "+trajX1+" trajY1 "+trajY1+" trajZ1 "+trajZ1+" trajX2 "+trajX2+" trajY2 "+trajY2+" trajZ2 "+trajZ2);
+				_hitsOnTrack.get(j).set_Point(Point);
+				
+				double tx = _yxslope/Math.sqrt(_yxslope*_yxslope+_yzslope*_yzslope+1);
+				double ty = 1/Math.sqrt(_yxslope*_yxslope+_yzslope*_yzslope+1);
+				double tz = _yzslope/Math.sqrt(_yxslope*_yxslope+_yzslope*_yzslope+1);
+				
+				_hitsOnTrack.get(j).set_Dir(new threeVec(tx,ty,tz));
+				
+				for(FittedHit hit : _hitsOnTrack.get(j).get_Cluster1()) {
+					double doca1 = geo.getDOCAToStrip(s, l1, hit.get_Strip() , new threeVec(trajX1,trajY1, trajZ1));
+					double sigma1 = geo.getSingleStripResolution(l1, hit.get_Strip(),trajZ1);
+					hit.set_stripResolutionAtDoca(sigma1);
+					hit.set_docaToTrk(doca1);
+					hit.set_TrkgStatus(2);
+					
+	  			}
+	  			for(FittedHit hit : _hitsOnTrack.get(j).get_Cluster2()) {
+					double doca2 = geo.getDOCAToStrip(s, l2, hit.get_Strip(), new threeVec(trajX2,trajY2, trajZ2));
+					double sigma2 = geo.getSingleStripResolution(l2, hit.get_Strip(),trajZ2);
+					hit.set_stripResolutionAtDoca(sigma2);
+					hit.set_docaToTrk(doca2);
+					hit.set_TrkgStatus(2);
+	  			}
+				 
+	  		}
+	 
+				
+		}
+		
+		
+	    private double[][][] calc_trackInterModule(Geometry geo) {
+	    	//[l][s], [0,1,2,3,4]=x,y,z,phi,theta,estimated centroid strip
+	    	double[][][] result = new double[Constants.NLAYR][Constants.NSECT[Constants.NLAYR-1]][7];
+	    	for(int l =0; l< Constants.NLAYR; l++) {
+		    	for (int s = 0; s<Constants.NSECT[l]; s++) {
+		    		result[l][s][0] = -999;
+	    		    result[l][s][1] = -999;
+	    		    result[l][s][2] = -999;
+	    		    result[l][s][3] = -999;
+	    		    result[l][s][4] = -999;
+		    	}
 	    	}
+	    	//Layer 1-8:
+	    	for(int l =0; l< Constants.NLAYR; l++) {
 	    	
-			return pointsAtPlanes;
-	    }
+		    	for (int s = 0; s<Constants.NSECT[l]; s++) {
+		    		
+		    		//double delta_phi = (double)s*2.*Math.PI/Constants.NSECT[l];
+		    				    		
+		    		double[] trkIntersInf=this.getIntersectionTrackWithModule(s,l,this._yxinterc , this._yxslope, this._yzinterc , this._yzslope,geo);
+		    		
+		    		threeVec p =  new threeVec(trkIntersInf[0],trkIntersInf[1],trkIntersInf[2]);
+		    		
+		    		if(p.len()==0)
+		    			continue;
+		    		   		
+		    		if( (p.rt()<=Math.sqrt(0.25*Constants.ACTIVESENLEN*Constants.ACTIVESENWIDTH+Constants.MODULERADIUS[l][0]*Constants.MODULERADIUS[l][0])) ){
+		    			      
+		    		    //double phi = Math.acos((-this._yxslope*Math.cos(delta_phi)-Math.sin(delta_phi))/Math.sqrt(1+this._yxslope*this._yxslope));
+		    		    
+		    		    //threeVec n =  new threeVec(-Math.sin(delta_phi), Math.cos(delta_phi), 0);
+		    		    //threeVec ui =  new threeVec(Math.cos(delta_phi), Math.sin(delta_phi), 0); //longitudinal vector along the local x direction of the module
+		    			
+		    			threeVec n =  geo.findBSTPlaneNormal(s+1, l+1);
+		    		    threeVec ui =  new threeVec(n.y(), -n.x(), 0); //longitudinal vector along the local x direction of the module
+		    			
+		    		    threeVec uj =  ui.cross(n); //longitudinal vector along the local z direction of the module
+		    		    
+		    		    double norm = Math.sqrt(this._yxslope*this._yxslope+this._yzslope*this._yzslope+1);
+					    
+					    threeVec u = new threeVec(this._yxslope/norm, 1/norm, this._yzslope/norm);
+					    
+					    if(p.y()<0)
+					    	u = new threeVec(-this._yxslope/norm, -1/norm, -this._yzslope/norm);
+					    
+		    		   double trkToMPlnAngl = Math.acos(u.dot(ui));
+		    		    
+					    double zl = u.dot(n);
+		    		    double xl = u.dot(ui);
+		    		    double yl = u.dot(uj);
+		    		    
+		    		    double phi = Math.atan2(yl, xl);
+		    		    double theta = Math.acos(zl);
+		    		    
+		    		    
+		    		    result[l][s][0] = p.x();
+		    		    result[l][s][1] = p.y();
+		    		    result[l][s][2] = p.z();
+		    		    result[l][s][3] = Math.toDegrees(phi);
+		    		    result[l][s][4] = Math.toDegrees(theta);   
+		    		    result[l][s][5] = Math.toDegrees(trkToMPlnAngl);  
+		    		    result[l][s][6] = trkIntersInf[3];
+		    		}	
+		    	}
+	    	}
+			return result;	
+		}
+
+
+		private double[] getIntersectionTrackWithModule(int s, int l,
+				double _yxinterc2, double _yxslope2, double _yzinterc2,
+				double _yzslope2, Geometry geo) {
+			// array [][][][] =[x][y][z][stripCentroid]
+			double[] inters = new double[4];
+			inters[0]=Double.NaN;
+    		inters[1]=Double.NaN;
+    		inters[2]=Double.NaN;
+    		inters[3]=Double.NaN;		
+    		
+			double epsilon=1e-6;
+			//double angle = 2.*Math.PI*((double) s/(double)Constants.NSECT[l]);
+			
+		   //threeVec n =  new threeVec(-Math.sin(angle), Math.cos(angle), 0);
+
+		    //double dot = -Math.sin(angle)*_yxslope2+Math.cos(angle);
+		    
+		    
+		    threeVec n = geo.findBSTPlaneNormal(s+1, l+1);
+  			
+  			double dot = (n.x()*_yxslope2+n.y());
+  			
+		    
+		    if(Math.abs(dot)>epsilon) {
+		    	//threeVec w = new threeVec(_yxinterc2+Constants.MODULERADIUS[l][0]*Math.sin(angle), -Constants.MODULERADIUS[l][0]*Math.cos(angle), _yzinterc2);
+		    	threeVec w = new threeVec(_yxinterc2-Constants.MODULERADIUS[l][0]*n.x(), -Constants.MODULERADIUS[l][0]*n.y(), _yzinterc2);
+		    	double y = -(n.x()*w.x()+n.y()*w.y()+n.z()*w.z())/dot;
+		    	//threeVec Delt = new threeVec(y*_yxslope2+_yxinterc2+Constants.MODULERADIUS[l][0]*Math.sin(angle),y-Constants.MODULERADIUS[l][0]*Math.cos(angle),0);
+		    	threeVec Delt = new threeVec(y*_yxslope2+_yxinterc2-Constants.MODULERADIUS[l][0]*n.x(),y-Constants.MODULERADIUS[l][0]*n.y(),0);
+		    	
+		    	if(Delt.len()<Constants.ACTIVESENWIDTH/2+Constants.TOLTOMODULEEDGE) {
+		    		inters[0]=y*_yxslope2+_yxinterc2;
+		    		inters[1]=y;
+		    		inters[2]=y*_yzslope2+_yzinterc2;
+		    		inters[3]=geo.calcNearestStrip(inters[0], inters[1], inters[2], l+1, s+1);		
+		    		}
+		    	return inters;
+		    }
+		    
+		    return inters;
+		}
+
+
+		
 	    
 		public Line3D getLine() {
 			
 			if(this._yxslope ==0 || this._yzslope==0 )
 				return new Line3D();
 			
-			double y_lineEnd = Constants.MODULERADIUS[7][0];
-			double y_lineOrig = -Constants.MODULERADIUS[7][0];
+			double y_lineEnd = 1000;
+			double y_lineOrig = -1000;
 			
 			double[] x = new double[2];
 			double[] y = new double[2];
@@ -257,133 +535,6 @@ public class CosmicTrack extends ArrayList<Cross> {
 			
 			return result;
 		}
-
-		
-		public void calcHitsSpatialResolution(Geometry geo) {
-			ArrayList<Point3D> pointsAtLayers = (ArrayList<Point3D>) this.get_trackInterModulePlanes() ;
-			
-            for(int crossIdx =0; crossIdx<this.size(); crossIdx++) {
-            	List<Cluster> crossClusList = new ArrayList<Cluster>();
-            	
-            	crossClusList.add(this.get(crossIdx).get_Cluster1());
-            	crossClusList.add(this.get(crossIdx).get_Cluster2());
-            	
-            	for(int clusIdx =0; clusIdx<crossClusList.size(); clusIdx++) {
-            		
-            		for(int hitIdx =0; hitIdx<crossClusList.get(clusIdx).size(); hitIdx++) {
-            			FittedHit stripHit = crossClusList.get(clusIdx).get(hitIdx);
-            			stripHit.get_Strip();
-            			
-            			int LayrIdx = (2*this.get(crossIdx).getCosmicsRegion()+stripHit.get_RegionSlayer()-3);
-            			
-            			double docaToTrk = geo.getDOCAToStrip( stripHit.get_Sector(), stripHit.get_Layer(), (double)stripHit.get_Strip(), 
-            					new threeVec(pointsAtLayers.get(LayrIdx).x(),pointsAtLayers.get(LayrIdx).y(),pointsAtLayers.get(LayrIdx).z()));
-            			stripHit.set_docaToTrk(docaToTrk);
-            			}
-            	}
-            }
-			
-		}
-		
-		public double calcHitSpatialResolution(Hit stripHit) {
-			if(stripHit == null) 
-				return Double.NaN;
-			
-			Line3D fitLine = this.getLine();
-            double docaToTrk = 0;
-            
-		/*	double x1 = Geometry.getEndPoints(stripHit.get_Layer(), stripHit.get_Sector(), stripHit.get_Strip()).getFirstEndPoint().x();
-			double y1 = Geometry.getEndPoints(stripHit.get_Layer(), stripHit.get_Sector(), stripHit.get_Strip()).getFirstEndPoint().y();
-			double z1 = Geometry.getEndPoints(stripHit.get_Layer(), stripHit.get_Sector(), stripHit.get_Strip()).getFirstEndPoint().z();
-			double x2 = Geometry.getEndPoints(stripHit.get_Layer(), stripHit.get_Sector(), stripHit.get_Strip()).getSecondEndPoint().x();
-			double y2 = Geometry.getEndPoints(stripHit.get_Layer(), stripHit.get_Sector(), stripHit.get_Strip()).getSecondEndPoint().y();
-			double z2 = Geometry.getEndPoints(stripHit.get_Layer(), stripHit.get_Sector(), stripHit.get_Strip()).getSecondEndPoint().z();
-			
-			Line3D stripLine = new Line3D(x1,y1,z1,x2,y2,z2);
-			
-			double docaToTrk = fitLine.distance(stripLine).length();
-        */    		
-			return docaToTrk;
-		}
-		
-	
-		private static int[] modulesLayerId; // layer used to id the plane by increasing index from the bottom up
-		private static int[] modulesSectorId; // and sector used to id the plane by increasing index from the bottom up
-		private void set_modulePlaneIds() {
-
-			if(Constants.TRACKERCOMPOSITION == "Stacked") {// test stand with up to 8 modules parallel
-				// layer 8 and sector 13 correspond to the bottom-most module 
-				// layer 7 and sector 13 correspond to the next module from the bottom up
-				// layer 6 and sector 10 correspond to the next module from the bottom up
-				// layer 5 and sector 10 correspond to the next module from the bottom up
-				// layer 4 and sector 8 correspond to the next module from the bottom up
-				// layer 3 and sector 8 correspond to the next module from the bottom up
-				// layer 2 and sector 6 correspond to the next module from the bottom up
-				// layer 1 and sector 6 correspond to the next module from the bottom up
-				// layer 1 and sector 1 correspond to the next module from the bottom up
-				// layer 2 and sector 1 correspond to the next module from the bottom up
-				// layer 3 and sector 1 correspond to the next module from the bottom up
-				// layer 4 and sector 1 correspond to the next module from the bottom up
-				// layer 5 and sector 1 correspond to the next module from the bottom up
-				// layer 6 and sector 1 correspond to the next module from the bottom up
-				// layer 7 and sector 1 correspond to the next module from the bottom up
-				// layer 8 and sector 1 correspond to the next module from the bottom up
-				int[] moduleLayerId = {7,6,5,4,3,2,1,0,0,1,2,3,4,5,6,7};
-				int[] moduleSectorId = {12,12,9,9,7,7,5,5,0,0,0,0,0,0,0,0};
-				
-				modulesLayerId = moduleLayerId;
-				modulesSectorId = moduleSectorId;
-			}
-		    
-		}
-		
-		
-		public int[] get_LayerEfficiencies(List<Hit> hits) {
-			
-			Line3D fitLine = this.getLine(); // get the track line
-			
-			int[] effs = null;
-			
-			
-			this.hitsToArray(hits);
-			if(HitArray == null)
-				return null;
-			
-			this.set_modulePlaneIds();			
-			
-		    effs = new int[modulesLayerId.length];
-			//initialize
-			for(int i = 0; i<modulesLayerId.length; i++) {
-					effs[i] =-1;
-			 }
-		
-			for(int i = 0; i<modulesLayerId.length; i++) {
-				
-				Shape3D theModule = Constants.MODULEPLANES.get(modulesLayerId[i]).get(modulesSectorId[i]); // layer and sector corresponding to that module 
-				
-				if(theModule.hasIntersection(fitLine))
-					effs[i] =0; // the track intersected the module
-				                // now look for a nearby hit
-				
-				if(HitArray[modulesLayerId[i]][modulesSectorId[i]].length>0){ // looking for hits in that module
-					for(int h = 0; h < Constants.NSTRIP; h++) {
-						if(HitArray[modulesLayerId[i]][modulesSectorId[i]][h]!=null) {
-							Hit theHit = HitArray[modulesLayerId[i]][modulesSectorId[i]][h];
-						
-							if(calcHitSpatialResolution(theHit)<Double.POSITIVE_INFINITY)
-								effs[i] =1;
-						}
-					}
-				}
-				//if(effs[i]==0)	
-				//	System.out.println(modulesLayerId.length+" layer "+(i+1)+" efficiency "+effs[i]);
-			}
-			
-			return effs;
-			
-			
-		}
-		
 
 		private Hit[][][] HitArray;
 		public void hitsToArray(List<Hit> hits2) {
@@ -405,16 +556,8 @@ public class CosmicTrack extends ArrayList<Cross> {
 		}
 
 
-		public List<Point3D> get_trackInterModulePlanes() {
-			return _trackInterModulePlanes;
-		}
-
-
-		public void set_trackInterModulePlanes(
-				List<Point3D> _trackInterModulePlanes) {
-			this._trackInterModulePlanes = _trackInterModulePlanes;
-		}
 		
+
 		public void update_Crosses(double s_yxfit, double s_yzslope, Geometry geo) {
 			for(Cross c : this) {
 				update_Cross(c, s_yxfit, s_yzslope, c.get_Sector(), c.get_Region(), geo);
@@ -426,12 +569,21 @@ public class CosmicTrack extends ArrayList<Cross> {
 			double x = s_yxfit/Math.sqrt(s_yxfit*s_yxfit+s_yzslope*s_yzslope+1);
 			double y = 1/Math.sqrt(s_yxfit*s_yxfit+s_yzslope*s_yzslope+1);
 			double z = s_yzslope/Math.sqrt(s_yxfit*s_yxfit+s_yzslope*s_yzslope+1);
-			
+					
 			threeVec trkDir = new threeVec(x,y,z);
-			if(trkDir!=null) {
-				
-				cross.set_CrossParams(trkDir, geo);
-				
+			
+			if(trkDir!=null) {			
+				cross.set_CrossParams(trkDir, geo);				
 			}
+		}
+
+
+		public double[][][] get_trackInterModulePlanes() {
+			return _trackInterModulePlanes;
+		}
+
+
+		public void set_trackInterModulePlanes(double[][][] _trackInterModulePlanes) {
+			this._trackInterModulePlanes = _trackInterModulePlanes;
 		}
 }

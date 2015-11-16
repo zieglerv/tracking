@@ -1,8 +1,11 @@
 package org.jlab.rec.bst;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 
 import org.jMath.Vector.threeVec;
+
 import trackfitter.surface.Line;
 import trackfitter.track.Helix;
 
@@ -35,14 +38,14 @@ public class Geometry {
  
 		//for making bst outline fig
 		
-		public threeVec getPlaneModuleOrigin(int layer, int sector) {
+		public threeVec getPlaneModuleOrigin(int sector, int layer) {
 			//shift the local origin to the physical orign instead of active area
 			threeVec point0 = new threeVec(0,0,0);
 			//point0.set(transformToLabFrame(-(42.000-40.052)/2., 0, layer, sector, 0));
 			point0.set(transformToFrame( sector,  layer, -(42.000-40.052), 0, 0, "lab", ""));
 			return point0;
 		}
-		public threeVec getPlaneModuleEnd(int layer, int sector) {
+		public threeVec getPlaneModuleEnd(int sector, int layer) {
 			//shift the local origin to the physical orign instead of active area
 			threeVec point0 = new threeVec(0,0,0);
 			//point0.set(transformToLabFrame(-(42.000-40.052)/2., 0, layer, sector, 0));
@@ -57,8 +60,8 @@ public class Geometry {
 			int Sect = Constants.NSECT[layer-1];
 			for(int s = 0; s<Constants.NSECT[layer-1]-1; s++) {
 				int sector = s+1;
-				double phi1 = this.getPlaneModuleOrigin(layer, sector).phi();
-				double phi2 = this.getPlaneModuleOrigin(layer, sector+1).phi();
+				double phi1 = this.getPlaneModuleOrigin(sector, layer).phi();
+				double phi2 = this.getPlaneModuleOrigin(sector+1, layer).phi();
 				if(phi1<0)
 					phi1+=2.*Math.PI;
 				if(phi2<0)
@@ -73,9 +76,9 @@ public class Geometry {
 		//***
 		public threeVec findBSTPlaneNormal(int sector, int layer) {
 			
-			double angle = 2.*Math.PI*((sector-1)/(double)Constants.NSECT[layer-1]);
-			
-		    return new threeVec(-Math.sin(angle), Math.cos(angle), 0);
+			//double angle = 2.*Math.PI*((double)(sector-1)/(double)Constants.NSECT[layer-1]) + Math.PI/2.;
+			double angle = 2.*Math.PI*((double)(sector-1)/(double)Constants.NSECT[layer-1]) + Constants.PHI0[layer-1];
+		    return new threeVec(Math.cos(angle), Math.sin(angle), 0);
 		}
 		//***
 		public  double[] getLocCoord(double s1, double s2) { //2 top, 1 bottom
@@ -111,10 +114,18 @@ public class Geometry {
 			
 			
 			Xerr[0] = Math.sqrt(sigma1*sigma1+sigma2*sigma2);
-			Xerr[1] = (getLocCoord( s1-0.5,  s2-0.5)[1]+
-					-getLocCoord( s1+0.5,  s2+0.5)[1]);
+			
+			Xerr[1] = (getLocCoord( s1-0.5,  s2-0.5)[1]
+						-getLocCoord( s1+0.5,  s2+0.5)[1]);
+			
 			//Xerr[0] = (getLocCoord( s1-0.5,  s2-0.5)[0]+
 			//		-getLocCoord( s1+0.5,  s2+0.5)[0]);
+			if(s1<=1)
+				Xerr[1] = (getLocCoord( s1,  s2-0.5)[1]
+						-getLocCoord( s1+1.5,  s2+0.5)[1]);
+			if(s2<=1)
+				Xerr[1] = (getLocCoord( s1-0.5,  s2)[1]
+						-getLocCoord( s1+1.5,  s2+2.5)[1]);
 			
 			return Xerr;
 			
@@ -161,22 +172,16 @@ public class Geometry {
 		//*** point and its error
 		public  double[] getCrossPars(int sector, int upperlayer, double s1, double s2, String frame, threeVec trkDir) {
 			double[] vals = new double[6];
-			double z0 = getLocCoord(s1,s2)[1];
 			
 			// if first iteration trkDir == null
 			double s2corr = s2;
+			// now use track info
+			s2corr = this.getCorrectedStrip( sector,  upperlayer,  s2,  trkDir,  Constants.MODULELENGTH);
+			double z =getLocCoord(s1,s2corr)[1];
+			//update using the corrected z
+			s2corr = this.getCorrectedStrip( sector,  upperlayer,  s2,  trkDir,  z);
 			
-			if(trkDir!=null) { // for some reason the algorithm is not working for s =1 ... may the digi has an issue
-				s2corr = s2 + (double)getStripIndexShift( sector,  upperlayer,  trkDir, s2, z0);
-				//update using corrected z
-				z0 = getLocCoord(s1,s2corr)[1];
-				s2corr = s2 + (double)getStripIndexShift( sector,  upperlayer,  trkDir, s2, z0);
-			}
-			
-			 if(s2 == 1)
-				 s2corr =s2;
-			double zf = z0 = getLocCoord(s1,s2corr)[1];
-			
+			double zf =getLocCoord(s1,s2corr)[1];
 			
 			if(upperlayer%2!=0) // should not happen as is upper layer...but just in case
 				s2corr =s2;
@@ -199,10 +204,17 @@ public class Geometry {
 			
 			 // global rotation angle to get the error in the lab frame
 			int layerIdx = upperlayer-1;
-	        double Glob_rangl = ((double) (sector-1)/(double) Constants.NSECT[layerIdx])*2.*Math.PI;
+	       /*
+			double Glob_rangl = ((double) (sector-1)/(double) Constants.NSECT[layerIdx])*2.*Math.PI;
 	        // angle to rotate to global frame
 	        double Loc_to_Glob_rangl = Glob_rangl-Constants.PHI0[layerIdx];
-	       
+	       */
+			// global rotation angle
+			double Glob_rangl = ((double) (sector-1)/(double) Constants.NSECT[layerIdx])*2.*Math.PI + Constants.PHI0[layerIdx];
+			// angle to rotate to global frame
+			double Loc_to_Glob_rangl = Glob_rangl-Constants.LOCZAXISROTATION;
+
+						
 	        double cosRotation = Math.cos(Loc_to_Glob_rangl);
 	        double sinRotation = Math.sin(Loc_to_Glob_rangl);	        
 
@@ -213,14 +225,137 @@ public class Geometry {
 			vals[4] = yerr;
 			vals[5] = LCErr_z;
 			
-			return vals;
+			//if the local cross is not in the fiducial volume it is not physical
+			if ( (trkDir!=null && (LC_x<0 || LC_x>Constants.ACTIVESENWIDTH+Constants.TOLTOMODULEEDGE) ) || 
+					(trkDir!=null && (LC_z<-Constants.interTol || LC_z>Constants.MODULELENGTH + Constants.interTol) ))
+				return new double[] {Double.NaN,0,Double.NaN,Double.NaN, Double.NaN, Double.NaN};
+				
+			double[] values = new double[6];
+			if(frame == "lab")
+				values = vals;
+			if(frame == "local")
+				values = new double[] {LC_x,0,LC_z,LCErr_x, 0, LCErr_z};
 			
-			
+			return values;
 			
 			
 		}
 		
-		
+		private double getCorrectedStrip(int sector, int upperlayer, double s2,
+				threeVec trkDir, double ZalongModule) {
+			double s2corr = s2;
+			// second iteration: there is a track direction
+			if(trkDir!=null) { 
+				double stripCorr = getStripIndexShift( sector,  upperlayer,  trkDir, s2, ZalongModule);
+				if(s2>1)
+					s2corr = s2 + stripCorr;	
+				if(s2==1) {
+					if(stripCorr>=0)
+						s2corr = s2 + stripCorr;	
+					if(stripCorr<0)
+						s2corr = s2;
+				}
+			}
+			return s2corr;
+		}
+
+		public double calcNearestStrip(double X, double Y, double Z, int layer, int sect) {
+			
+			threeVec LocPoint = this.transformToFrame( sect, layer, X, Y, Z, "local", "");
+			
+			double x = LocPoint.x();
+			double z = LocPoint.z();
+			
+			double alpha = Constants.STEREOANGLE/(double) (Constants.NSTRIP-1); 
+			
+			double b = Constants.ACTIVESENWIDTH;
+			double P = Constants.PITCH;
+			
+			double s = -1;
+			
+			
+			 if(layer%2==1) {//layers 1,3,5 == bottom ==i ==>(1) : regular configuration
+				//m1,b1
+				s = (int) Math.floor((-x+b+alpha*z)/(alpha*z+P));	
+				
+				double delta = 99999;
+				double sdelta = delta;
+				double newStrip = s;
+				for(int i = -1; i<2; i++) {
+					double sp = s+(double)i;
+					double x_calc = -Math.tan((sp-1)*alpha)*z+b-sp*P;
+					
+					if(Math.abs(x-x_calc)<delta) {
+						sdelta = x-x_calc;
+						delta = Math.abs(sdelta);
+						newStrip = sp;
+					}				
+				}
+				
+				s=newStrip;
+				for(int i = -10; i<=10; i++) {
+					double sp = s+(double)i*0.1;
+					double x_calc = -Math.tan((sp-1)*alpha)*z+b-sp*P;
+					
+					if(Math.abs(x-x_calc)<delta) {
+						sdelta = x-x_calc;
+						delta = Math.abs(sdelta);
+						newStrip = sp;
+					}	
+				}
+				s=newStrip;
+				// charge sharing digitization routine in GEMC
+				/*if(sdelta>(P+z*Math.tan(alpha))/4.)
+					s= newStrip-0.5;
+				if(sdelta<-(P+z*Math.tan(alpha))/4.)
+					s= newStrip+0.5;
+				//s=(-x+b+alpha*z)/(alpha*z+P); */
+				
+			}
+			if(layer%2==0) { 
+				 //layers 2,4,6 == top ==j ==>(2) : regular configuration
+				//m2,b2		
+				s = (int) Math.floor((x+alpha*z)/(alpha*z+P));	
+				
+				double delta = 99999;
+				double sdelta = delta;
+				double newStrip = s;
+				for(int i = -1; i<2; i++) {
+					double sp = s+(double)i;
+					double x_calc = Math.tan((sp-1)*alpha)*z+sp*P;
+					
+					if(Math.abs(x-x_calc)<delta) {
+						sdelta = x-x_calc;
+						delta = Math.abs(sdelta);
+						newStrip = sp;
+					}				
+				}
+				
+				s=newStrip;
+				for(int i = -10; i<=10; i++) {
+					double sp = s+(double)i*0.1;
+					double x_calc = Math.tan((sp-1)*alpha)*z+sp*P;
+					
+					if(Math.abs(x-x_calc)<delta) {
+						sdelta = x-x_calc;
+						delta = Math.abs(sdelta);
+						newStrip = sp;
+					}	
+				}
+				s=newStrip;
+				// charge sharing digitization routine in GEMC
+				/*if(sdelta>(P+z*Math.tan(alpha))/4.)
+					s= newStrip+0.5;
+				if(sdelta<-(P+z*Math.tan(alpha))/4.)
+					s= newStrip-0.5;
+				//s=(x+alpha*z)/(alpha*z+P); */
+				
+			}	
+			if(s<0.5)
+				s=1;
+			//System.out.println(" layer "+layer+" sector "+sect+" strip "+s);
+			return s;
+		}
 		//****
 		public  double getSingleStripResolution(int lay, int strip, double Z) { // as a function of local z
 			double Strip = (double) strip;
@@ -273,23 +408,25 @@ public class Geometry {
 
 			threeVec vecAlongStrip = new threeVec();
 			threeVec pointOnStrip = new threeVec();
-			
+			threeVec LocPoint = this.transformToFrame( sector, layer, point0.x(), point0.y(), point0.z(), "local", "");
 			
 			if(layer%2==0) { //layers 2,4,6 == top ==j ==>(2) : regular configuration
-				vecAlongStrip = transformToFrame( sector,  layer, m2, 0, 1, "lab", ""); 
-				pointOnStrip = transformToFrame( sector,  layer, b2, 0, 0, "lab", "");					
+				vecAlongStrip = new threeVec(m2, 0, 1); 
+				pointOnStrip = new threeVec(b2, 0, 0);					
 			}
 			if(layer%2==1) { //layers 1,3,5 == bottom ==i ==>(1) : regular configuration
-				vecAlongStrip = transformToFrame( sector,  layer, m1, 0, 1, "lab", ""); 
-				pointOnStrip = transformToFrame( sector,  layer, b1, 0, 0, "lab", "");		
+				vecAlongStrip = new threeVec(m1, 0, 1); 
+				pointOnStrip = new threeVec(b1, 0, 0);		
 			}	
 
 			if(vecAlongStrip.len()>0)
-			vecAlongStrip.multi(1./vecAlongStrip.len());
+				vecAlongStrip.multi(1./vecAlongStrip.len());
 
-			Line stripLine = new Line(pointOnStrip,vecAlongStrip);
+			threeVec r = LocPoint.diff(pointOnStrip);
 			
-			return stripLine.distanceFromPoint(point0);
+			threeVec d = r.cross(vecAlongStrip);
+			
+			return d.y();
 			
 		}
 		//****
@@ -326,33 +463,36 @@ public class Geometry {
 		
 		//***
 		public  double getStripIndexShift(int sector, int layer, threeVec trkDir, double s2, double z) {
+			
 			double tx = trkDir.x();
 			double ty = trkDir.y();
 			threeVec trkDir_t = new threeVec(tx/Math.sqrt(tx*tx+ty*ty),ty/Math.sqrt(tx*tx+ty*ty),0);
 			threeVec n = findBSTPlaneNormal(sector, layer);
 			
-			int sign = 1;
-			if(Math.acos(n.dot(trkDir_t))>Math.PI/2)
-				sign = -1;
+			if(Constants.isCosmicsData && Math.acos(n.dot(trkDir_t))>Math.PI/2) // flip the direction of the track for y<0 for cosmics
+				trkDir_t = new threeVec(-trkDir_t.x(),-trkDir_t.y(),0);
+			
+			double TrkToPlnNormRelatAngl = Math.acos(n.dot(trkDir_t));
+			double sign = Math.signum(n.cross(trkDir_t).z());	
 		   // int shift = (int)((Constants.LAYRGAP*n.cross(trkDir_t).z())/Constants.PITCH);
 		    //
 		    //correction to the pitch to take into account the grading of the angle -- get the upper or lower strip depending on the trkdir
 			double pitchcorr = Constants.PITCH;
-			/*
-			int sign = (int) Math.signum(n.cross(trkDir_t).z());
-			if(sign>0)
-				pitchcorr+=z*(Math.tan((s2)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1))-
-					Math.tan((s2-1)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1)));		
-			if(sign<0)
-				pitchcorr+=z*(Math.tan((s2-1)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1))-
-					Math.tan((s2-2)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1)));		
-			 */
 			
-			//	pitchcorr+=0.5*z*(Math.tan((s2)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1))-
-			//			Math.tan((s2-2)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1)));
+			 if(s2>2 && s2<255) {
+				double pitchToNextStrp = Math.abs(getXAtZ(layer, (double) s2+1,z)-getXAtZ(layer, (double) s2,z)); 
+				double pitchToPrevStrp = Math.abs(getXAtZ(layer, (double) s2-1,z)-getXAtZ(layer, (double) s2,z)); 
+				pitchcorr = (pitchToNextStrp+pitchToPrevStrp)/2;
+			}
+			if(s2<=2)
+				pitchcorr = Math.abs(getXAtZ(layer, (double) s2+1,z)-getXAtZ(layer, (double) s2,z)); 
+			if(s2==256)
+				pitchcorr = Math.abs(getXAtZ(layer, (double) s2-1,z)-getXAtZ(layer, (double) s2,z)); 
+			
 			double layerGap = Constants.MODULERADIUS[1][0]-Constants.MODULERADIUS[0][0];
-			double shift = ((sign*layerGap*n.cross(trkDir_t).z())/pitchcorr);
 			
+			double shift = sign*layerGap*Math.tan(TrkToPlnNormRelatAngl)/pitchcorr;
+			//System.out.println("pitch "+pitchcorr+" shift is "+ shift +" at layer "+layer +" and sector "+sector);
 			return shift;
 		}
 		//***
@@ -403,18 +543,52 @@ public class Geometry {
 		}
 		
 		
-	
-	
-    
-	
-
-		
 	      public static void main (String arg[]) throws FileNotFoundException {
 	    	 
 	    	  Constants.Load();
+	    	  Geometry geo = new Geometry();
+	    	  System.out.println(geo.findBSTPlaneNormal(6, 1).toString());
+	    	  threeVec p1i = new threeVec(-17.35,-68.28,-286.45);
+	    	  threeVec p2i = new threeVec(17.35,-68.28,-286.45);
+	    	  threeVec p3i = new threeVec(3.5,-68.28,122.42);
+	    	  p1i.diffi(p3i);
+	    	  p2i.diffi(p3i);
+	    	  
+	    	  threeVec ni = (p1i.cross(p2i));
+	    	  ni.multi(1./ni.len());
+	    	  System.out.println(ni.toString());
+	    	  
+	    	  threeVec p1 = new threeVec(-17.33,-68.30,-286.24);
+	    	  threeVec p2 = new threeVec(17.34,-68.21,-286.18);
+	    	  threeVec p3 = new threeVec(3.97,-68.70,122.60);
+	    	  p1.diffi(p3);
+	    	  p2.diffi(p3);
+	    	  
+	    	  threeVec n = (p1.cross(p2));
+	    	  n.multi(1./n.len());
+	    	  System.out.println(n.toString());
 	    	  
 	    	  
-	    		
+	    	  
+	    	// global rotation angle
+				double Glob_rangl = ((double) (6-1)/(double) Constants.NSECT[1-1])*2.*Math.PI + Constants.PHI0[1-1];
+				// angle to rotate to global frame
+				double Loc_to_Glob_rangl = Glob_rangl-Constants.LOCZAXISROTATION;
+
+				
+				
+				//rotate and translate
+				double cosRotation = Math.cos(Loc_to_Glob_rangl);
+				double sinRotation = Math.sin(Loc_to_Glob_rangl);
+
+				System.out.println(cosRotation+" "+sinRotation);
+	    	  
+	    	  System.out.println(n.dot(p3));
+	    	  System.out.println(ni.dot(p3i));
+	    	  
+	    	  PrintWriter pw = new PrintWriter(new File("/Users/ziegler/bst_geo_test.txt"));
+	    	  pw.printf(geo.findBSTPlaneNormal(6, 1).toString());
+	    	  pw.close();
 	    	  //System.out.println(Constants.MODULEPLANES.get(0).get(0).hasIntersection(1));
 	    	  /*
 	    		PrintWriter pw = new PrintWriter(new File("/Users/ziegler/bst_new_strips.txt"));
