@@ -54,7 +54,7 @@ public class RecoBankWriter {
 	 */
 	public static EvioDataBank fillClustersBank(EvioDataEvent event, List<Cluster> cluslist) {
 
-		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BSTRec::Clusters",cluslist.size());
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BMTRec::Clusters",cluslist.size());
 		int[] hitIdxArray= new int[5];
 		
 		for(int i =0; i< cluslist.size(); i++) {
@@ -96,7 +96,7 @@ public class RecoBankWriter {
 	 */
 	public static EvioDataBank fillCrossesBank(EvioDataEvent event, List<Cross> crosslist) {
 
-		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BSTRec::Crosses",crosslist.size());
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BMTRec::Crosses",crosslist.size());
     
 		for(int i =0; i< crosslist.size(); i++) {
 			bank.setInt("ID",i, crosslist.get(i).get_Id());
