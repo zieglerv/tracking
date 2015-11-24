@@ -120,5 +120,24 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	public void set_AssociatedTrackID(int _AssociatedTrackID) {
 		this._AssociatedTrackID = _AssociatedTrackID;
 	}
+	public void set_ParametersOfHit(Hit hit) {
+		this.set_Id(hit.get_Id());
+		if(this.get_Layer()%2==0) { // C-dtectors
+			// set z
+			this.set_Z(hit.get_Z());
+			//  z err
+			this.set_ZErr(hit.get_ZErr());
+			// strip number taking into account Lorentz angle correction (for Z detectors)
+			this.set_LCStrip(hit.get_LCStrip());
+		}
+		if(this.get_Layer()%2==1) { // Z-dtectors
+			//set phi
+			this.set_Phi(hit.get_Phi());
+			//set err on phi
+			this.set_PhiErr(hit.get_PhiErr());
+		}
+	}
+	
+	
 	
 }

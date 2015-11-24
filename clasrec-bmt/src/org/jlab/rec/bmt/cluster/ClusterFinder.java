@@ -72,7 +72,11 @@ public class ClusterFinder  {
 					// strip until there's a strip with no hit
 					while(HitArray[si][l] != null  && si<nstrip)
 					{
-						hits.add(new FittedHit(HitArray[si][l].get_Sector(),HitArray[si][l].get_Layer(),HitArray[si][l].get_Strip(),HitArray[si][l].get_Edep()));
+						FittedHit hitInCls = new FittedHit(HitArray[si][l].get_Sector(),HitArray[si][l].get_Layer(),HitArray[si][l].get_Strip(),HitArray[si][l].get_Edep());
+						//hitInCls.set_Id(HitArray[si][l].get_Id());
+						hitInCls.set_ParametersOfHit(HitArray[si][l]);
+						hits.add(hitInCls);
+						
 						si++;
 					}
 					

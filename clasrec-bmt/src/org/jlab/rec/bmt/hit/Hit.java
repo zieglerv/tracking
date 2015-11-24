@@ -109,7 +109,7 @@ public class Hit implements Comparable<Hit>{
 		
 		if(this.get_Layer()%2==0) { // C-dtectors
 			// set z
-			double z = geo.CRCStrip_GetZ(this.get_Sector(),this.get_Layer(), this.get_Strip());
+			double z = geo.CRCStrip_GetZ(this.get_Layer(), this.get_Strip());
 			this.set_Z(z);
 			// max z err
 			this.set_ZErr(Constants.SigmaMax);

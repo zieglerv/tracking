@@ -224,17 +224,17 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 		Cluster Zcluster = this.get_Cluster1();  // Z detector
 		Cluster Ccluster = this.get_Cluster2(); // C detector
 		
-		double phiC = Ccluster.get_Phi();
-		double phiCerr = Ccluster.get_PhiErr();
-		double z = Zcluster.get_Z();
-		double zErr = Zcluster.get_ZErr();
+		double phi = Zcluster.get_Phi();
+		double phierr = Zcluster.get_PhiErr();
+		double z = Ccluster.get_Z();
+		double zErr = Ccluster.get_ZErr();
 		double R = Constants.CRCRADIUS[Ccluster.get_Region()-1];
 		
-		double x = R*Math.cos(phiC);
-		double y = R*Math.sin(phiC);
+		double x = R*Math.cos(phi);
+		double y = R*Math.sin(phi);
 		
-		double xErr = -R*Math.sin(phiC)*phiCerr;
-		double yErr =  R*Math.cos(phiC)*phiCerr;
+		double xErr = -R*Math.sin(phi)*phierr;
+		double yErr =  R*Math.cos(phi)*phierr;
 		
 		this.set_Point(new Point3D(x,y,z));
 		this.set_PointErr(new Point3D(xErr,yErr,zErr));
@@ -276,7 +276,7 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 	 * @return the track info.
 	 */
 	public String printInfo() {
-		String s = "fmt cross: ID "+this.get_Id()+" trkID "+ this.get_AssociatedTrackID()+" Sector "+this.get_Sector()+" Region "+this.get_Region()
+		String s = "BMT cross: ID "+this.get_Id()+" trkID "+ this.get_AssociatedTrackID()+" Sector "+this.get_Sector()+" Region "+this.get_Region()
 				+" Point "+this.get_Point().toString();
 		return s;
 	}

@@ -53,6 +53,7 @@ public class HitReader {
 		
 		EvioDataBank bankDGTZ = (EvioDataBank) event.getBank("BMT::dgtz");
         
+		int[] id = bankDGTZ.getInt("hitn");
         int[] sector = bankDGTZ.getInt("sector");
 		int[] layer = bankDGTZ.getInt("layer");
 		int[] strip = bankDGTZ.getInt("strip");
@@ -62,12 +63,12 @@ public class HitReader {
 		
 		if(event.hasBank("BMT::dgtz")==true) {
 			for(int i = 0; i<size; i++){
-			
+			  
 	    	  Hit hit = new Hit(sector[i], layer[i], strip[i], Edep[i]);
-	    	  hit.set_Id(i);
+	    	  hit.set_Id(id[i]);
 	    	  
 	    	  //use only hits with signals
-	          if(strip[i]!=-1){
+	          if(strip[i]!=-1 && Edep[i]>0.0001){
 	        	  hit.calc_StripParams(geo); // for Z detectors the Lorentz angle shifts the strip measurement; calc_Strip corrects for this effect
 	              hits.add(hit); 
 	          }

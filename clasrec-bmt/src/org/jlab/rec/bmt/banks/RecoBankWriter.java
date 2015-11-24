@@ -99,6 +99,7 @@ public class RecoBankWriter {
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BMTRec::Crosses",crosslist.size());
     
 		for(int i =0; i< crosslist.size(); i++) {
+			System.out.println(" fill cross "+crosslist.get(i).printInfo());
 			bank.setInt("ID",i, crosslist.get(i).get_Id());
 			bank.setInt("sector",i, crosslist.get(i).get_Sector());	
 			bank.setInt("region", i, crosslist.get(i).get_Region());

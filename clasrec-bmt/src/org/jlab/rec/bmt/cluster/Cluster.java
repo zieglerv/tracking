@@ -6,7 +6,7 @@ import org.jlab.rec.bmt.hit.FittedHit;
 import org.jlab.rec.bmt.hit.Hit;
 
 /**
- *  A cluster in the fmt consists of an array of hits that are grouped together according to the algorithm of the ClusterFinder class
+ *  A cluster consists of an array of hits that are grouped together according to the algorithm of the ClusterFinder class
  * @author ziegler
  *
  */
@@ -15,8 +15,8 @@ public class Cluster extends ArrayList<FittedHit> {
 	private static final long serialVersionUID = 9153980362683755204L;
 
 
-	private int _Sector;      							//	    sector[1...24]
-	private int _Layer;    	 							//	    layer [1,...8]
+	private int _Sector;      							//	    sector[1...3]
+	private int _Layer;    	 							//	    layer [1,...6]
 	private int _Id;									//		cluster Id
 
 	/**
@@ -111,7 +111,7 @@ public class Cluster extends ArrayList<FittedHit> {
      * @return cluster info. about location and number of hits contained in it
      */
 	public String printInfo() {
-		String s = "fmt cluster: ID "+this.get_Id()+" Sector "+this.get_Sector()+" Superlayer "+this.get_Layer()+" Size "+this.size();
+		String s = "BMT cluster: ID "+this.get_Id()+" Sector "+this.get_Sector()+" Layer "+this.get_Layer()+" Size "+this.size();
 		return s;
 	}
 	
@@ -143,12 +143,13 @@ public class Cluster extends ArrayList<FittedHit> {
 		double weightedZErrSq = 0;
 		
 		int nbhits = this.size();
+		System.out.println("NUmber of hits in cluster "+nbhits);
 		if(nbhits != 0) {
 			
 			int layer = this.get_Layer();
 			
 			for(int i=0;i<nbhits;i++) {
-				Hit thehit = this.get(i);
+				FittedHit thehit = this.get(i);
 				double strpEn = thehit.get_Edep();
 				int strpNb = -1;
 				
@@ -181,6 +182,7 @@ public class Cluster extends ArrayList<FittedHit> {
 		_TotalEnergy = totEn;
 		_Centroid = stripNumCent;
 		if( this.get_Layer()%2==1) {
+			
 			_Phi = phiCent;
 			_PhiErr = phiErrCent;
 		}
@@ -188,6 +190,7 @@ public class Cluster extends ArrayList<FittedHit> {
 			_Z = zCent;
 			_ZErr = zErrCent;
 		}
+		System.out.println(this.printInfo()+" phi "+this.get_Phi());
 	}
 	
 	/**
@@ -204,7 +207,7 @@ public class Cluster extends ArrayList<FittedHit> {
 			double totEn = 0.;
 			
 			for(int i=0;i<nbhits;i++) {
-				Hit thehit = this.get(i);
+				FittedHit thehit = this.get(i);
 				double strpEn = thehit.get_Edep();
 				totEn = totEn + strpEn;
 			}

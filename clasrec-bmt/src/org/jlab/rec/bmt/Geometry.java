@@ -16,7 +16,26 @@ public class Geometry {
 	// The outer layer contain arched strips at a non-constant pitch in Z. This is called the C layer.
 	// The cylinder phi profile in divided into 3 sectors, A, B, C.
 	// 
-	
+	/**
+	 * 
+	 * @param sector
+	 * @return detector index A (=0), B (=1), C (=2)
+	 */
+	public int getDetectorIndex(int sector) {
+		//sector 1 corresponds to detector B, 2 to A,  3 to C
+		// A is detIdx 0, B 1, C 2.
+		int DetIdx = -1;
+		if(sector == 1)
+			DetIdx = 1;
+		if(sector == 2)
+			DetIdx = 0;
+		if(sector == 3)
+			DetIdx = 2;
+		
+		return DetIdx;
+		
+	}
+
 	/**
 	 * 
 	 * @param sector the sector in CLAS12 1...3
@@ -28,13 +47,13 @@ public class Geometry {
 	    // Sector = num_detector + 1;	
 	    // num_detector = 0 (region A), 1 (region B), 2, (region C)
 	    //For CRZ, this function returns the angle to localize the  center of strip "num_strip" for the "num_detector"
-		int num_detector = sector - 1; 			// index of the detector (0...2)
-		int num_strip = strip - 1;     			// index of the strip (starts at 0)
-		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
+		int num_detector = this.getDetectorIndex(sector); 				// index of the detector (0...2)
+		int num_strip = strip - 1;     									// index of the strip (starts at 0)
+		int num_region = (int) (layer+1)/2 - 1; 						// region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
 
-		//double angle=Constants.CR6Z_edge[num_detector]+(Constants.CR6Z_Xpos+(Constants.CR6Z_width/2.+num_strip*(Constants.CR6Z_width+Constants.CR6Z_spacing)))/Constants.CR6Z_radius;
 		double angle=Constants.CRZEDGE1[num_region][num_detector]+(Constants.CRZXPOS[num_region]+(Constants.CRZWIDTH[num_region]/2.+num_strip*(Constants.CRZWIDTH[num_region]+Constants.CRZSPACING[num_region])))/Constants.CRZRADIUS[num_region];
 		if (angle>2*Math.PI) angle-=2*Math.PI;
+
 		return angle; //in rad 
 	}
 
@@ -95,7 +114,7 @@ public class Geometry {
 		// Sector = num_detector + 1;	
 	    // num_detector = 0 (region A), 1 (region B), 2, (region C)
 	    
-		int num_detector = sector - 1; 			// index of the detector (0...2)
+		int num_detector = this.getDetectorIndex(sector); 			// index of the detector (0...2)
 		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
 		
 		//For CRC, this function returns the angle to localize the beginning of the strips
@@ -114,8 +133,8 @@ public class Geometry {
 		// Sector = num_detector + 1;	
 	    // num_detector = 0 (region A), 1 (region B), 2, (region C)
 	    
-		int num_detector = sector - 1; 			// index of the detector (0...2)
-		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
+		int num_detector = this.getDetectorIndex(sector); 			// index of the detector (0...2)
+		int num_region = (int) (layer+1)/2 - 1; 					// region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
 		
 		//For CRC, this function returns the angle to localize the end of the strips
 		double angle=Constants.CRCEDGE1[num_region][num_detector]+(Constants.CRCXPOS[num_region]+Constants.CRCLENGTH[num_region])/Constants.CRCRADIUS[num_region];
@@ -125,12 +144,11 @@ public class Geometry {
 
 	/**
 	 * 
-	 * @param sector the hit sector
 	 * @param layer the hit layer
 	 * @param strip the hit strip
 	 * @return the z position in mm for the C-detectors
 	 */
-	public double CRCStrip_GetZ(int sector, int layer, int strip){
+	public double CRCStrip_GetZ(int layer, int strip){
 		
 		int num_strip = strip - 1;     			// index of the strip (starts at 0)
 		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
@@ -155,65 +173,44 @@ public class Geometry {
 	}
 
 	/**
-	 * 
-	 * @param sector 
+	 *
 	 * @param layer
 	 * @param trk_z the track z position of intersection with the C-detector
 	 * @return the C-strip
 	 */
-	public int getCStrip(int sector, int layer, double trk_z) { 
+	public int getCStrip(int layer, double trk_z) { 
 		
 		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
-		double Zb=0;
-		double Z0 =0;
-		
 		int strip_group = 0;
+		int ClosestStrip =-1;
+		// get group
+		int len = Constants.CRCGROUP[num_region].length;
+		double[] Z_lowBound = new double[len];
+		double[] Z_uppBound = new double[len];
+		int[] NStrips = new int[len];
 		
-		int ClosestStp = -1;
+		double zi= Constants.CRCZMIN[num_region]+Constants.CRCOFFSET[num_region];
+		double z = trk_z - zi;
 		
-		for(int i =0; i< Constants.CRCGROUP[num_region].length; i++) {
+		Z_lowBound[0] = Constants.CRCWIDTH[num_region][0]/2.; // the lower bound is the zMin+theOffset with half the width
+		Z_uppBound[0] = Z_lowBound[0]
+						   + (Constants.CRCGROUP[num_region][0]-1)*(Constants.CRCWIDTH[num_region][0]+ Constants.CRCSPACING[num_region]);
+		NStrips[0] = Constants.CRCGROUP[num_region][0];
+		for(int i =1; i< len; i++)
+		{
+			Z_lowBound[i] = Z_uppBound[i-1] + Constants.CRCWIDTH[num_region][i-1]/2. + Constants.CRCSPACING[num_region] + Constants.CRCWIDTH[num_region][i]/2.;
+			Z_uppBound[i] = Z_lowBound[i] + (Constants.CRCGROUP[num_region][i]-1)*(Constants.CRCWIDTH[num_region][i] + Constants.CRCSPACING[num_region]);
 			
-			int group =i;
-			double zi= Constants.CRCZMIN[num_region]+Constants.CRCOFFSET[num_region];
-			double z0 = Constants.CRCWIDTH[num_region][group]/2.;
-			double zb = Constants.CRCGROUP[num_region][group]*(Constants.CRCWIDTH[num_region][group] + Constants.CRCSPACING[num_region]) ;
+			NStrips[i] = NStrips[i-1] + Constants.CRCGROUP[num_region][i];
 			
-			
-			double z = trk_z - zi;
-			z=Math.ceil(z*100000)/100000; // some rounding issue
-			Z0+=z0;
-			Zb=zb+Z0;
-			
-			if(z>=Z0 && z<Zb) {
-				strip_group = group;
-				int min_strip = 1;
-				for(int g =0; g<strip_group; g++)
-					min_strip+=Constants.CRCGROUP[num_region][g];
-				int max_strip = min_strip + Constants.CRCGROUP[num_region][strip_group];
-								
-				double StripDiffMin = Constants.CRCLENGTH[num_region];
-				
-				for(int nCstrpNb = min_strip; nCstrpNb<=max_strip; nCstrpNb++) {
-					double zstp = CRCStrip_GetZ(sector, layer, nCstrpNb ) -zi; //  c strip
-					zstp = Math.ceil(zstp*100000)/100000;
-					
-					double StripDiffCalc = Math.abs(z-zstp);
-					if(StripDiffCalc<StripDiffMin) {
-						StripDiffMin = StripDiffCalc;
-						ClosestStp = nCstrpNb;
-					} else {
-						break;
-					}
-				}
-			}
-			Z0+=zb;
-		}	
-		
-		
-		if(ClosestStp<1 || ClosestStp>Constants.CRCNSTRIPS[num_region])
-			ClosestStp = -1;
-		
-		return ClosestStp;
+			if(z>=Z_lowBound[i] && z<=Z_uppBound[i]) {
+				strip_group = i;
+				ClosestStrip = 1 + (int) (Math.round(((z-Z_lowBound[strip_group])/(Constants.CRCWIDTH[num_region][strip_group] + Constants.CRCSPACING[num_region]))))+NStrips[i-1];
+
+				len =i;
+			} 
+		}
+		return ClosestStrip;
 	}
 	
 	/**
@@ -375,7 +372,9 @@ public int isInSector(int layer, double angle) {
 	public double LorentzAngleCorr(double phi, int layer) {
 
 		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
+		
 		return phi +( Constants.hDrift/2*Math.tan(Constants.ThetaL) )/Constants.CRZRADIUS[num_region];
+		
 	}
 	
 	// Correct strip position before clustering
@@ -392,8 +391,43 @@ public int isInSector(int layer, double angle) {
 		
 		Constants.Load();		
 		Geometry geo = new Geometry();
+		
+		double trk_z = 0;
+		
+		int layer = 5;
+		
+		
+		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
+		int strip_group = 0;
+		int ClosestStrip =-1;
+		// get group
+		int len = Constants.CRCGROUP[num_region].length;
+		double[] Z_lowBound = new double[len];
+		double[] Z_uppBound = new double[len];
+		int[] NStrips = new int[len];
+		
+		double zi= Constants.CRCZMIN[num_region]+Constants.CRCOFFSET[num_region];
+		double z = trk_z - zi;
+		
+		Z_lowBound[0] = Constants.CRCWIDTH[num_region][0]/2.; // the lower bound is the zMin+theOffset with half the width
+		Z_uppBound[0] = Z_lowBound[0]
+						   + (Constants.CRCGROUP[num_region][0]-1)*(Constants.CRCWIDTH[num_region][0]+ Constants.CRCSPACING[num_region]);
+		NStrips[0] = Constants.CRCGROUP[num_region][0];
+		for(int i =1; i< len; i++)
+		{
+			Z_lowBound[i] = Z_uppBound[i-1] + Constants.CRCWIDTH[num_region][i-1]/2. + Constants.CRCSPACING[num_region] + Constants.CRCWIDTH[num_region][i]/2.;
+			Z_uppBound[i] = Z_lowBound[i] + (Constants.CRCGROUP[num_region][i]-1)*(Constants.CRCWIDTH[num_region][i] + Constants.CRCSPACING[num_region]);
+			
+			NStrips[i] = NStrips[i-1] + Constants.CRCGROUP[num_region][i];
+			
+			if(z>=Z_lowBound[i] && z<=Z_uppBound[i]) {
+				strip_group = i;
+				ClosestStrip = 1 + (int) (Math.round(((z-Z_lowBound[strip_group])/(Constants.CRCWIDTH[num_region][strip_group] + Constants.CRCSPACING[num_region]))))+NStrips[i-1];
 
-		 double[] X = geo.smearedPosition(5, 0 , Constants.CRZRADIUS[2] , 0);
+				len =i;
+			} 
+		}
+		/* double[] X = geo.smearedPosition(5, 0 , Constants.CRZRADIUS[2] , 0);
 		 System.out.println(0+", "+(0.3+Constants.CRZRADIUS[2])+" , "+0+"  smeared "+X[0]+", "+X[1]+" , "+X[2]);
 		 System.out.println(geo.getZStrip(5, Math.atan2(Constants.CRZRADIUS[2],0 )));
 		 System.out.println(geo.getZStrip(5, Math.atan2(X[1],X[0])));
@@ -404,12 +438,12 @@ public int isInSector(int layer, double angle) {
 		 System.out.println(" corrected phi = "+Math.toDegrees(theLorentzCorrectedAngle));
 		 int theLorentzCorrectedStrip = geo.getZStrip(5, theLorentzCorrectedAngle);
 		 System.out.println(theMeasuredZStrip+" "+theLorentzCorrectedStrip);
-		 double phiC = geo.CRZStrip_GetPhi(1,6,theLorentzCorrectedStrip);
+		 double phiC = geo.CRZStrip_GetPhi(3,6,216);
 		 double x = Constants.CRCRADIUS[2]*Math.cos(phiC);
 		 double y = Constants.CRCRADIUS[2]*Math.sin(phiC);
-		 int theMeasuredCStrip = geo.getCStrip(1,6,X[2]);
-		 double z = geo.CRCStrip_GetZ(1,6,theMeasuredCStrip);
-		 System.out.println(x+", "+y+", "+z);
+		 int theMeasuredCStrip = geo.getCStrip(6,X[2]);
+		 double z = geo.CRCStrip_GetZ(6,309);
+		 System.out.println(x+", "+y+", "+z);*/
 		//List<double[]> Hits = geo.GEMCBMTHits(layer, sector, -199.89230321711165 , 93.78543124898611 , -164.52000000000007, .1);
 		//System.out.println("There are "+Hits.size()+" hits in this cluster");
 		//for(int i =0; i<Hits.size(); i++) {
