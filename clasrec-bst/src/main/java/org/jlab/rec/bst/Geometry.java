@@ -545,8 +545,12 @@ public class Geometry {
 		
 	      public static void main (String arg[]) throws FileNotFoundException {
 	    	 
+	    	 
+	    	  
 	    	  Constants.Load();
 	    	  Geometry geo = new Geometry();
+	    	  
+	    	  
 	    	  System.out.println(geo.findBSTPlaneNormal(6, 1).toString());
 	    	  threeVec p1i = new threeVec(-17.35,-68.28,-286.45);
 	    	  threeVec p2i = new threeVec(17.35,-68.28,-286.45);
@@ -652,7 +656,7 @@ public class Geometry {
 	    		}
 	    		pw.close();
 	    		*/
-	    	 
+	    	
 	  	}
 		
 }

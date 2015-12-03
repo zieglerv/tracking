@@ -560,7 +560,8 @@ public class CosmicTrack extends ArrayList<Cross> {
 
 		public void update_Crosses(double s_yxfit, double s_yzslope, Geometry geo) {
 			for(Cross c : this) {
-				update_Cross(c, s_yxfit, s_yzslope, c.get_Sector(), c.get_Region(), geo);
+				if(c.get_Region()<5)
+					update_Cross(c, s_yxfit, s_yzslope, c.get_Sector(), c.get_Region(), geo);
 			}
 		}
 		

@@ -20,7 +20,7 @@ public class RecoBankWriter {
 
 	/**
 	 * 
-	 * @param hitlist the list of DC hits that are of the type FittedHit.  If the hit has not been fitted, the fitted hit fields are left to
+	 * @param hitlist the list of hits that are of the type FittedHit.  If the hit has not been fitted, the fitted hit fields are left to
 	 * their default values.
 	 * @return hits bank
 	 *

@@ -1,5 +1,7 @@
 package org.jlab.rec.bst.track;
 
+import java.io.FileNotFoundException;
+
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
 import org.jlab.rec.bst.trajectory.BSTSwimmer;
@@ -201,7 +203,6 @@ public class EnergyLossCorr {
 	 static double pMass  = 0.938272029;
 	 
 	 
-	
-	
+
 
 }

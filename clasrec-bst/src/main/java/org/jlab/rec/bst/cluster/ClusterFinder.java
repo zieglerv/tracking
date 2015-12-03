@@ -51,6 +51,7 @@ public class ClusterFinder  {
 			if(w>0 && w<=nstrip && l>0 && l<=nlayr)	{	
 				if(s>0 && s<=nsectors[l-1]) {
 					HitArray[w-1][l-1][s-1] = hit;
+					
 				}
 				
 			}

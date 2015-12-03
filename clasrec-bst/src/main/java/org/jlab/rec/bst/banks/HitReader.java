@@ -90,8 +90,6 @@ public class HitReader {
 			for(int i = 0; i<size; i++){
 			
 		      double ADCtoEdep = converttoDAQ(ADC[i]);
-			  if(event.hasBank("GenPart::true")==true)
-				  Constants.isSimulation=true;
 			  
 			  //Gemc bug fix
 			  if(Constants.isCosmicsData == false && strip[i]==0)

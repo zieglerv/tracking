@@ -6,11 +6,11 @@ import java.util.List;
 import trackfitter.fitter.HelicalTrackFitter;
 
 import org.jMath.Vector.threeVec;
+import org.jlab.data.io.DataEvent;
 import org.jlab.rec.bst.Constants;
 import org.jlab.rec.bst.Geometry;
 import org.jlab.rec.bst.cross.Cross;
 import org.jlab.rec.bst.cross.CrossList;
-
 import org.jlab.rec.bst.trajectory.Trajectory;
 import org.jlab.rec.bst.trajectory.TrajectoryFinder;
 
@@ -180,7 +180,7 @@ public class TrackCandListFinder {
 
 
 
-	public List<CosmicTrack> getCosmicsTracks(CrossList crossList, Geometry geo, int excludeRegion) {
+	public List<CosmicTrack> getCosmicsTracks(DataEvent event, CrossList crossList, Geometry geo, int excludeRegion) {
 		ArrayList<CosmicTrack> cands = new ArrayList<CosmicTrack>();
 		
 		int index =-1;  
@@ -257,8 +257,11 @@ public class TrackCandListFinder {
             for(int i = 0; i<ctrk.size(); i++) {
             	ctrk.update_Crosses(ctrk.get_yxslope(),ctrk.get_yzslope(), geo) ;
             }
-          //refit
-            ctrk.fitCosmicTrack(geo);
+          // refit with MM
+            TrackMicroMegasMatching mm = new TrackMicroMegasMatching();
+            mm.matchTrackToMM(event, ctrk, geo);
+          //refit 
+            ctrk.fitCosmicTrack(geo); 
             ctrk.refitCosmicTrack(geo);
             index++;
             ctrk.setIdx(index);

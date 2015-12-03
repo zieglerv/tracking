@@ -163,6 +163,8 @@ public class Constants {
 
 	public static double RMLAYER = 0;
 
+	public static boolean newGeometry = true;
+
 	
 	// for landau inverse calculation
 	public static final double f[] = {
@@ -376,7 +378,9 @@ public class Constants {
 		Z0[7] =  -83.406 + 0.5*DEADZNLEN;
 		
 		double rotationFlag =0;
-		if(Constants.isSimulation==false)
+		if(Constants.newGeometry==false)
+			rotationFlag = 0;// old geom
+		if(Constants.newGeometry==true)
 			rotationFlag = 1;// in hardware the tracker is rotated by an  180 degrees in azimuth
 		PHI0[0] = Math.toRadians(90.+180.*rotationFlag);
 		PHI0[1] = Math.toRadians(90.+180.*rotationFlag);
@@ -466,7 +470,7 @@ public class Constants {
 		areConstantsLoaded = true;
 		System.out.println(" geometry constants loaded ? "+areConstantsLoaded);
 		System.out.println(" cosmics data ? "+isCosmicsData);
-		
+		System.out.println(" geometry "+isSimulation);
 	}
 
 

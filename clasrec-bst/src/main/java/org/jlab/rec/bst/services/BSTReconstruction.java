@@ -49,6 +49,7 @@ public class BSTReconstruction extends DetectorReconstruction{
 	private int recTrackEff =0;
 	private static boolean debugMode = false;
 	
+	
 	public void processEvent(EvioDataEvent event) {
 		
 		eventNb++;
@@ -78,7 +79,13 @@ public class BSTReconstruction extends DetectorReconstruction{
 		if(hits.size()==0 ) {
 			return;
 		}
-		
+		if(debugMode) {
+			System.out.println(" print hits : ");
+			for(int i = 0; i<hits.size(); i++) {
+				System.out.println("  "+
+				hits.get(i).printInfo() );
+			}
+		}
 		//2) find the clusters from these hits
 		ClusterFinder clusFinder = new ClusterFinder();
 		clusters = clusFinder.findClusters(hits);
@@ -151,7 +158,7 @@ public class BSTReconstruction extends DetectorReconstruction{
 			
 			//5) find the list of  track candidates
 			TrackCandListFinder trkcandFinder = new TrackCandListFinder();
-			cosmics = trkcandFinder.getCosmicsTracks(crosslist,geo,Constants.BSTEXCLUDEDFITREGION) ;
+			cosmics = trkcandFinder.getCosmicsTracks(event,crosslist,geo,Constants.BSTEXCLUDEDFITREGION) ;
 			
 			
 			if(cosmics.size()==0) {
@@ -313,6 +320,13 @@ public class BSTReconstruction extends DetectorReconstruction{
 			boolean kFlag = Boolean.parseBoolean(CosmicFlag);
 			Constants.isCosmicsData = kFlag;
 			System.out.println("\n\n********** RUNNING COSMICS RECONSTRUCTION ? " + kFlag + "  *************");
+
+		}
+		if(config.hasItem("SVT", "newGeometry")) {
+			String CosmicFlag = config.asString("SVT", "newGeometry");
+			boolean kFlag = Boolean.parseBoolean(CosmicFlag);
+			Constants.newGeometry = kFlag;
+			System.out.println("\n\n********** New Geometry ? " + kFlag + "  *************");
 
 		}
 		if(config.hasItem("SVT", "excludeRegion")) {
