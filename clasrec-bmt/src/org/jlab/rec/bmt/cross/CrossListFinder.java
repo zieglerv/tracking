@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jlab.geom.prim.Point3D;
+import org.jlab.rec.bmt.Constants;
 
 /**
  * A class with methods used to find lists of crosses.  This is the Pattern Recognition step used in track seeding, to 
@@ -83,10 +84,10 @@ public class CrossListFinder  {
 					        // selection for first 3 hits:	
 							//---------------------------	
 							 double phi12 = Math.abs(get_PointInfo(c1,c2,null)[2]);
-								if(phi12>org.jlab.rec.bst.Constants.phi12cut)
+								if(phi12>Constants.phi12cut)
 									continue;		
 							 double phi13 = Math.abs(get_PointInfo(c1,c3,null)[2]);  
-							 if(phi13>org.jlab.rec.bst.Constants.phi13cut)
+							 if(phi13>Constants.phi13cut)
 								 continue; 	
 							 				 
 							 double drdz1 = get_PointInfo(c1,null,null)[1]/get_PointInfo(c1,null,null)[0];
@@ -95,11 +96,11 @@ public class CrossListFinder  {
 								 
 							 double drdzsum = drdz1 + drdz2 + drdz3;
 							 
-							 if( Math.abs((drdz1-drdzsum/3.)/(drdzsum/3.)) >org.jlab.rec.bst.Constants.drdzcut)
+							 if( Math.abs((drdz1-drdzsum/3.)/(drdzsum/3.)) >Constants.drdzcut)
 								 continue; 
-							 if( Math.abs((drdz2-drdzsum/3.)/(drdzsum/3.)) >org.jlab.rec.bst.Constants.drdzcut)
+							 if( Math.abs((drdz2-drdzsum/3.)/(drdzsum/3.)) >Constants.drdzcut)
 								 continue; 
-							 if( Math.abs((drdz3-drdzsum/3.)/(drdzsum/3.)) >org.jlab.rec.bst.Constants.drdzcut)
+							 if( Math.abs((drdz3-drdzsum/3.)/(drdzsum/3.)) >Constants.drdzcut)
 								 continue; 
 							
 								 	

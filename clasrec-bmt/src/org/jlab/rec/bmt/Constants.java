@@ -57,7 +57,13 @@ public class Constants {
 
 	public static boolean isCosmicsData = true;
 
-	
+	// ----- cut based cand select
+	public static  double phi12cut = 35.; 
+	public static  double phi13cut = 35.; 
+	public static  double phi14cut = 35.;
+	public static  double radcut = 100.;
+	public static  double drdzcut =150.;
+		
     public static synchronized void Load() {
 		if (areConstantsLoaded ) return;
 
