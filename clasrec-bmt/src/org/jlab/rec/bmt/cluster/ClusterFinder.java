@@ -81,11 +81,13 @@ public class ClusterFinder  {
 					}
 					
 					// define new cluster 
-					Cluster this_cluster = new Cluster(1, l+1, cid++); 
-					
+					Cluster this_cluster = new Cluster(hits.get(0).get_Sector(), l+1, cid++); 					
 					
 					// add hits to the cluster
 					this_cluster.addAll(hits);
+					for(FittedHit h : hits) {
+						h.set_AssociatedClusterID(this_cluster.get_Id());
+					}
 					//this_cluster.calc_Centroid();
 					//this_cluster.calc_TotalEnergy();
 					this_cluster.set_Parameters();

@@ -143,7 +143,7 @@ public class Cluster extends ArrayList<FittedHit> {
 		double weightedZErrSq = 0;
 		
 		int nbhits = this.size();
-		System.out.println("NUmber of hits in cluster "+nbhits);
+		
 		if(nbhits != 0) {
 			
 			int layer = this.get_Layer();
@@ -159,13 +159,14 @@ public class Cluster extends ArrayList<FittedHit> {
 					weightedZErrSq+= (strpEn*(double)thehit.get_ZErr())*(strpEn*(double)thehit.get_ZErr());
 				}
 				if(layer%2==1) { // Z-detectors
-					strpNb = thehit.get_LCStrip();
+					//strpNb = thehit.get_LCStrip();
+					strpNb = thehit.get_Strip();
 					weightedPhi+= strpEn*(double)thehit.get_Phi();
 					weightedPhiErrSq+= (strpEn*(double)thehit.get_PhiErr())*(strpEn*(double)thehit.get_PhiErr());
 				}
 				
 				totEn += strpEn;
-			    weightedStrp+= strpEn*(double)strpNb;	
+			    weightedStrp+= strpEn*(double)thehit.get_Strip();	
 			    
 			}
 			if(totEn==0) {
@@ -181,6 +182,7 @@ public class Cluster extends ArrayList<FittedHit> {
 		
 		_TotalEnergy = totEn;
 		_Centroid = stripNumCent;
+
 		if( this.get_Layer()%2==1) {
 			
 			_Phi = phiCent;
@@ -190,7 +192,7 @@ public class Cluster extends ArrayList<FittedHit> {
 			_Z = zCent;
 			_ZErr = zErrCent;
 		}
-		System.out.println(this.printInfo()+" phi "+this.get_Phi());
+		
 	}
 	
 	/**

@@ -48,7 +48,7 @@ public class BMTReconstruction extends DetectorReconstruction{
 		eventNb++;
 		
 		if(debugMode)
-			System.out.println("Event Number = "+eventNb);
+			System.out.println("BMT Event Number = "+eventNb);
 		List<FittedHit> fhits = new ArrayList<FittedHit>();
 		List<Cluster> clusters = new ArrayList<Cluster>();
 		List<Cross> crosses = new ArrayList<Cross>();
@@ -73,6 +73,7 @@ public class BMTReconstruction extends DetectorReconstruction{
 		if(debugMode)
 			System.out.println("number of reconstructed clusters = "+clusters.size());
 		if(clusters.size()==0) {
+			
 			return;
 		}
 		
