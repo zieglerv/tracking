@@ -330,7 +330,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 						clus.get(i).set_LeftRightAmb(-1);
 					}
 					
-					if( (trking=="HitBased" && Math.abs((y[i]-fit_slope*x[i]-fit_interc))<0.01 ) ||(trking=="TimeBased" && LRassigned==false &&
+					if( (trking.equals("HitBased") && Math.abs((y[i]-fit_slope*x[i]-fit_interc))<0.01 ) ||(trking.equals("TimeBased") && LRassigned==false &&
 						 Constants.TIMETODIST[clus.get(i).get_Region()-1]*clus.get(i).get_Time()/clus.get(i).get_CellSize() < 0.4)  ) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment 
 						clus.get(i).set_LeftRightAmb(0);
 					}

@@ -271,7 +271,7 @@ public class TrackMicroMegasMatching {
 				iterationNb = totNbOfIterations;
 				continue;
 			}
-			if(kf.KF_p!=Double.NaN && kf.KF_p>Constants.MINTRKMOM) {
+			if(!Double.isNaN(kf.KF_p) && kf.KF_p>Constants.MINTRKMOM) {
 				cand.set_P(kf.KF_p);								
 				cand.set_Q(kf.KF_q);
 				cand.set_CovMat(kf.covMat);

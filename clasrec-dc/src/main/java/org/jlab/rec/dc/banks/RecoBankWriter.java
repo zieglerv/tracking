@@ -11,9 +11,8 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
+
 import trackfitter.fitter.utilities.*;
-
-
 import Jama.Matrix;
 /**
  * A class to fill the reconstructed DC banks
@@ -42,7 +41,7 @@ public class RecoBankWriter {
 			
 			for(int j = 0; j<clusters.get(i).size(); j++) {
 				
-				clusters.get(i).get(j).set_AssociatedClusterID(i);
+				//clusters.get(i).get(j).set_AssociatedClusterID(i);
 				clsfhits.add(clusters.get(i).get(j));
 				
 			}
@@ -92,8 +91,8 @@ public class RecoBankWriter {
 			bank.setInt("sector",i, hitlist.get(i).get_Sector());
 			bank.setInt("wire",i, hitlist.get(i).get_Wire());
 			bank.setDouble("time",i, hitlist.get(i).get_Time());
-			bank.setDouble("doca",i, hitlist.get(i).get_TimeToDistance());
-			
+			bank.setDouble("timeError",i, hitlist.get(i).get_TimeErr());
+			bank.setDouble("trkDoca", i, hitlist.get(i).get_ClusFitDoca());
 			bank.setDouble("locX",i, hitlist.get(i).get_lX());
 			bank.setDouble("locY",i, hitlist.get(i).get_lY());
 			bank.setDouble("X",i, hitlist.get(i).get_X());
@@ -101,8 +100,6 @@ public class RecoBankWriter {
 			bank.setInt("LR",i, hitlist.get(i).get_LeftRightAmb());
 			
 			bank.setInt("clusterID", i, hitlist.get(i).get_AssociatedClusterID());
-			
-			
 		}
 		
 		return bank;
@@ -131,6 +128,7 @@ public class RecoBankWriter {
 			bank.setInt("sector",i, cluslist.get(i).get_Sector());			
 			
 			bank.setDouble("avgWire", i, cluslist.get(i).getAvgwire());
+			bank.setInt("size", i, cluslist.get(i).size());
 			
 			double fitSlope= cluslist.get(i).get_clusterLineFitSlope();			
 			double fitInterc =cluslist.get(i).get_clusterLineFitIntercept();
@@ -144,10 +142,10 @@ public class RecoBankWriter {
 				if(j<hitIdxArray.length)
 					hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
 				
-				double residual = (cluslist.get(i).get(j).get_X()-fitSlope*cluslist.get(i).get(j).get_Z()-fitInterc)/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = cluslist.get(i).get(j).get_ClusFitDoca()/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
-			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, cluslist.get(i).size()));
+			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, cluslist.get(i).size()-2));
 			
 			for(int j =0; j<hitIdxArray.length; j++) {
 				String hitStrg = "Hit";
@@ -170,7 +168,7 @@ public class RecoBankWriter {
 
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::HBSegments", seglist.size());
     
-		int[] hitIdxArray= new int[12];
+		int[] hitIdxArray= new int[12]; // only saving 12 hits for now
 				
 		for(int i =0; i< seglist.size(); i++) {
 			for(int j =0; j<hitIdxArray.length; j++) {
@@ -180,6 +178,7 @@ public class RecoBankWriter {
 			double chi2 =0;
 			
 			bank.setInt("ID",i, seglist.get(i).get_Id());
+			//bank.setInt("size", i, seglist.get(i).size());
 			bank.setInt("superlayer",i, seglist.get(i).get_Superlayer());
 			bank.setInt("sector",i, seglist.get(i).get_Sector());	
 			
@@ -187,19 +186,21 @@ public class RecoBankWriter {
 			bank.setInt("Cluster_ID",  i, cls.get_Id());
 			
 			bank.setDouble("avgWire", i, cls.getAvgwire());
+			bank.setInt("size", i, seglist.get(i).size());
 			
 			bank.setDouble("fitSlope", i, cls.get_clusterLineFitSlope());
 			bank.setDouble("fitSlopeErr", i, cls.get_clusterLineFitSlopeErr());
 			bank.setDouble("fitInterc", i, cls.get_clusterLineFitIntercept());
 			bank.setDouble("fitIntercErr", i, cls.get_clusterLineFitInterceptErr());
 			
-			for(int j = 0; j<seglist.get(i).size(); j++) {				
-				hitIdxArray[j] = seglist.get(i).get(j).get_Id();
+			for(int j = 0; j<seglist.get(i).size(); j++) {	
+				if(j<hitIdxArray.length)
+					hitIdxArray[j] = seglist.get(i).get(j).get_Id();
 				
-				double residual = (seglist.get(i).get(j).get_X()-cls.get_clusterLineFitSlope()*seglist.get(i).get(j).get_Z()-cls.get_clusterLineFitIntercept())/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = seglist.get(i).get(j).get_ClusFitDoca()/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
-			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, seglist.get(i).size()));
+			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, seglist.get(i).size()-2));
 			
 			for(int j =0; j<hitIdxArray.length; j++) {
 				String hitStrg = "Hit";
@@ -303,6 +304,7 @@ public class RecoBankWriter {
 			bank.setInt("LR",i, hitlist.get(i).get_LeftRightAmb());
 			bank.setDouble("time",i, hitlist.get(i).get_Time());
 			bank.setDouble("doca",i, hitlist.get(i).get_TimeToDistance());
+			bank.setDouble("trkDoca", i, hitlist.get(i).get_ClusFitDoca());
 			bank.setInt("clusterID", i, hitlist.get(i).get_AssociatedClusterID());
 			bank.setDouble("timeResidual", i, hitlist.get(i).get_TimeResidual());
 			
@@ -334,6 +336,7 @@ public class RecoBankWriter {
 			bank.setInt("sector",i, cluslist.get(i).get_Sector());			
 
 			bank.setDouble("avgWire", i, cluslist.get(i).getAvgwire());
+			bank.setInt("size", i, cluslist.get(i).size());
 			
 			double fitSlope= cluslist.get(i).get_clusterLineFitSlope();			
 			double fitInterc =cluslist.get(i).get_clusterLineFitIntercept();
@@ -347,10 +350,10 @@ public class RecoBankWriter {
 				if(j<hitIdxArray.length)
 					hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
 				
-				double residual = (cluslist.get(i).get(j).get_X()-fitSlope*cluslist.get(i).get(j).get_Z()-fitInterc)/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = cluslist.get(i).get(j).get_ClusFitDoca()/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
-			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, cluslist.get(i).size()));
+			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, cluslist.get(i).size()-2));
 			
 			
 			for(int j =0; j<hitIdxArray.length; j++) {
@@ -390,19 +393,20 @@ public class RecoBankWriter {
 			bank.setInt("Cluster_ID",  i, cls.get_Id());
 			
 			bank.setDouble("avgWire", i, cls.getAvgwire());
-			
+			bank.setInt("size", i, seglist.get(i).size());
 			bank.setDouble("fitSlope", i, cls.get_clusterLineFitSlope());
 			bank.setDouble("fitSlopeErr", i, cls.get_clusterLineFitSlopeErr());
 			bank.setDouble("fitInterc", i, cls.get_clusterLineFitIntercept());
 			bank.setDouble("fitIntercErr", i, cls.get_clusterLineFitInterceptErr());
 			
-			for(int j = 0; j<seglist.get(i).size(); j++) {				
-				hitIdxArray[j] = seglist.get(i).get(j).get_Id();
+			for(int j = 0; j<seglist.get(i).size(); j++) {	
+				if(j<hitIdxArray.length)
+					hitIdxArray[j] = seglist.get(i).get(j).get_Id();
 				
-				double residual = (seglist.get(i).get(j).get_X()-cls.get_clusterLineFitSlope()*seglist.get(i).get(j).get_Z()-cls.get_clusterLineFitIntercept())/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = seglist.get(i).get(j).get_ClusFitDoca()/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
-			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, seglist.get(i).size()));
+			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, seglist.get(i).size()-2));
 			
 			
 			for(int j =0; j<hitIdxArray.length; j++) {

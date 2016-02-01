@@ -41,7 +41,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	
 	private double _QualityFac ;	
 	private int _TrkgStatus = -1 ;	//  TrkgStatusFlag factor (-1: no fit; 0: hit-based trking fit; 1: time-based trking fit)
-	
+	private double _ClusFitDoca;
+	private double _TrkFitDoca;
 	private double _TimeToDistance =0;
 	
 	/**
@@ -77,15 +78,31 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	 * sets the center of the cell as a function of wire number in the local superlayer coordinate system.
 	 */
 	public void set_lY(int layer, int wire) {
+		double y = this.calcLocY(layer, wire);
+		this._lY = y;
+	}
+	/**
+	 * 
+	 * @param layer layer number from 1 to 6
+	 * @param wire wire number from 1 to 112 
+	 * calculates the center of the cell as a function of wire number in the local superlayer coordinate system.
+	 *//*
+	public double calcLocY(int layer, int wire) {
+		
+		// in old mc, layer 1 is closer to the beam than layer 2, in hardware it is the opposite
+		double  brickwallPattern = GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(1).getMidpoint().x()
+				- GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(1).getMidpoint().x();
+		
+		double brickwallSign = Math.signum(brickwallPattern);
+		System.out.println(" breick wall "+brickwallSign+"  simul "+Constants.isSimulation);
 		//center of the cell asfcn wire num
 		double y= (double)wire*(1.+0.25*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.)));
 		
 		if(layer%2==1) {
-			y-= Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.));
+			y = y-brickwallSign*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.));
 		}
-		this._lY = y;
-	}
-
+		return y;
+	}*/
 	
 	/**
 	 * 
@@ -107,14 +124,14 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	/**
 	 * 
 	 * @return the cell size in a given superlayer
-	 */
+	 *//*
 	public double get_CellSize() {
 		
 		double cellSize  = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(10).getMidpoint().z()
 	                     - GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(10).getMidpoint().z();
 		
 		return (cellSize/2.);
-	}
+	}*/
 
 	/**
 	 * 
@@ -229,6 +246,22 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 		this._TimeToDistance = d*this.get_Time();
 	}
 
+
+	public double get_ClusFitDoca() {
+		return _ClusFitDoca;
+	}
+
+	public void set_ClusFitDoca(double _ClusFitDoca) {
+		this._ClusFitDoca = _ClusFitDoca;
+	}
+
+	public double get_TrkFitDoca() {
+		return _TrkFitDoca;
+	}
+
+	public void set_TrkFitDoca(double _TrkFitDoca) {
+		this._TrkFitDoca = _TrkFitDoca;
+	}
 
 	public void fix_TimeToDistance(double cellSize) {
 		this._TimeToDistance = cellSize;
@@ -352,6 +385,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	 * identifying outoftimehits;
 	 */
 	private boolean _OutOfTimeFlag;
+	
 	public void set_OutOfTimeFlag(boolean b) {
 		_OutOfTimeFlag =b;
 	}

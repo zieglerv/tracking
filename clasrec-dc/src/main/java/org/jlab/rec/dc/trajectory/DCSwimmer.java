@@ -9,6 +9,7 @@ import cnuphys.magfield.CompositeField;
 import cnuphys.magfield.RotatedCompositeField;
 import cnuphys.magfield.Solenoid;
 import cnuphys.magfield.Torus;
+import cnuphys.rk4.IStopper;
 import cnuphys.rk4.RungeKuttaException;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimmer;
@@ -182,12 +183,74 @@ public class DCSwimmer {
 			value[6] = lastY[6]*100;
 			value[7] = lastY[7]*10;
 			
+			
 		} catch (RungeKuttaException e) {
 			e.printStackTrace();
 		}
 		return value;
 		
 	}
+	
+	//added for raster study
+		private class CylinderBoundarySwimStopper implements IStopper {
+
+			private double _cylRad;
+			/**
+			 * A  swim stopper that will stop if the boundary of a plane is crossed
+			 * @param maxR the max radial coordinate in meters. 
+			 */
+			private CylinderBoundarySwimStopper(double cylRad) {
+				// DC reconstruction units are cm.  Swimmer units are m.  Hence scale by 100
+				_cylRad = cylRad;
+			}
+			@Override
+			public boolean stopIntegration(double t, double[] y) {
+				
+				double r = Math.sqrt(y[0]*y[0] +y[1]*y[1])*100.;
+
+				return (r > _cylRad);
+				
+			}
+			@Override
+			public double getFinalT() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			@Override
+			public void setFinalT(double arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		}
+		
+	
+		public  double[] SwimToCylinder(double cylRad) {
+				
+				double[] value = new double[8];
+				// using adaptive stepsize
+				
+				CylinderBoundarySwimStopper stopper = new CylinderBoundarySwimStopper(cylRad);
+		
+				// step size in m
+				double stepSize = 1e-4; // m
+		
+				SwimTrajectory st = swimmer.swim(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, stopper, _maxPathLength, stepSize, 0.0005);
+				st.computeBDL(compositeField);
+				double[] lastY = st.lastElement();
+				
+				value[0] = lastY[0]*100; // convert back to cm
+				value[1] = lastY[1]*100; // convert back to cm
+				value[2] = lastY[2]*100; // convert back to cm
+				value[3] = lastY[3]*_pTot; //normalized values
+				value[4] = lastY[4]*_pTot;
+				value[5] = lastY[5]*_pTot;
+				value[6] = lastY[6]*100;
+				value[7] = lastY[7]*10; //Conversion from kG.m to T.cm 
+		
+			return value;
+				
+		}
+
 	public static double CLAS_Tolerance[];
 	static {
 		double xscale = 1.0;  //position scale order of meters
@@ -256,7 +319,7 @@ public class DCSwimmer {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
+		/*
 		if(Constants.FieldConfig=="variable") {
 		
 			if(Constants.TORSCALE<0) {
@@ -275,13 +338,13 @@ public class DCSwimmer {
 				if(solenoid.isInvertField()==true)
 					solenoid.setInvertField(false);
 			}
-		}
+		} */
 		rcompositeField = new RotatedCompositeField();
 		compositeField = new CompositeField();
 		//System.out.println("***** ****** CREATED A COMPOSITE ROTATED FIELD ****** **** ");
 			
 		if (torus != null) {
-			
+			/*
 			if(Constants.TORSCALE<0) {
 				if(torus.isInvertField()==false)
 					torus.setInvertField(true);
@@ -292,14 +355,14 @@ public class DCSwimmer {
 					torus.setInvertField(false);
 			}
 			
-			torus.setScaleField(true);
+			torus.setScaleField(true);  */
 			torus.setScaleFactor(Constants.TORSCALE);
 			System.out.println("***** ****** ****** THE TORUS IS BEING SCALED BY "+ (Constants.TORSCALE*100) +"  %   *******  ****** **** ");
 			rcompositeField.add(torus);
 			compositeField.add(torus);
 		}
 		if (solenoid != null) {
-			
+			/*
 			if(Constants.SOLSCALE<0) {
 				if(solenoid.isInvertField()==false)
 					solenoid.setInvertField(true);
@@ -309,7 +372,7 @@ public class DCSwimmer {
 				if(solenoid.isInvertField()==true)
 					solenoid.setInvertField(false);
 			}
-			solenoid.setScaleField(true);
+			solenoid.setScaleField(true); */
 			solenoid.setScaleFactor(Constants.SOLSCALE);
 			System.out.println("***** ****** ****** THE SOLENOID IS BEING SCALED BY "+ (Constants.SOLSCALE*100) +"  %   *******  ****** **** ");
 			if(Constants.useSolenoid == true) {
@@ -319,8 +382,8 @@ public class DCSwimmer {
 			}
 		}
 		areFieldsLoaded = true;
-		System.out.println("Fields are Loaded! with torus inverted ? "+torus.isInvertField()+
-				" and solenoid inverted ? "+solenoid.isInvertField());
+		//System.out.println("Fields are Loaded! with torus inverted ? "+torus.isInvertField()+
+		//		" and solenoid inverted ? "+solenoid.isInvertField());
 	}	
 		
 		
@@ -390,7 +453,6 @@ public class DCSwimmer {
 	}
 
 	
-
 	
 	@SuppressWarnings("unused")
 	private void printSummary(String message, int nstep, double momentum, double Q[], double hdata[]) {

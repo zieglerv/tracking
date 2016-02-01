@@ -17,13 +17,14 @@ import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.cross.CrossMaker;
 import org.jlab.rec.dc.hit.FittedHit;
-//import dc.hit.MCHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.track.TrackMicroMegasMatching;
 import org.jlab.rec.dc.trajectory.DCSwimmer;
+//import org.jlab.rec.dc.trajectory.Vertex;
+import org.jlab.rec.dc.trajectory.Vertex;
 
 /**
  * Service to return reconstructed DC track candidates from Hit-based tracking.
@@ -35,7 +36,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 	
     public TimeBasedTracking() {
 
-    	super("DCTB", "ziegler", "1.0");
+    	super("DCTB", "ziegler", "2.0");
     	
 		
     }
@@ -185,17 +186,20 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 		}
 		
 		// track found
+		if(Constants.useRaster==true) {
+			
+			Vertex vtx = new Vertex();
+			for(int k =0; k<trkcands.size(); k++) {
+				Track thecand = trkcands.get(k);
+				vtx.resetTrackAtRasterRadius(event, thecand);
+			}
+		}
 		
 		rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
 		if(Constants.DEBUGPRINTMODE==true)
 			System.out.println("all DCTB banks should be appended !!!");
 
-		recNb++;
-		if(Constants.DEBUGPRINTMODE==true) {
-			System.out.println("      *************************  ");
-		    System.out.println("         Tracking Effciency  (%)  "+((float) recNb*100/(float)fidNb));
-		    System.out.println("      *************************  ");
-		}
+		
 	}
 	
 	@Override
@@ -219,12 +223,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 		System.out.println(" CONFIGURING SERVICE DCTB ************************************** ");
 		if(config.hasItem("DCTB", "kalman")) {
 			String KalmanFlag = config.asString("DCTB", "kalman");
-			if(KalmanFlag != "true" || KalmanFlag !="false") {
-				System.out.println("   ************************************************************************************************************");
-				System.out.println("   * You MISTYPED the kalman filter configuration.  Should should have typed true or false!!!                 *");
-				System.out.println("   * The reconstruction will therefore run with the Kalman Filter OFF and your resolutions will be poorer !!! *");
-				System.out.println("   ************************************************************************************************************");
-			}
+			
 			boolean kFlag = Boolean.parseBoolean(KalmanFlag);
 			Constants.useKalmanFilter = kFlag;			
 			System.out.println("\n\n********** KALMAN ON " + kFlag + "  *************");
@@ -238,10 +237,18 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 			System.out.println("\n\n********** MICROMEGAS ON " + mFlag + "  *************");
 
 		}
+		if(config.hasItem("DCTB", "useRaster")) {
+			String RFlag = config.asString("DCTB", "useRaster");
+			
+			boolean rFlag = Boolean.parseBoolean(RFlag);
+			Constants.useRaster = rFlag;			
+			System.out.println("\n\n********** RASTER ? " + rFlag + "  *************");
+
+		}
 		if(config.hasItem("DCTB", "debug")) {
 			int debug = config.asInteger("DCTB", "debug");
 			if(debug>0)
-				System.out.println("************************************** VERSION DCREC 1.0 ****************************************");
+				System.out.println("************************************** VERSION DCREC 2.0 ****************************************");
 			}
 	}
 	

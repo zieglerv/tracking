@@ -210,7 +210,11 @@ public class KalFit {
 					//System.out.println("Covariance Matrix is non-invertible - quit filter!");
 					return;
 				}
+			if(Ca.inverse()!=null) {
 				covMat = Ca.inverse();
+			} else {
+				return;
+			}
 			
 			for(int j = 0; j < 5; j++) {
 				// the gain matrix
@@ -704,15 +708,15 @@ public class KalFit {
 	 */
     public double MassHypothesis(String H) {
   	   double value = piMass; //default
-  	   if(H=="proton")
+  	   if(H.equals("proton"))
   		  value = pMass;
-  	   if(H=="electron")
+  	   if(H.equals("electron"))
   		  value = eMass;
-  	   if(H=="pion")
+  	   if(H.equals("pion"))
   		  value = piMass;
-  	   if(H=="kaon")
+  	   if(H.equals("kaon"))
   		  value = KMass;
-  	   if(H=="muon")
+  	   if(H.equals("muon"))
   		  value = muMass;
   	return value;
      }

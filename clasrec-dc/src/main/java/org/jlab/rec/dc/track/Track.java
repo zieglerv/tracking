@@ -144,6 +144,7 @@ public class Track extends Trajectory {
 	
 	
 	private double _fitChisq;
+	public boolean fit_Successful;
 	
 	
 	

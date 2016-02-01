@@ -9,7 +9,8 @@ public class Constants {
 
 	// SIMULATION FLAG
 	public static boolean isSimulation = true;
-
+	// GEOMETRY FLAG
+	public static boolean newGeometry = true;
 	
 	// RECONSTRUCTION PARAMETERS
 	public static int DC_MIN_NLAYERS = 4;
@@ -75,8 +76,6 @@ public class Constants {
 	public static final double TRACKSELECTQFMINCHSQ = 600; 
 	public static final double TCHISQPROBFITXZ = 0.01;
 
-	
-
 	//------------
 	// ----- cut based cand select
 	
@@ -97,10 +96,11 @@ public class Constants {
 	public static final double MAXTRKMOM = 20.0;
 
 	public static final int MAXCLUSSIZE = 14;
-
-
 	
 	public static final double MAXCHI2 = 600;
+
+
+	public static final boolean LAYEREFFS = false;
 
 	public static  boolean DEBUGPRINTMODE = false;
 	
@@ -123,9 +123,16 @@ public class Constants {
 	
 	public static boolean useSolenoid = true;
 	
-	public static boolean useNoiseAlgo =true;
+	public static boolean useNoiseAlgo =false;
 
 	public static boolean turnOnMicroMegas = true;
+
+	public static boolean useRaster = false;
+
+	public static boolean smearDocas = false;
+
+
+	public static double T0 =0;
 
 	
 	public static synchronized void Load() {
@@ -149,9 +156,9 @@ public class Constants {
 		TIMETODIST[1] = 0.0026;
 		TIMETODIST[2] = 0.0036;
 
-		DRIFTVEL[0] = 5.3e-4;
-		DRIFTVEL[1] = 2.6e-4;
-		DRIFTVEL[2] = 3.6e-4;
+		//DRIFTVEL[0] = 5.3e-4;
+		//DRIFTVEL[1] = 2.6e-4;
+		//DRIFTVEL[2] = 3.6e-4;
 
 		areConstantsLoaded = true;
 		

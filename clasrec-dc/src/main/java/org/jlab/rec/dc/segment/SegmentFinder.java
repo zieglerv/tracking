@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
 
@@ -35,7 +36,7 @@ public class SegmentFinder {
 			seg.set_fitPlane();	
 			
 			
-			if(trkg == "HitBased") {
+			if(trkg.equals("HitBased")) {
 				// pass all for now.  Deal with refitting later	
 				
 				FittedCluster fClus0 = seg.get_fittedCluster();
@@ -71,6 +72,17 @@ public class SegmentFinder {
 				segList.add(rSeg);
 			}
 		}
+		
+		for(Segment sgt : segList)
+			for(FittedHit fhit : sgt) {
+				//double calc_doca = (fhit.get_X()-sgt.get_fittedCluster().get_clusterLineFitSlope()*fhit.get_Z()-sgt.get_fittedCluster().get_clusterLineFitIntercept());
+				double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().x();
+				double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().z();
+				
+				double calc_doca = (x-sgt.get_fittedCluster().get_clusterLineFitSlope()*z-sgt.get_fittedCluster().get_clusterLineFitIntercept());
+				
+				fhit.set_ClusFitDoca(calc_doca);
+			}
 		
 //		this.setAssociatedID(segList);
 		return segList;

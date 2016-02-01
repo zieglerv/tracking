@@ -40,6 +40,8 @@ public class TrackCandListFinder {
 			System.err.print("Error no tracks found");
 			return cands;
 		}
+		if(Constants.DEBUGPRINTMODE)
+			System.out.println(" looking for tracks ....");
 		
 		for(int i = 0; i<crossList.size(); i++) {
 			Track cand = new Track();
@@ -124,7 +126,7 @@ public class TrackCandListFinder {
 									iterationNb = totNbOfIterations;
 									continue;
 								}
-								if(kf.KF_p!=Double.NaN && kf.KF_p>Constants.MINTRKMOM) {
+								if(!Double.isNaN(kf.KF_p) && kf.KF_p>Constants.MINTRKMOM) {
 									cand.set_P(kf.KF_p);								
 									cand.set_Q(kf.KF_q);
 									cand.set_CovMat(kf.covMat);
@@ -141,6 +143,10 @@ public class TrackCandListFinder {
 								
 						}	
 						this.setTrackPars(cand, traj, trjFind, VecAtReg3MiddlePlane, cand.get(2).get_Point().z());
+						
+						if(cand.fit_Successful==false)
+							continue;
+						
 						if((iterationNb>0 && cand.get_FitChi2()>Constants.MAXCHI2) || 
 								(iterationNb!=0 && cand.get_FitChi2()==0))
 							continue; // fails if after KF chisq exceeds cutoff or if KF fails 
@@ -168,9 +174,15 @@ public class TrackCandListFinder {
 				 -cand.get_Q());
 		
 		double[] VecAtTar = dcSwim.SwimToPlane(0);
-		if(VecAtTar==null) 
+		if(VecAtTar==null) {
+			cand.fit_Successful=false;
 			return;
+		}
 		double totPathLen = VecAtTar[6];
+		if(totPathLen<cand.get(1).get_Point().z()) {
+			cand.fit_Successful=false;
+			return;
+		}
 		
 		double xOr = VecAtTar[0];
 		double yOr = VecAtTar[1];
@@ -199,6 +211,7 @@ public class TrackCandListFinder {
 		cand.set_Vtx0(trakOrig);
 		cand.set_pAtOrig(pAtOrig.toVector3D());
 		
+		cand.fit_Successful=true;
 		cand.set_TrackingInfoString(trking);
 	}
 

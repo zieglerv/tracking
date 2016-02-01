@@ -2,14 +2,12 @@ package org.jlab.rec.dc.banks;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
 
 import org.jlab.data.io.DataEvent;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
-
+import org.jlab.rec.dc.hit.SmearDCHit;
 import org.jlab.rec.dc.Constants;
 
 import cnuphys.snr.NoiseReductionParameters;
@@ -24,12 +22,6 @@ import cnuphys.snr.clas12.Clas12NoiseResult;
  */
 public class HitReader {
 
-
-	
-	
-	Random rn = new Random();
-	public static double HITPOSSMEARING = Constants.CELLRESOL*0.5;
-	
 	private List<Hit> _DCHits;
 
 	private List<FittedHit> _HBHits; //hit-based tracking hit information
@@ -72,7 +64,7 @@ public class HitReader {
 	 * @param event DataEvent
 	 */
 	public void fetch_DCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,NoiseReductionParameters parameters,
-			Clas12NoiseResult results) {
+			Clas12NoiseResult results, SmearDCHit smear) {
 
 		if(event.hasBank("DC::dgtz")==false) {
 			//System.err.println("there is no dc bank ");
@@ -89,8 +81,18 @@ public class HitReader {
 		int[] slayer = bankDGTZ.getInt("superlayer");
 		int[] layer = bankDGTZ.getInt("layer");
 		int[] wire = bankDGTZ.getInt("wire");
+		double[] doca = null ;
+		double[] time = null ;
+		int[] tdc = null;
 		
-		double[] stime = bankDGTZ.getDouble("time");
+		if(Constants.isSimulation ==true) {
+			doca = bankDGTZ.getDouble("doca");
+			time = bankDGTZ.getDouble("time");
+		}
+		
+		if(Constants.isSimulation == false) {		
+			tdc = bankDGTZ.getInt("tdc");
+		}
 		
 		if(Constants.useNoiseAlgo == true) {
 			results.clear();
@@ -99,20 +101,34 @@ public class HitReader {
 			noiseAnalysis.findNoise(sector, slayer, layer, wire, results);
 		
 		}
+		
+		
 		int size = layer.length;
 
 		List<Hit> hits = new ArrayList<Hit>();
 		
 		for(int i = 0; i<size; i++) {
 
-			double timeErrorSigma = Constants.CELLRESOL/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];  // this is the error put into the simulation 
+			double timeError = Constants.CELLRESOL/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];  // this is the error put into the simulation 
 			
-			// Smear the time by the time resolution assumed for MC
-			//if(Constants.isSimulation == true)
-				 // Smear the z coordinate of the hit position
-			//	stime[i]= stime[i] + (HITPOSSMEARING/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1]) * rn.nextGaussian();
+			double smearedTime = 0;
 			
-			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], stime[i],timeErrorSigma, i);
+			if(Constants.isSimulation == true) {
+				if(Constants.smearDocas) {
+					double invTimeToDist = Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];
+					smearedTime = smear.smearedTime(invTimeToDist, doca[i], slayer[i]);
+					timeError = smear.smearedTimeSigma(invTimeToDist, doca[i], slayer[i]);
+				} else {
+					smearedTime = time[i];
+				}
+			} 
+			if(Constants.isSimulation == false) {
+				if(tdc!=null) {
+					smearedTime = (double) tdc[i];
+				}
+			}
+			
+			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], smearedTime,timeError, i);
 			
 			//use only hits with signal on wires
 			
@@ -134,47 +150,7 @@ public class HitReader {
 
 		}
 		
-	/**
-	 * 
-	 * @param hit
-	 * @param event
-	 * @return MC time at present - this method will return the corrected time using TOF information and corrected time information
-	 */
-	public double[] get_Time(FittedHit hit,DataEvent event) {
-		
-		double[] Time = new double[2]; //(t, t_err);
-		double GEMCtime = -1;
-		double timeErrorSigma = -1;
-		
-		EvioDataBank bankDGTZ = (EvioDataBank) event.getBank("DC::dgtz");
-        
-        int[] sector = bankDGTZ.getInt("sector");
-		int[] slayer = bankDGTZ.getInt("superlayer");
-		int[] layer = bankDGTZ.getInt("layer");
-		int[] wire = bankDGTZ.getInt("wire");
-		double[] stime = bankDGTZ.getDouble("time");
-		
-		int size = layer.length;
-		
-		for(int i = 0; i<size; i++) {
-			
-			if(sector[i]==hit.get_Sector() && slayer[i]==hit.get_Superlayer() && layer[i]==hit.get_Layer() && wire[i]==hit.get_Wire()) {
-				
-				timeErrorSigma = Constants.CELLRESOL/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];  // this is the error put into the simulation 
-				
-				if(Constants.isSimulation == true)
-					 // Smear the z coordinate of the hit position
-					//stime[i]= stime[i] + (HITPOSSMEARING/Constants.TIMETODIST[(int) (slayer[i]+1)/2-1]) * rn.nextGaussian();
-				GEMCtime = stime[i];
-				
-			}
-		}
-		Time[0] = GEMCtime;
-		Time[1] = timeErrorSigma;
-		
-		return Time;
-		
-	}
+
 	/**
 	 * Reads HB DC hits written to the DC bank
 	 * @param event
@@ -195,7 +171,8 @@ public class HitReader {
 		int[] slayer = bank.getInt("superlayer");
 		int[] layer = bank.getInt("layer");
 		int[] wire = bank.getInt("wire");
-		
+		double[] time = bank.getDouble("time");
+		double[] timeErr = bank.getDouble("timeError");
 		int[] LR = bank.getInt("LR");		
 		int[] clusterID = bank.getInt("clusterID");
 		
@@ -206,8 +183,8 @@ public class HitReader {
 			//use only hits that have been fit to a track
 			if(clusterID[i]==-1)
 				continue;
-			double[] T = get_Time(new FittedHit(sector[i], slayer[i], layer[i], wire[i], 0, 0, id[i]), event);
-			FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], T[0], T[1], id[i]);
+			
+			FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], time[i]-Constants.T0, timeErr[i], id[i]);
 
 			hit.set_AssociatedClusterID(clusterID[i]);
 			

@@ -18,7 +18,7 @@ import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.cross.CrossMaker;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
-//import dc.hit.MCHit;
+import org.jlab.rec.dc.hit.SmearDCHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.track.Track;
@@ -39,7 +39,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 
     
     public HitBasedTracking() {
-    	super("DCHB", "ziegler", "1.0");
+    	super("DCHB", "ziegler", "2.0");
     	
     }
 	
@@ -56,9 +56,13 @@ public class HitBasedTracking extends DetectorReconstruction {
 	
     int eventNb =0;
     int recNb = 0;
-   
+    
+    SmearDCHit hsmear = new SmearDCHit();
+    
 	@Override
 	public void processEvent(EvioDataEvent event) {
+		//if(event.hasBank("GenPart::true")==true)
+		//	Constants.isSimulation = true;
 		
 		eventNb++;		
 		List<FittedHit> fhits = new ArrayList<FittedHit>();
@@ -66,18 +70,13 @@ public class HitBasedTracking extends DetectorReconstruction {
 		List<Segment> segments = new ArrayList<Segment>();
 		List<Cross> crosses = new ArrayList<Cross>();
 		
-		List<FittedHit> tfhits = new ArrayList<FittedHit>();
-		List<FittedCluster> tclusters = new ArrayList<FittedCluster>();
-		List<Segment> tsegments = new ArrayList<Segment>();
-		List<Cross> tcrosses = new ArrayList<Cross>();
-		
 		List<Track> trkcands = new ArrayList<Track>();
 		
 		//instantiate bank writer
 		RecoBankWriter rbc = new RecoBankWriter();
 		
 		HitReader hitRead = new HitReader();
-		hitRead.fetch_DCHits(event, noiseAnalysis, parameters, results);
+		hitRead.fetch_DCHits(event, noiseAnalysis, parameters, results, hsmear);
 
 		if(Constants.DEBUGPRINTMODE==true)
 			System.out.println("*********  HIT-BASED TRACKING  ********* \n event number "+eventNb);
@@ -101,6 +100,10 @@ public class HitBasedTracking extends DetectorReconstruction {
 		//2) find the clusters from these hits
 			ClusterFinder clusFinder = new ClusterFinder();
 			clusters = clusFinder.findClusters(hits);
+			
+			if(Constants.LAYEREFFS)
+				clusFinder.getLayerEfficiencies(hits, event);
+			
 			if(Constants.DEBUGPRINTMODE==true)  
 				System.out.println("Nb of clusters "+clusters.size());
 			
@@ -163,97 +166,25 @@ public class HitBasedTracking extends DetectorReconstruction {
 			}
 
 			
-			for(Segment seg : segments) {					
-				for(FittedHit hit : seg.get_fittedCluster()) {		
-					
-					tfhits.add(hit);						
-				}
-			}
-			if(tfhits.size()>Constants.MAXNBHITS) {
-				if(Constants.DEBUGPRINTMODE==true) 
-					System.err.println("Too many hits -- abandon the event !!!");
-				return;
-			}
-			
-			if(Constants.DEBUGPRINTMODE==true)  
-				System.out.println("Nb of fitted hits "+fhits.size());
-			// look for clusters with raw hits time information
-			
-			tclusters = clusFinder.timeBasedClusters(tfhits);
 			
 			
-			if(tclusters.size()==0) {
-				// no clusters found, stop here and save the hits		
-				
-				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null);
-				return;
-			}
-			if(Constants.DEBUGPRINTMODE==true)  
-				System.out.println("Nb of time based clusters "+tclusters.size());
-			
-			//3) find the segments from the fitted clusters using hit timing information
-			
-			tsegments =  segFinder.get_Segments(tclusters,"TimeBased");
-			
-			
-			if(Constants.DEBUGPRINTMODE==true)  
-				System.out.println("Nb of time based segments "+tsegments.size());
-			if(tsegments.size()==0) {
-				
-				rbc.fillAllHBBanks(event, rbc, fhits, tclusters, segments, crosses, null); // no segment found, stop here and save the hits and the clusters
-				return;
-			}
-			
-			if(tsegments.size()!=0) {   
-				// get fittedHits from refined segments
-				tfhits = new ArrayList<FittedHit>();
-	   			for(int i = 0; i<tsegments.size(); i++) {
-	   				for(int j = 0; j<tsegments.get(i).size(); j++) {
-	   					tfhits.add(tsegments.get(i).get(j));
-	   				}		   			
-	   			}
-			}
-			
-			
-			//4) find the crosses from the segments
-			tcrosses = crossMake.find_Crosses(tsegments);
-			
-			
-			
-			if(Constants.DEBUGPRINTMODE==true)  
-				System.out.println("Nb of timebased crosses "+tcrosses.size());
-			if(tcrosses.size()==0) {
-				
-				rbc.fillAllHBBanks(event, rbc, fhits, tclusters, tsegments, crosses, null); // no cross found, stop here and save the hits, the clusters, the segments
-				return;
-			}
-			
-			//5) make list of crosses consistent with a track candidate
-			CrossList tcrosslist = crossLister.candCrossLists(tcrosses);
-			if(tcrosslist.size()==0) {
-				if(Constants.DEBUGPRINTMODE==true)  
-					System.out.println("No timebased cross list found !!!");
-				
-				rbc.fillAllHBBanks(event, rbc, fhits, tclusters, tsegments, tcrosses, null); // no crosslist found, stop here and save the hits, the clusters, the segments, the crosses
-				return;
-			}
 			
 			//6) find the list of  track candidates
 			TrackCandListFinder trkcandFinder = new TrackCandListFinder("HitBased");
-			trkcands = trkcandFinder.getTrackCands(tcrosslist) ;
+			trkcands = trkcandFinder.getTrackCands(crosslist) ;
 			
 				
 			if(Constants.DEBUGPRINTMODE==true)  
 				System.out.println("Nb of tracks "+trkcands.size());
 			if(trkcands.size()==0) {
 				
-				rbc.fillAllHBBanks(event, rbc, fhits, tclusters, tsegments, tcrosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
+				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
 				return;
 			}
 			// track found
 			
 			
-			rbc.fillAllHBBanks(event, rbc, fhits, tclusters, tsegments, tcrosses, trkcands);
+			rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
 			if(Constants.DEBUGPRINTMODE==true)
 				System.out.println("all DCHB banks should be appended !!!");
 			
@@ -287,24 +218,46 @@ public class HitBasedTracking extends DetectorReconstruction {
 			public void configure(ServiceConfiguration config) {
 				
 				System.out.println(" CONFIGURING SERVICE DCHB ************************************** ");
+				if(config.hasItem("DATA", "mc")) {
+					String isMC = config.asString("DATA", "mc");
+					boolean isMCdata = Boolean.parseBoolean(isMC);
+					Constants.isSimulation = isMCdata;
+				}	
+				
+				if(config.hasItem("GEOM", "new")) {
+					String inNewG = config.asString("GEOM", "new");
+					boolean isNewGeom = Boolean.parseBoolean(inNewG);
+					Constants.newGeometry = isNewGeom;
+				}	
+				
 				if(config.hasItem("MAG", "torus")) {
 					Constants.FieldConfig="variable";
 					String TorusScale = config.asString("MAG", "torus");
 					double scale = Double.parseDouble(TorusScale);
-					Constants.TORSCALE = scale;
-					
+					Constants.TORSCALE = scale;					
 				}
 				if(config.hasItem("MAG", "solenoid")) {
 					Constants.FieldConfig="variable";
 					String SolenoidScale = config.asString("MAG", "solenoid");
 					double scale = Double.parseDouble(SolenoidScale);
 					Constants.SOLSCALE = scale;
-					
-
 				}
+				
 				if(config.hasItem("MAG", "fields")) {
 					String FieldsConf = config.asString("MAG", "fields");
 					Constants.FieldConfig = FieldsConf;
+				}
+				
+				if(config.hasItem("TIME", "T0")) {
+					String TimeConf = config.asString("TIME", "T0");
+					double t0 = Double.parseDouble(TimeConf);
+					Constants.T0 = t0;
+				}
+				
+				if(config.hasItem("SMEAR", "docas")) {
+					String Docas = config.asString("SMEAR", "docas");
+					boolean smearDocas = Boolean.parseBoolean(Docas);
+					Constants.smearDocas = smearDocas;
 				}		
 				
 			}

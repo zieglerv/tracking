@@ -1,5 +1,8 @@
 package org.jlab.rec.dc.hit;
 
+import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.GeometryLoader;
+
 /**
  * A DC hit characterized by superlayer, layer, sector, wire number, and time.  The TDC to time conversion has been done.
  * @author ziegler
@@ -189,6 +192,42 @@ public class Hit implements Comparable<Hit>{
 		}
 	}
 		
+	/**
+	 * 
+	 * @param layer layer number from 1 to 6
+	 * @param wire wire number from 1 to 112 
+	 * calculates the center of the cell as a function of wire number in the local superlayer coordinate system.
+	 */
+	public double calcLocY(int layer, int wire) {
+		
+		// in old mc, layer 1 is closer to the beam than layer 2, in hardware it is the opposite
+		double  brickwallPattern = GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(1).getMidpoint().x()
+				- GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(1).getMidpoint().x();
+		
+		double brickwallSign = Math.signum(brickwallPattern);
+		
+		//center of the cell asfcn wire num
+		double y= (double)wire*(1.+0.25*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.)));
+		
+		if(layer%2==1) {
+			y = y-brickwallSign*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.));
+		}
+		return y;
+		
+		
+	}
+	
+	/**
+	 * 
+	 * @return the cell size in a given superlayer
+	 */
+	public double get_CellSize() {
+		
+		double cellSize  = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(10).getMidpoint().z()
+	                     - GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(10).getMidpoint().z();
+		
+		return (cellSize/2.);
+	}
 	/**
 	 * 
 	 * @return print statement with hit information

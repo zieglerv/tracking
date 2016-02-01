@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jlab.evio.clas12.EvioDataBank;
+import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.dc.Constants;
-
+import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.hit.FittedHit;
 
@@ -75,6 +77,31 @@ public class ClusterFinder  {
 		// with valid hits
 		for(Hit hit : hits)  {
 			if(passHitSelection(hit)) {
+				int ssl = (hit.get_Sector()-1)*nsect + (hit.get_Superlayer() - 1);
+				int wi  = hit.get_Wire() - 1;
+				int la  = hit.get_Layer() - 1;
+
+				if(wi>=0 && wi<nwire)
+					hitArray[ssl][wi][la] = hit;
+			}
+		}
+		this.setHitArray(hitArray);
+
+	}
+	/**
+	 * Fills 3-dimentional array of hits from input hits
+	 * @param hits the unfitted hit
+	 */
+	public void fillHitArray(List<Hit> hits, int rejectLayer) {
+
+		// a Hit Array is used to identify clusters
+
+		Hit[][][] hitArray= new Hit[nsect*nslay][nwire][nlayr];
+
+		// initializing non-zero Hit Array entries
+		// with valid hits
+		for(Hit hit : hits)  {
+			if(passHitSelection(hit) && hit.get_Layer()!=rejectLayer) {
 				int ssl = (hit.get_Sector()-1)*nsect + (hit.get_Superlayer() - 1);
 				int wi  = hit.get_Wire() - 1;
 				int la  = hit.get_Layer() - 1;
@@ -195,7 +222,7 @@ public class ClusterFinder  {
 							if(HitArray[ssl][wi][la]!=null) {
 
 								hits.add(HitArray[ssl][wi][la]);
-
+								//System.out.println(" adding hit "+HitArray[ssl][wi][la].printInfo()+" to cid "+cid);
 							}
 						}
 						wi++;
@@ -208,7 +235,7 @@ public class ClusterFinder  {
 
 						// cluster constructor DCCluster(hit.sector,hit.superlayer, cid)
 						Cluster this_cluster = new Cluster((int) (ssl/nsect) + 1, (int)(ssl%nsect) + 1, cid++);
-
+						//System.out.println(" created cluster "+this_cluster.printInfo());
 						this_cluster.addAll(hits);
 
 						clumps.add(this_cluster);
@@ -248,7 +275,7 @@ public class ClusterFinder  {
 
 		for(Cluster clus : clusters) {
 			if(passSelector(clus)) {
-
+				//System.out.println(" I passed this cluster "+clus.printInfo());
 				FittedCluster fclus = new FittedCluster(clus);
 				selectedClusList.add(fclus);
 			}
@@ -263,11 +290,14 @@ public class ClusterFinder  {
 		
 			if(clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB || clus.size()<Constants.HITBASEDTRKGNONSPLITTABLECLSSIZE) {
 				fittedClusList.add(clus); //if the chi2 prob is good enough, then just add the cluster, or if the cluster is not split-able because it has too few hits
-
+				//System.out.println(" I passed this cluster based on fit prob "+clus.printInfo());
 			} else {
-
+				//System.out.println(" I am trying to split this cluster  "+clus.printInfo());
 				List<FittedCluster> splitClus =  gcf.splitClusters(clus, selectedClusList.size());
 				fittedClusList.addAll(splitClus);
+				//System.out.println(" After trying to split the cluster I get  "+splitClus.size()+" clusters : ");
+				//for(FittedCluster cl : splitClus)
+				//	System.out.println(cl.printInfo());
 			}
 		}
 
@@ -281,11 +311,21 @@ public class ClusterFinder  {
 				for(FittedHit fhit : clus) {
 					fhit.set_TrkgStatus(0);
 					fhit.updateHitPosition();	
-					fhit.set_AssociatedClusterID(refittedClusList.size());
+					fhit.set_AssociatedClusterID(clus.get_Id());
 					
 				}
 				// Refit
 				clus.clusterFitter("HitBased", false);
+				for(FittedHit fhit : clus) {
+					//double calc_doca = (fhit.get_X()-clus.get_clusterLineFitSlope()*fhit.get_Z()-clus.get_clusterLineFitIntercept());
+					
+					double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().x();
+					double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().z();
+					
+					double calc_doca = (x-clus.get_clusterLineFitSlope()*z-clus.get_clusterLineFitIntercept());
+					
+					fhit.set_ClusFitDoca(calc_doca);
+				}
 				refittedClusList.add(clus);
 				
 			}
@@ -325,10 +365,12 @@ public class ClusterFinder  {
 		for(int c = 0; c<NbClus+1; c++) {
 			List<FittedHit> hitlist = new ArrayList<FittedHit>();
 			for(int i = 0; i<index; i++) {
-				if(HitArray[i][c]!=null)
-					hitlist.add(HitArray[i][c]);
+				if(HitArray[i][c]!=null) {
+					hitlist.add(HitArray[i][c]);					
+				}
 			}
 			if(hitlist.size()>0) {
+				
 				Cluster cluster = new Cluster(hitlist.get(0).get_Sector(),hitlist.get(0).get_Superlayer(),c);
 				FittedCluster fcluster = new FittedCluster(cluster);			
 				fcluster.addAll(hitlist);			
@@ -348,7 +390,15 @@ public class ClusterFinder  {
 					}
 				}
 				// Refit
-				clus.clusterFitter("TimeBased", false);				
+				clus.clusterFitter("TimeBased", false);		
+				for(FittedHit fhit : clus) {
+					
+					double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().x();
+					double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().z();
+					
+					double calc_doca = (x-clus.get_clusterLineFitSlope()*z-clus.get_clusterLineFitIntercept());
+					fhit.set_ClusFitDoca(calc_doca);
+				}
 			}
 		}
 		return clusters;
@@ -572,7 +622,17 @@ public class ClusterFinder  {
 					selectedClusList.add(bestCls);
 			}
 		}
-
+		
+		int splitclusId =1;
+		if(selectedClusList.size()!=0) {
+			for(FittedCluster cl : selectedClusList) {
+				cl.set_Id(clus.get_Id()*1000+splitclusId);
+				splitclusId++;
+			}
+		}
+		
+		if(selectedClusList.size()==0)
+			selectedClusList.add(clus); // if the splitting fails, then return the original cluster
 		return selectedClusList;
 	}
 
@@ -702,6 +762,85 @@ public class ClusterFinder  {
 
 	}
 
+	/**
+	 * @param allhits the list of unfitted hits
+	 * @return layer efficiencies
+	 * .....
+	 */
+	public void getLayerEfficiencies(List<Hit> allhits, EvioDataEvent event) {
 
+		ClusterFinder gcf;
+		
+		int[][][] EffArray = new int[6][2][6]; //6 sectors,  2 superlayers, 6 layers
+		for(int i=0; i<6; i++)
+			for(int j=0; j<2; j++)
+				for(int k=0; k<6; k++)
+					EffArray[i][j][k]=-1;
+		
+		for(int rejLy=1; rejLy<=6; rejLy++) {
+			
+			gcf = new ClusterFinder();
+			
+			//fill array of hit
+			gcf.fillHitArray(allhits, rejLy);		
+			//find clumps of hits
+			List<Cluster> clusters = gcf.findClumps(allhits);
+			// create cluster list to be fitted
+			List<FittedCluster> selectedClusList =  new ArrayList<FittedCluster>();
 	
+			for(Cluster clus : clusters) {
+				if(passSelector(clus)) {
+					//System.out.println(" I passed this cluster "+clus.printInfo());
+					FittedCluster fclus = new FittedCluster(clus);
+					
+					selectedClusList.add(fclus);
+				}
+			}
+	
+			
+			for(FittedCluster clus : selectedClusList) {
+				if(clus!=null) {
+					
+					int status = 0;
+					//fit
+					clus.clusterFitter("HitBased", false);
+					for(Hit hit : allhits) {
+						
+						if(hit.get_Sector()!=clus.get_Sector() || hit.get_Superlayer()!=clus.get_Superlayer() || hit.get_Layer()!=rejLy)
+							continue;
+						
+						double locX = hit.calcLocY(hit.get_Layer(), hit.get_Wire());
+						double locZ = hit.get_Layer();
+						
+						double calc_doca = Math.abs(locX-clus.get_clusterLineFitSlope()*locZ-clus.get_clusterLineFitIntercept());
+						
+						if(calc_doca<2)
+							status =1; //found a hit close enough to the track to assume that the layer is live
+						
+						int sec = clus.get_Sector()-1;
+						int slay = clus.get_Superlayer()-1;
+						int lay = rejLy -1;
+						
+						EffArray[sec][slay][lay] = status;
+						
+					}
+				}
+			}
+		}
+		// now fill the bank
+		int bankSize =6*2*6;
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::LayerEffs",bankSize);
+		int bankEntry = 0;
+		for(int i=0; i<6; i++)
+			for(int j=0; j<2; j++)
+				for(int k=0; k<6; k++) {
+					bank.setInt("sector",bankEntry, i+1);
+					bank.setInt("superlayer",bankEntry, j+1);
+					bank.setInt("layer",bankEntry, k+1);
+					bank.setInt("status", bankEntry,EffArray[i][j][k]);
+					bankEntry++;
+				}
+		event.appendBank(bank);
+		
+	}
 }
