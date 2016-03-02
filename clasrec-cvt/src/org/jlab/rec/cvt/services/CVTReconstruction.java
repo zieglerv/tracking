@@ -45,12 +45,10 @@ public class CVTReconstruction extends DetectorReconstruction{
     
 	private int eventNb = 0;
 
-	private static boolean debugMode = true;
-	
 	private ADCConvertor adcConv = new ADCConvertor();
 	public void processEvent(EvioDataEvent event) {
 		eventNb++;
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("Event Number = "+eventNb);
 		
 		HitReader hitRead = new HitReader();
@@ -67,7 +65,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 		if(bmt_hits.size()>0)
 			hits.addAll(bmt_hits);
 		
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed SVT hits = "+svt_hits.size()+" BMT hits "+bmt_hits.size());
 		
 		
@@ -86,7 +84,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 		//2) find the clusters from these hits
 		ClusterFinder clusFinder = new ClusterFinder();
 		clusters = clusFinder.findClusters(hits);
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed clusters = "+clusters.size());
 		if(clusters.size()==0) {
 			return;
@@ -111,7 +109,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 		CrossMaker crossMake = new CrossMaker();
 
 		crosses = crossMake.findCrosses(clusters,SVTGeom);
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses before looper rejection = "+ (crosses.get(0).size()));
 		
 		if(clusters.size()==0 ) {
@@ -128,7 +126,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 			}
 		}
 		
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
 		if(crosses.size()==0 ) {
 			// create the clusters and fitted hits banks
@@ -157,7 +155,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
 			return;
 		}
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("looking for trks from cross lists...."+ crosslist.size());
 
 		//5) find the list of  track candidates
@@ -174,7 +172,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
 			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
 			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
-			if(debugMode)
+			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving crosses ... no track candidates found!");
 			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
 			return;
@@ -197,7 +195,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 		//found trajectories
 		DataBank bank8 = RecoBankWriter.fillHelicalTracksTrajectoryBank((EvioDataEvent) event, trks);
 		
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("Saving tracks !");
 		event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6,bank7,bank8);
 		
@@ -254,7 +252,11 @@ public class CVTReconstruction extends DetectorReconstruction{
 			org.jlab.rec.cvt.Constants.SVTOnly = kFlag;
 			System.out.println("\n\n********** SVT Only " + kFlag + "  *************");
 		}
-		
+		if(config.hasItem("CVT", "debug")) {
+			String DB = config.asString("CVT", "debug");
+			boolean kFlag = Boolean.parseBoolean(DB);
+			org.jlab.rec.cvt.Constants.DEBUGMODE = kFlag;
+		}
 	}
 	
 

@@ -31,7 +31,8 @@ public class TrackCandListFinder {
 
 	/**
 	 * A class representing the measurement variables used to fit a helical track
-	 * The track fitting algorithm empl
+	 * The track fitting algorithm employs the Karimaki algorithm to determine the circle fit paramters: the doca to the z axis, the phi at the doca, the curvature;
+	 * and a linear regression line fitting algorithm to determine z at the doca and the helix dip angle
 	 * @author ziegler
 	 *
 	 */
@@ -61,15 +62,20 @@ public class TrackCandListFinder {
         }
 	}
 	
+	/**
+	 * A class representing the measurement variables used to fit a straight track
+	 * @author ziegler
+	 *
+	 */
 	private class RayMeasurements {
-		double[] _X ;
-		double[] _Y ;
-		double[] _Z ;
-		double[] _Y_prime ;
-		double[] _ErrZ ;
-		double[] _ErrY_prime ;
-		double[] _ErrRt ;
-		
+		double[] _X ;			// x coordinate array
+		double[] _Y ;			// y coordinate array (same size as X array)
+		double[] _Z ;			// z coordinate array
+		double[] _Y_prime ;		// y coordinate array (same size as Z array)
+		double[] _ErrZ ;		// z uncertainty (same size as Z array)
+		double[] _ErrY_prime ;	// y uncertainty (same size as Z array)
+		double[] _ErrRt ;		// sqrt(x^2 + y^2)  uncertainty array (same size as X & Y arrays)
+
 		RayMeasurements(double[] X ,
 					 double[] Y ,
 					 double[] Z ,
@@ -99,26 +105,27 @@ public class TrackCandListFinder {
 			System.err.print("Error in estimating track candidate trajectory: less than 3 crosses found");
 			return cands;
 		}
-		
+		// instantiating the Helical Track fitter
 		HelicalTrackFitter fitTrk = new HelicalTrackFitter();
-		
+		// sets the index according to assumption that the track comes from the origin or not
 		int shift =0;
 		if(org.jlab.rec.cvt.Constants.trk_comesfrmOrig)
 			shift =1;
 
-		
+		// interate the fit a number of times set in the constants file
 		int Max_Number_Of_Iterations = org.jlab.rec.cvt.svt.Constants.BSTTRKINGNUMBERITERATIONS;
 		
-		
+		// loop over the cross list and do the fits to the crosses
 		for(int i = 0; i<crossList.size(); i++) {
-			
+			// for debugging purposes only sets all errors to 1
 			boolean ignoreErr = org.jlab.rec.cvt.svt.Constants.ignoreErr;
 			
 			int Number_Of_Iterations = 0;
-						
+			// do till the number of iterations is reached			
 			while(Number_Of_Iterations<=Max_Number_Of_Iterations) {
 				Number_Of_Iterations++;
 				fitTrk = new HelicalTrackFitter();
+				// get the measuerement arrays for the helical track fit
 				HelixMeasurements MeasArrays = this.get_HelixMeasurementsArrays(crossList.get(i), shift, ignoreErr, false);
 				
 				double[] X = MeasArrays._X;					
@@ -129,9 +136,10 @@ public class TrackCandListFinder {
 				double[] ErrRho = MeasArrays._ErrRho;
 				double[] ErrRt = MeasArrays._ErrRt;
 				
-
+				// do the fit to X, Y taking ErrRt uncertainties into account to get the circle fit params, 
+				// and do the fit to Rho, Z taking into account the uncertainties in Rho and Z into account to get the linefit params
 				fitTrk.fit(X, Y, Z, Rho, ErrRt, ErrRho, ErrZ);
-				
+				// if the fit failed then use the uncorrected SVT points since the z-correction in resetting the SVT cross points sometimes fails 
 				if(fitTrk.get_helix()==null) {
 					//System.err.println("Error in Helical Track fitting -- helix not found -- trying to refit using the uncorrected crosses...");
 					MeasArrays = this.get_HelixMeasurementsArrays(crossList.get(i), shift, ignoreErr, true);
@@ -150,7 +158,7 @@ public class TrackCandListFinder {
 						//System.err.println("Error in Helical Track fitting -- helix not found -- refit FAILED");
 				}
 				
-				
+				// if the fit is successful
 				if(fitTrk.get_helix()!=null && fitTrk.getFit()!=null) {	
 					Track cand = new Track(fitTrk.get_helix());
 					cand.addAll(crossList.get(i));
@@ -166,8 +174,9 @@ public class TrackCandListFinder {
 				}
 			}
 		}	
+		// remove clones
 		ArrayList<Track> passedcands = this.rmHelicalTrkClones(org.jlab.rec.cvt.svt.Constants.removeClones, cands);
-		
+		// loop over candidates and set the trajectories
 		for(int ic = 0; ic< passedcands.size(); ic++) {
 			Helix trkHelix = passedcands.get(ic).get_helix();
 			
@@ -284,9 +293,7 @@ public class TrackCandListFinder {
 				NewMeasArrays = this.get_RayMeasurementsArrays(crossesToFitWithBMT, false, false);
 				
 				fitTrk.fit(NewMeasArrays._X, NewMeasArrays._Y, NewMeasArrays._Z, NewMeasArrays._Y_prime, NewMeasArrays._ErrRt, NewMeasArrays._ErrY_prime, NewMeasArrays._ErrZ);	
-				System.out.println(" ***  cand without mm "+cand.get_ray().get_dirVec().toString()+
-						" slope xy "+cand.get_ray().get_yxslope()+" slope yz "+cand.get_ray().get_yzslope()+
-						" intec xy "+cand.get_ray().get_yxinterc()+" inter yz "+cand.get_ray().get_yzinterc());
+				
 				//create the cand
 				if(fitTrk.get_ray()!=null) {
 					cand = new StraightTrack(fitTrk.get_ray());
@@ -295,9 +302,7 @@ public class TrackCandListFinder {
 					crossesToFitWithBMT = new ArrayList<Cross>();
 					crossesToFitWithBMT.addAll(cand);
 					crossesToFitWithBMT.addAll(BMTmatches);
-					System.out.println(iter+") *** Refit cand with mm "+cand.get_ray().get_dirVec().toString()+
-							" slope xy "+cand.get_ray().get_yxslope()+" slope yz "+cand.get_ray().get_yzslope()+
-							" intec xy "+cand.get_ray().get_yxinterc()+" inter yz "+cand.get_ray().get_yzinterc());
+					
 				}
 			}
 			// reset the arrays
@@ -506,7 +511,7 @@ public class TrackCandListFinder {
 		
 		//make lists
 		for(Cross c : arrayList) {
-			System.out.println("check cross "+c.printInfo());
+			
 			if(c.get_Detector()=="SVT") 
 				SVTcrossesInTrk.add(c);
 			if(c.get_Detector()=="BMT") { // Micromegas
@@ -583,7 +588,7 @@ public class TrackCandListFinder {
 		}
 
 		RayMeasurements MeasArray = new RayMeasurements( X , Y , Z , Y_prime , ErrZ , ErrY_prime , ErrRt );
-		System.out.println("array Len X "+ErrRt.length+" Y "+Y.length+" Z "+Z.length+ " Y_prime "+Y_prime.length);
+		
 		return MeasArray;
 	}
 

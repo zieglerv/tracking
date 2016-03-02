@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jMath.Vector.threeVec;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.cluster.Cluster;
@@ -413,7 +412,7 @@ public class TrajectoryFinder {
 				double doca1 = svt_geo.getDOCAToStrip(sector, layer, (double)hit.get_Strip().get_Strip() , new Point3D(stVec.x(),stVec.y(), stVec.z()));
 				double sigma1 = svt_geo.getSingleStripResolution(layer, hit.get_Strip().get_Strip(),stVec.z());
 				hit.set_stripResolutionAtDoca(sigma1);
-				hit.set_docaToTrk(doca1);  System.out.println("  DOCA "+doca1);
+				hit.set_docaToTrk(doca1);  
 				if(trajFinal)
 					hit.set_TrkgStatus(2);
 			}

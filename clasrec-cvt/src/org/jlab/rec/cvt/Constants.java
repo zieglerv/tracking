@@ -22,10 +22,9 @@ public class Constants {
 	 // selection cuts for helical tracks
 	public static final double MINRADCURV = 200.00; //in cm
 
-	
 	public static boolean isCosmicsData = false;
 
-	public static boolean SVTOnly = true;
+	public static boolean SVTOnly = false;
 	
 	public static boolean trk_comesfrmOrig = true;
 	
@@ -41,6 +40,9 @@ public class Constants {
 
 
 	public static double CTOFINNERRADIUS = 250; // 250 mm
+
+
+	public static boolean DEBUGMODE =false;
 
 	
 	// for landau inverse calculation
@@ -219,10 +221,6 @@ public class Constants {
 		if (areConstantsLoaded) return;
 		
 		
-		if(Constants.isCosmicsData)
-			Constants.SOLSCALE = 0;
-		
-		
 		org.jlab.rec.cvt.svt.Constants.Load();
 		org.jlab.rec.cvt.bmt.Constants.Load();
 		
@@ -230,7 +228,8 @@ public class Constants {
 		areConstantsLoaded = true;
 		System.out.println(" constants loaded ? "+areConstantsLoaded);
 		System.out.println(" cosmics data ? "+isCosmicsData);
-		
+		System.out.println(" solenoid scaled to "+SOLSCALE);
+		System.out.println(" debug ? "+DEBUGMODE);
 	}
 
 

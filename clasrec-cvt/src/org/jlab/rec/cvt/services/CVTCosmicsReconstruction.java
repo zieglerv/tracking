@@ -43,12 +43,11 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
     
 	private int eventNb = 0;
 
-	private static boolean debugMode = true;
 	
 	private ADCConvertor adcConv = new ADCConvertor();
 	public void processEvent(EvioDataEvent event) {
-		eventNb++;
-		if(debugMode)
+		eventNb++; 
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("Event Number = "+eventNb);
 		
 		HitReader hitRead = new HitReader();
@@ -65,7 +64,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		if(bmt_hits.size()>0)
 			hits.addAll(bmt_hits);
 		
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed SVT hits = "+svt_hits.size()+" BMT hits "+bmt_hits.size());
 		
 		
@@ -84,7 +83,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		//2) find the clusters from these hits
 		ClusterFinder clusFinder = new ClusterFinder();
 		clusters = clusFinder.findClusters(hits);
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed clusters = "+clusters.size());
 		if(clusters.size()==0) {
 			return;
@@ -109,7 +108,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		CrossMaker crossMake = new CrossMaker();
 
 		crosses = crossMake.findCrosses(clusters,SVTGeom);
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses before looper rejection = "+ (crosses.get(0).size()));
 		
 		if(clusters.size()==0 ) {
@@ -126,7 +125,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			}
 		}
 		
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
 		if(crosses.size()==0 ) {
 			// create the clusters and fitted hits banks
@@ -143,7 +142,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		StraightTrackCrossListFinder crossLister = new StraightTrackCrossListFinder();
 		CrossList crosslist = crossLister.findCosmicsCandidateCrossLists(crosses, SVTGeom);
 		
-		if(crosslist.size()==0) {
+		if(crosslist==null || crosslist.size()==0) {
 			// create the clusters and fitted hits banks
 			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
 			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
@@ -151,12 +150,12 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
 			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
 			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
-			if(debugMode)
+			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving crosses ... no track candidates found!");
 			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
 			return;
 		}
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("looking for trks from cross lists...."+ crosslist.size());
 		
 		//5) find the list of  track candidates
@@ -173,13 +172,13 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
 			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
 			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
-			if(debugMode)
+			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving crosses ... no track candidates found!");
 			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
 			return;
 		}
 			
-		if(debugMode){ 
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE){ 
 				System.out.println("number of reconstructed tracks = "+cosmics.size());
 			
 		}
@@ -195,7 +194,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		
 		//4)  ---  write out the banks			
 		event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6,bank7,bank8);
-		if(debugMode)
+		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("    All Cosmic data banks saved !!!!");
 	}
 	
@@ -206,6 +205,11 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 	public void init() {
 		// Load the Constants
 		if (Constants.areConstantsLoaded == false) {
+			// THIS IS COSMICS
+			Constants.isCosmicsData = true;
+			Constants.trk_comesfrmOrig = false;
+			Constants.SOLSCALE=0;
+			//Constants.DEBUGMODE=true;
 			Constants.Load();
 		}
 		// Load the fields
@@ -213,9 +217,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			TrkSwimmer.getMagneticFields();
 		}		
 		
-		// THIS IS COSMICS
-		Constants.isCosmicsData = true;
-		Constants.trk_comesfrmOrig = false;
+		
 	}
 	@Override
 	
@@ -249,6 +251,11 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			boolean kFlag = Boolean.parseBoolean(SVTonly);
 			org.jlab.rec.cvt.Constants.SVTOnly = kFlag;
 			System.out.println("\n\n********** SVT Only " + kFlag + "  *************");
+		}
+		if(config.hasItem("CVT", "debug")) {
+			String DB = config.asString("CVT", "debug");
+			boolean kFlag = Boolean.parseBoolean(DB);
+			org.jlab.rec.cvt.Constants.DEBUGMODE = kFlag;
 		}
 		
 		
