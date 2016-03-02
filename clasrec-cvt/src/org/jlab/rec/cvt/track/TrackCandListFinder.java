@@ -773,7 +773,7 @@ public class TrackCandListFinder {
 							}
 						}
 						if(overlaps>1) {
-							if( (cands.get(k2).get_circleFitChi2Prob()+cands.get(k2).get_lineFitChi2Prob()) > (cands.get(k).get_circleFitChi2Prob()+cands.get(k).get_lineFitChi2Prob())) {
+							if( (cands.get(k2).get_circleFitChi2PerNDF()+cands.get(k2).get_lineFitChi2PerNDF()) > (cands.get(k).get_circleFitChi2PerNDF()+cands.get(k).get_lineFitChi2PerNDF())) {
 								
 								cands.get(k2).set_Id(-999);
 								
