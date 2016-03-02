@@ -141,27 +141,15 @@ public class Track extends Trajectory {
   
 	
   
-	private double _circleFitChi2Prob;			// the chi2 for the helical track circle fit
-	private double _lineFitChi2Prob;			// the linear fit to get the track dip angle
+	private double _circleFitChi2PerNDF;		// the chi2 for the helical track circle fit
+	private double _lineFitChi2PerNDF;			// the linear fit to get the track dip angle
 	
 	private Point3D _TrackPointAtCTOFRadius;	// a point of reference at the CTOF radius [the track is extrapolated to the CTOF radius and matched to CTOF hits to get the TOF]	
 	private Vector3D _TrackDirAtCTOFRadious;	// the direction of the track at the reference point described above.
 	private  double _pathLength;				// the pathlength from the doca of the track to the z axis to the reference point described above
 	public boolean passCand;					// a flag to pass the candidate.
 	
-	public double get_circleFitChi2Prob() {
-		return _circleFitChi2Prob;
-	}
-	public void set_circleFitChi2Prob(double _circleFitChi2Prob) {
-		this._circleFitChi2Prob = _circleFitChi2Prob;
-	}
-
-	public double get_lineFitChi2Prob() {
-		return _lineFitChi2Prob;
-	}
-	public void set_lineFitChi2Prob(double _lineFitChi2Prob) {
-		this._lineFitChi2Prob = _lineFitChi2Prob;
-	}
+	
 	/**
 	 * 
 	 * @param cross the cross
@@ -204,6 +192,18 @@ public class Track extends Trajectory {
 	}
 	public void set_PID(String _PID) {
 		this._PID = _PID;
+	}
+	public double get_circleFitChi2PerNDF() {
+		return _circleFitChi2PerNDF;
+	}
+	public void set_circleFitChi2PerNDF(double _circleFitChi2PerNDF) {
+		this._circleFitChi2PerNDF = _circleFitChi2PerNDF;
+	}
+	public double get_lineFitChi2PerNDF() {
+		return _lineFitChi2PerNDF;
+	}
+	public void set_lineFitChi2PerNDF(double _lineFitChi2PerNDF) {
+		this._lineFitChi2PerNDF = _lineFitChi2PerNDF;
 	}
 
 

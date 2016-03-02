@@ -317,6 +317,8 @@ public class RecoBankWriter {
 			for(int j = 0; j<trkcands.get(i).size(); j++) {						
 				crossIdxArray[trkcands.get(i).get(j).get_Region()-1] = trkcands.get(i).get(j).get_Id();
 			}
+			bank.setDouble("circlefit_chi2_per_ndf", i,trkcands.get(i).get_circleFitChi2PerNDF() );
+			bank.setDouble("linefit_chi2_per_ndf", i,trkcands.get(i).get_lineFitChi2PerNDF() );
 			
 			for(int j =0; j<crossIdxArray.length; j++) {
 				String hitStrg = "Cross";

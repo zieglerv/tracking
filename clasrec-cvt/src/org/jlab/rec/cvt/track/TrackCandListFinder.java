@@ -156,12 +156,10 @@ public class TrackCandListFinder {
 					cand.addAll(crossList.get(i));
 					//cand.set_HelicalTrack(fitTrk.get_helix());			done in Track constructor			
 					cand.update_Crosses(svt_geo);
-					
-					
-					cand.set_circleFitChi2Prob(fitTrk.get_chisq()[0]);
-					cand.set_lineFitChi2Prob(fitTrk.get_chisq()[1]);
-													
-					
+										
+					cand.set_circleFitChi2PerNDF(fitTrk.get_chisq()[0]/(int)(X.length-3)); // 3 fit params					
+					cand.set_lineFitChi2PerNDF(fitTrk.get_chisq()[1]/(int)(Z.length-2)); // 2 fit params
+																		
 					if(Number_Of_Iterations==Max_Number_Of_Iterations) {							
 						cands.add(cand); // dump the cand							
 					}

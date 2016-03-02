@@ -142,7 +142,7 @@ public class HelicalTrackFitter {
 		        double avechi2Max = 1.; 
 		        if(passed_fits>0) { 
 		        	averageChi2 = chi2/passed_fits;
-		        	if(averageChi2>avechi2Max) { System.out.println("circ c2 "+chi2);
+		        	if(averageChi2>avechi2Max) { 
 		            return FitStatus.CircleCalcInconsistentWithFit; 
 		        	}
 		        }
