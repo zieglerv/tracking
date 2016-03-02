@@ -425,7 +425,7 @@ public class RecoBankWriter {
 	public static DataBank fillHelicalTracksTrajectoryBank(EvioDataEvent event,
 			List<Track> trks) {
 		
-		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("CVTRec::Trajectory",8*trks.size()); // 8 SVT layer + 2 BMT layers for each hemisphere
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("CVTRec::Trajectory",10*trks.size()); // 8 SVT layer + 2 BMT layers 
 	
 		int k =0;
 		for(int i =0; i< trks.size(); i++) {
