@@ -41,7 +41,8 @@ public class Decoder {
 	 */
 	public void processEvent(DataEvent de, EvioDataSync writer) {
         EvioDataEvent event = (EvioDataEvent) de;
-        EvioDataEvent decodedEvent = EvioFactory.createEvioEvent();
+        EvioDataEvent decodedEvent = (EvioDataEvent) de;
+        		//EvioFactory.createEvioEvent();
        
         if(event.hasBank("BMT::dgtz")==false){ //decoding BMT
         	// decode the event 
