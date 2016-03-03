@@ -64,6 +64,7 @@ public class HelixCrossListFinder {
 	  			{1,2,3},{1,2,4},{1,3,4},{2,3,4}
 	  	}; // combinatorial array
 	 	
+	  	
 	  	// loop over the regions and find cross combinatorial combinations of a minimum of 3 crosses out of 4
 	 	if(theListsByRegion.size()==4) {	 		
 		 	for(int i1 = 0; i1< theListsByRegion.get(0).size(); i1++) {
@@ -87,11 +88,16 @@ public class HelixCrossListFinder {
 		  					} else {
 		  						// if the seed-finder fails with 4 crosses, look for 3 out of 4 using possible combinatorial combinations
 			  					for(int l =1; l< C.length; l++) {
-			  						int r1 = C[l][0]; String s1 = "i"+r1; int l1 = Integer.parseInt(s1);
-			  				  		int r2 = C[l][1]; String s2 = "i"+r2; int l2 = Integer.parseInt(s2);
-			  				  		int r3 = C[l][2]; String s3 = "i"+r3; int l3 = Integer.parseInt(s3);
-				  					trkCand = this.findCandUsingThreeCrosses(theListsByRegion.get(r1).get(l1),
-				  							theListsByRegion.get(r2).get(l2), theListsByRegion.get(r3).get(l3));
+			  						int l1, l2, l3;
+			  						int r1 = C[l][0]; 			  						
+			  				  		int r2 = C[l][1]; 
+			  				  		int r3 = C[l][2]; 
+			  				  		l1 = this.match(r1,i1,i2,i3,i4); // get the correct combinatorial value by matching the region from C for the 1st cross in the sorted array to the value in the loop
+			  				  		l2 = this.match(r2,i1,i2,i3,i4); // get the correct combinatorial value by matching the region from C for the 2nd cross in the sorted array to the value in the loop
+			  				  		l3 = this.match(r3,i1,i2,i3,i4); // get the correct combinatorial value by matching the region from C for the 3rd cross in the sorted array to the value in the loop
+		  						
+				  					trkCand = this.findCandUsingThreeCrosses(theListsByRegion.get(r1-1).get(l1),
+				  							theListsByRegion.get(r2-1).get(l2), theListsByRegion.get(r3-1).get(l3));
 				  					
 				  					if(trkCand!=null && crossList.ContainsNot(trkCnds,trkCand)) {
 				  						if(bmt_crosses.size()>0) {
@@ -130,6 +136,19 @@ public class HelixCrossListFinder {
 		crossList.addAll(trkCnds);
 		return crossList;
 
+	}
+
+	private int match(int r1, int i1, int i2, int i3, int i4) {
+		int l1 = -1;
+		if(r1==1)
+			l1=i1;
+		if(r1==2)
+			l1=i2;
+		if(r1==3)
+			l1=i3;
+		if(r1==4)
+			l1=i4;
+		return l1;
 	}
 
 	/**
