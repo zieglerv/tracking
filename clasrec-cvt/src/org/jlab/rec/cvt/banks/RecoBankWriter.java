@@ -27,7 +27,10 @@ public class RecoBankWriter {
 	 *
 	 */
 	public static EvioDataBank fillSVTHitsBank(EvioDataEvent event, List<FittedHit> hitlist) {
-
+		if(hitlist==null)
+			return null;
+		if(hitlist.size()==0)
+			return null;
 		
 		EvioDataBank bank = (EvioDataBank)
 		          event.getDictionary().createBank("BSTRec::Hits", hitlist.size());
@@ -57,7 +60,11 @@ public class RecoBankWriter {
 	 * @return clusters bank
 	 */
 	public static EvioDataBank fillSVTClustersBank(EvioDataEvent event, List<Cluster> cluslist) {
-
+		if(cluslist==null)
+			return null;
+		if(cluslist.size()==0)
+			return null;
+		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BSTRec::Clusters",cluslist.size());
 		int[] hitIdxArray= new int[5];
 		
@@ -99,7 +106,11 @@ public class RecoBankWriter {
 	 * @return crosses bank
 	 */
 	public static EvioDataBank fillSVTCrossesBank(EvioDataEvent event, List<ArrayList<Cross>> crosses) {
-
+		if(crosses==null)
+			return null;
+		if(crosses.get(0).size()==0)
+			return null;
+		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BSTRec::Crosses",crosses.get(0).size());
     
 		int index =0;
@@ -136,7 +147,10 @@ public class RecoBankWriter {
 	}
 	
 	public static EvioDataBank fillBMTHitsBank(EvioDataEvent event, List<FittedHit> hitlist) {
-
+		if(hitlist==null)
+			return null;
+		if(hitlist.size()==0)
+			return null;
 		
 		EvioDataBank bank = (EvioDataBank)
 		          event.getDictionary().createBank("BMTRec::Hits", hitlist.size());
@@ -166,7 +180,11 @@ public class RecoBankWriter {
 	 * @return clusters bank
 	 */
 	public static EvioDataBank fillBMTClustersBank(EvioDataEvent event, List<Cluster> cluslist) {
-
+		if(cluslist==null)
+			return null;
+		if(cluslist.size()==0)
+			return null;
+		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BMTRec::Clusters",cluslist.size());
 		int[] hitIdxArray= new int[5];
 		
@@ -208,7 +226,11 @@ public class RecoBankWriter {
 	 * @return crosses bank
 	 */
 	public static EvioDataBank fillBMTCrossesBank(EvioDataEvent event, List<ArrayList<Cross>> crosses) {
-
+		if(crosses==null)
+			return null;
+		if(crosses.get(1).size()==0)
+			return null;
+		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("BMTRec::Crosses", crosses.get(1).size());
     
 		int index =0;
@@ -252,7 +274,11 @@ public class RecoBankWriter {
 	 * @return track bank
 	 */
 	public static EvioDataBank fillTracksBank(EvioDataEvent event, List<Track> trkcands) {
-
+		if(trkcands==null)
+			return null;
+		if(trkcands.size()==0)
+			return null;
+		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("CVTRec::Tracks",trkcands.size());
     	// an array representing the ids of the crosses that belong to the track: for a helical track with the current
 		// 4 regions of SVT + 1 region of BMT there can be up to 4 crosses of type SVT and 2 of type BMT (1 for the C detector and 1 for the Z detector)
@@ -340,6 +366,10 @@ public class RecoBankWriter {
 	 */
 	public static DataBank fillStraightTracksBank(EvioDataEvent event,
 			List<StraightTrack> cosmics) {
+		if(cosmics==null)
+			return null;
+		if(cosmics.size()==0)
+			return null;
 		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("CVTRec::Cosmics",cosmics.size());
 		// an array representing the ids of the crosses that belong to the track: for a helical track with the current
@@ -395,6 +425,10 @@ public class RecoBankWriter {
 	
 	public static DataBank fillStraightTracksTrajectoryBank(EvioDataEvent event,
 			List<StraightTrack> trks) {
+		if(trks==null)
+			return null;
+		if(trks.size()==0)
+			return null;
 		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("CVTRec::Trajectory",20*trks.size()); // 8 SVT layer + 2 BMT layers for each hemisphere
 	
@@ -424,6 +458,10 @@ public class RecoBankWriter {
 	
 	public static DataBank fillHelicalTracksTrajectoryBank(EvioDataEvent event,
 			List<Track> trks) {
+		if(trks==null)
+			return null;
+		if(trks.size()==0)
+			return null;
 		
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("CVTRec::Trajectory",10*trks.size()); // 8 SVT layer + 2 BMT layers 
 	
@@ -448,10 +486,131 @@ public class RecoBankWriter {
 			}
 		}
     
-	return bank;
+		return bank;
 	}
-	
-	
+
+	public static void appendCVTBanks(EvioDataEvent event,
+			List<FittedHit> sVThits, List<FittedHit> bMThits,
+			List<Cluster> sVTclusters, List<Cluster> bMTclusters,
+			List<ArrayList<Cross>> crosses, List<Track> trks) {
+		List<DataBank> banks = new ArrayList<DataBank>();
+		
+		DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, sVThits);	
+		if(bank1!=null)
+			banks.add(bank1);
+		
+		DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, bMThits);	
+		if(bank2!=null)
+			banks.add(bank2);
+		
+		DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, sVTclusters);
+		if(bank3!=null)
+			banks.add(bank3);
+		
+		DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, bMTclusters);
+		if(bank4!=null)
+			banks.add(bank4);
+		
+		DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
+		if(bank5!=null)
+			banks.add(bank5);
+		
+		DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
+		if(bank6!=null)
+			banks.add(bank6);
+		
+		//found tracks
+		DataBank bank7 = RecoBankWriter.fillTracksBank((EvioDataEvent) event, trks);
+		if(bank7!=null)
+			banks.add(bank7);
+		
+		//found trajectories
+		DataBank bank8 = RecoBankWriter.fillHelicalTracksTrajectoryBank((EvioDataEvent) event, trks);
+		if(bank8!=null)
+			banks.add(bank8);
+		
+		if(banks.size()==8)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4), banks.get(5), banks.get(6), banks.get(7));
+		if(banks.size()==7)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4), banks.get(5), banks.get(6));
+		if(banks.size()==6)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4), banks.get(5));
+		if(banks.size()==5)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4));			
+		if(banks.size()==4)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3));
+		if(banks.size()==3)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2));
+		if(banks.size()==2)
+			event.appendBanks(banks.get(0),banks.get(1));
+		if(banks.size()==1)
+			event.appendBanks(banks.get(0));
+		
+		
+		
+	}
+
+	public static void appendCVTCosmicsBanks(EvioDataEvent event,
+			List<FittedHit> sVThits, List<FittedHit> bMThits,
+			List<Cluster> sVTclusters, List<Cluster> bMTclusters,
+			List<ArrayList<Cross>> crosses, List<StraightTrack> trks) {
+		List<DataBank> banks = new ArrayList<DataBank>();
+		
+		DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, sVThits);	
+		if(bank1!=null)
+			banks.add(bank1);
+		
+		DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, bMThits);	
+		if(bank2!=null)
+			banks.add(bank2);
+		
+		DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, sVTclusters);
+		if(bank3!=null)
+			banks.add(bank3);
+		
+		DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, bMTclusters);
+		if(bank4!=null)
+			banks.add(bank4);
+		
+		DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
+		if(bank5!=null)
+			banks.add(bank5);
+		
+		DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
+		if(bank6!=null)
+			banks.add(bank6);
+		
+		//found tracks
+		DataBank bank7 = RecoBankWriter.fillStraightTracksBank((EvioDataEvent) event, trks);
+		if(bank7!=null)
+			banks.add(bank7);
+		
+		//found trajectories
+		DataBank bank8 = RecoBankWriter.fillStraightTracksTrajectoryBank((EvioDataEvent) event, trks);
+		if(bank8!=null)
+			banks.add(bank8);
+		
+		if(banks.size()==8)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4), banks.get(5), banks.get(6), banks.get(7));
+		if(banks.size()==7)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4), banks.get(5), banks.get(6));
+		if(banks.size()==6)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4), banks.get(5));
+		if(banks.size()==5)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3), banks.get(4));			
+		if(banks.size()==4)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2), banks.get(3));
+		if(banks.size()==3)
+			event.appendBanks(banks.get(0),banks.get(1), banks.get(2));
+		if(banks.size()==2)
+			event.appendBanks(banks.get(0),banks.get(1));
+		if(banks.size()==1)
+			event.appendBanks(banks.get(0));
+		
+		
+		
+	}
+
 	
 	
 }

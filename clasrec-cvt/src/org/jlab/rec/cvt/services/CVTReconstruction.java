@@ -16,7 +16,6 @@ import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.cross.CrossList;
 import org.jlab.rec.cvt.cross.CrossMaker;
 import org.jlab.rec.cvt.cross.HelixCrossListFinder;
-import org.jlab.rec.cvt.cross.StraightTrackCrossListFinder;
 import org.jlab.rec.cvt.hit.ADCConvertor;
 import org.jlab.rec.cvt.hit.FittedHit;
 import org.jlab.rec.cvt.hit.Hit;
@@ -130,29 +129,19 @@ public class CVTReconstruction extends DetectorReconstruction{
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
 		if(crosses.size()==0 ) {
 			// create the clusters and fitted hits banks
-			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-			DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-			event.appendBanks(bank1,bank2,bank3,bank4);
+			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, null, null);
+			
 			return; //exiting
 		}
 		
-		//Find cross lists for Cosmics
+		//Find cross lists for Helix
 		//4) make list of crosses consistent with a track candidate
-		StraightTrackCrossListFinder crossLister = new StraightTrackCrossListFinder();
-		CrossList crosslist = crossLister.findCosmicsCandidateCrossLists(crosses, SVTGeom);
+		HelixCrossListFinder crossLister = new HelixCrossListFinder();
+		CrossList crosslist = crossLister.findCandidateCrossLists(crosses);
 		
 		if(crosslist.size()==0) {
-			// create the clusters and fitted hits banks
-			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-			DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
-			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
+			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, null);
 			
-			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
 			return;
 		}
 		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
@@ -166,15 +155,10 @@ public class CVTReconstruction extends DetectorReconstruction{
 		
 		if(trkcands.size()==0) {
 			// create the clusters and fitted hits banks
-			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-			DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
-			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
+			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, null);
 			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving crosses ... no track candidates found!");
-			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
+			
 			return;
 		}
 		
@@ -183,22 +167,12 @@ public class CVTReconstruction extends DetectorReconstruction{
 		TrackListFinder trkFinder = new TrackListFinder();
 		List<Track> trks = new ArrayList<Track>();
 		trks = trkFinder.getTracks(trkcands, SVTGeom) ;
-		
-		DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-		DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-		DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-		DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-		DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
-		DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);		
-		//found tracks
-		DataBank bank7 = RecoBankWriter.fillTracksBank((EvioDataEvent) event, trks);
-		//found trajectories
-		DataBank bank8 = RecoBankWriter.fillHelicalTracksTrajectoryBank((EvioDataEvent) event, trks);
-		
-		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
-			System.out.println("Saving tracks !");
-		event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6,bank7,bank8);
-		
+		if(trks.size()>0) {
+			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, trks);
+			
+			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
+				System.out.println("Saving tracks !");
+		}
 		
 	}
 	@Override

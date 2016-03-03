@@ -129,11 +129,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
 		if(crosses.size()==0 ) {
 			// create the clusters and fitted hits banks
-			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-			DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-			event.appendBanks(bank1,bank2,bank3,bank4);
+			RecoBankWriter.appendCVTCosmicsBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, null, null);
 			return; //exiting
 		}
 		
@@ -144,15 +140,10 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		
 		if(crosslist==null || crosslist.size()==0) {
 			// create the clusters and fitted hits banks
-			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-			DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
-			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
+			RecoBankWriter.appendCVTCosmicsBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, null);
 			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving crosses ... no track candidates found!");
-			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
+			
 			return;
 		}
 		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
@@ -166,15 +157,10 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		
 		
 		if(cosmics.size()==0) {
-			DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-			DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-			DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-			DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-			DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
-			DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
+			RecoBankWriter.appendCVTCosmicsBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, null);
 			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving crosses ... no track candidates found!");
-			event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6);
+		
 			return;
 		}
 			
@@ -182,20 +168,14 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 				System.out.println("number of reconstructed tracks = "+cosmics.size());
 			
 		}
-			// create the clusters and fitted hits banks
-		DataBank bank1 = RecoBankWriter.fillSVTHitsBank((EvioDataEvent) event, SVThits);	
-		DataBank bank2 = RecoBankWriter.fillBMTHitsBank((EvioDataEvent) event, BMThits);	
-		DataBank bank3 = RecoBankWriter.fillSVTClustersBank((EvioDataEvent) event, SVTclusters);
-		DataBank bank4 = RecoBankWriter.fillBMTClustersBank((EvioDataEvent) event, BMTclusters);
-		DataBank bank5 = RecoBankWriter.fillSVTCrossesBank((EvioDataEvent) event, crosses);
-		DataBank bank6 = RecoBankWriter.fillBMTCrossesBank((EvioDataEvent) event, crosses);
-		DataBank bank7 = RecoBankWriter.fillStraightTracksBank((EvioDataEvent) event, cosmics);
-		DataBank bank8 = RecoBankWriter.fillStraightTracksTrajectoryBank((EvioDataEvent) event, cosmics);
+		if(cosmics.size()>0) {		
+			//4)  ---  write out the banks			
+			RecoBankWriter.appendCVTCosmicsBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, cosmics);
 		
-		//4)  ---  write out the banks			
-		event.appendBanks(bank1,bank2,bank3,bank4,bank5,bank6,bank7,bank8);
-		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
-			System.out.println("    All Cosmic data banks saved !!!!");
+			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
+				System.out.println("    All Cosmic data banks saved !!!!");
+		}
+	
 	}
 	
 
