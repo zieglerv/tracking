@@ -7,6 +7,7 @@ import org.jlab.data.io.DataBank;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.geom.prim.Vector3D; 
+import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.FittedHit;
@@ -340,8 +341,12 @@ public class RecoBankWriter {
 			bank.setDouble("pathlength",i,trkcands.get(i).get_pathLength()/10); // conversion to cm
 			
 			// fills the list of cross ids for crosses belonging to that reconstructed track
-			for(int j = 0; j<trkcands.get(i).size(); j++) {						
-				crossIdxArray[trkcands.get(i).get(j).get_Region()-1] = trkcands.get(i).get(j).get_Id();
+			
+			for(int j = 0; j<trkcands.get(i).size(); j++) {		
+				if(trkcands.get(i).get(j).get_Detector()=="SVT")
+					crossIdxArray[trkcands.get(i).get(j).get_Region()-1] = trkcands.get(i).get(j).get_Id();
+				if(trkcands.get(i).get(j).get_Detector()=="BMT")
+					crossIdxArray[trkcands.get(i).get(j).get_Region()-1+Constants.CVTCONFIGSTARTREG] = trkcands.get(i).get(j).get_Id();
 			}
 			bank.setDouble("circlefit_chi2_per_ndf", i,trkcands.get(i).get_circleFitChi2PerNDF() );
 			bank.setDouble("linefit_chi2_per_ndf", i,trkcands.get(i).get_lineFitChi2PerNDF() );

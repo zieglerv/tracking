@@ -79,7 +79,7 @@ public class HelicalTrackFitter {
 	   		
 	   		 for(int j=0; j<X.length;j++){
 	   			 
-	   			 if(errRt[j]==0 || ErrZ[j]==0) {
+	   			 if(errRt[j]==0) {
 	   				 System.err.println("Point errors ill-defined -- helical fit exiting");
 	   				 return FitStatus.CircleFitFailed;	   				
 	   			 }
@@ -150,7 +150,7 @@ public class HelicalTrackFitter {
 		     //Line fit
 		     _linefit = new LineFitter();
 		   	
-		   	boolean linefitstatusOK = _linefit.fitStatus(Rho, Z, errRho, ErrZ, X.length);
+		   	boolean linefitstatusOK = _linefit.fitStatus(Rho, Z, errRho, ErrZ, Z.length);
 		   		 	
 	        if (!linefitstatusOK) {
 	            return FitStatus.LineFitFailed;
@@ -160,6 +160,7 @@ public class HelicalTrackFitter {
 	        
 	        _circlefitpars = _circlefit.getFit();
 	        
+	       
 	        // get the parameters of the helix representation of the track
 	        double fit_dca = _circlefitpars.doca(); //check sign convention
 	        double fit_phi_at_dca  = _circlefitpars.phi();   

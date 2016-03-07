@@ -122,6 +122,8 @@ public class Track extends Trajectory {
 		if(this.get_helix()!=null) {
 			Helix helix = this.get_helix();
 			for (int i =0; i<this.size(); i++) {
+				if(this.get(i).get_Detector()!="SVT")
+					continue;
 				double R = Math.sqrt(this.get(i).get_Point().x()*this.get(i).get_Point().x()+this.get(i).get_Point().y()*this.get(i).get_Point().y());
 				Vector3D helixTanVecAtLayer = helix.getTrackDirectionAtRadius(R);
 				this.get(i).set_CrossParamsSVT(helixTanVecAtLayer, geo);

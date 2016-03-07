@@ -107,7 +107,7 @@ public class Constants {
 	
 	public static final double CIRCLEFIT_MAXCHI2 = 600;
 
-	public static final int BSTTRKINGNUMBERITERATIONS = 4;
+	public static final int BSTTRKINGNUMBERITERATIONS = 3;
 
 	public static final int MAXNUMCROSSES = 50;
 
@@ -148,7 +148,7 @@ public class Constants {
 	
 	public static double RMLAYER = 0;
 
-	public static boolean newGeometry = false;
+	public static boolean newGeometry = true;
 
 
 	

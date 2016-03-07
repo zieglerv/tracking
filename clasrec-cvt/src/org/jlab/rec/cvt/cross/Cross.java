@@ -280,7 +280,7 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 		
 		Cluster inlayerclus = this.get_Cluster1();
 		Cluster outlayerclus = this.get_Cluster2();
-
+		
 		double[] Params = geo.getCrossPars(outlayerclus.get_Sector(), outlayerclus.get_Layer(), 
 				inlayerclus.get_Centroid(), outlayerclus.get_Centroid(), "lab", dirAtBstPlane);
 		

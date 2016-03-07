@@ -29,10 +29,14 @@ public class TrajectoryFinder {
 	/**
 	 * 
 	 * @param candCrossList the input list of crosses used in determining a trajectory
+	 * @param isFinal 
 	 * @return a trajectory object
 	 */
-	public Trajectory findTrajectory(int id, Helix helix, ArrayList<Cross> candCrossList, org.jlab.rec.cvt.svt.Geometry svt_geo, org.jlab.rec.cvt.bmt.Geometry bmt_geo) {
+	public Trajectory findTrajectory(int id, Helix helix, ArrayList<Cross> candCrossList, org.jlab.rec.cvt.svt.Geometry svt_geo, org.jlab.rec.cvt.bmt.Geometry bmt_geo, String isFinal) {
 		Trajectory traj = new Trajectory(helix);
+		if(isFinal=="final")
+			traj.isFinal = true;
+		
 		traj.set_Id(id);
 		
 		if(candCrossList.size()==0) {
@@ -148,14 +152,14 @@ public class TrajectoryFinder {
 			// calculate crosses on BMT layers using track information.  These are used in the event display
 			for(Cross c : BMTCrossList) {
 				if(matchCrossToStateVec( c,  stVec, l+1, 0)==false)
-					continue;
+					continue; 
 				if(c.get_DetectorType()=="C") { //C-detector measuring Z
 					double x = InterPoint.x();
 					double y = InterPoint.y();
-					//if(traj.isFinal) { 
+					if(traj.isFinal) { 
 						c.set_Point(new Point3D(x,y,c.get_Point().z()) );
 						c.set_Dir(trkDir);
-					//}
+					}
 					
 					// calculate the hit residuals
 					this.setHitResolParams("BMT", c.get_Cluster2().get_Sector(), c.get_Cluster2().get_Layer(), c.get_Cluster2(),
@@ -173,6 +177,7 @@ public class TrajectoryFinder {
 					// calculate the hit residuals
 					this.setHitResolParams("BMT", c.get_Cluster1().get_Sector(), c.get_Cluster1().get_Layer(), c.get_Cluster1(),
 							 stVec, svt_geo,  bmt_geo, traj.isFinal);
+					
 				}
 			}				
 		}
@@ -366,11 +371,12 @@ public class TrajectoryFinder {
 		return traj;
 	}
 	private boolean matchCrossToStateVec(Cross c, StateVec stVec, int layer, int sector) {
-		int l = layer-1;
-		boolean value = true;
-		if(c.get_Region()!=(int)(l/2)+1) 
-			value = false;	// reauire same region
+		boolean value = false;
 		if(c.get_Detector()=="SVT") {
+			int l = layer-1;
+			value = true;
+			if(c.get_Region()!=(int)(l/2)+1) 
+				value = false;	// reauire same region
 			if(c.get_Sector()!=sector)
 				value = false;		// same sector 
 			double deltaXt = Math.sqrt((stVec.x()-c.get_Point().x())*(stVec.x()-c.get_Point().x())+(stVec.y()-c.get_Point().y())*(stVec.y()-c.get_Point().y()));
@@ -379,15 +385,18 @@ public class TrajectoryFinder {
 		}
 		
 		if(c.get_Detector()=="BMT") { // BMT
-			
+			value = true;
+			int l = layer-9;
+			if(c.get_Region()!=(int)(l/2)+1) 
+				value = false;	// reauire same region
 			if(c.get_DetectorType()=="C") { //C-detector measuring Z
 				if( Math.abs(stVec.z()-c.get_Point0().z()) > Constants.interTol)
-					value = false;
+					value = false; 
 			}
 			if(c.get_DetectorType()=="Z") { //Z-detector measuring phi		
 				double deltaXt = Math.sqrt((stVec.x()-c.get_Point().x())*(stVec.x()-c.get_Point().x())+(stVec.y()-c.get_Point().y())*(stVec.y()-c.get_Point().y()));
 				if( deltaXt > Constants.interTol)
-					value = false;
+					value = false; 
 			}
 		}
 		

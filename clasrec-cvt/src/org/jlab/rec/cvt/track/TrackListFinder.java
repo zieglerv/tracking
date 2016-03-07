@@ -60,6 +60,8 @@ public class TrackListFinder {
 		int NbHits =0;
 		double TotE =0;
 		for(int i = 0; i<trk.size(); i++) {
+			if(trk.get(i).get_Detector()!="SVT")
+				continue;
 			for(int j =0; j< trk.get(i).get_Cluster1().size(); j++) {
 				TotE+= trk.get(i).get_Cluster1().get(j).get_Strip().get_Edep();
 				NbHits++;

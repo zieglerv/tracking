@@ -78,11 +78,9 @@ public class HelixCrossListFinder {
 		  					if(trkCand!=null) {		  					
 		  						// if a seed has been found look for a match with the micromegas crosses
 		  						if(bmt_crosses.size()>0) {
-			  						for(Cross bmt_cross : bmt_crosses) {
-			  							this.findCandUsingMicroMegas(trkCand, bmt_cross);
-			  							trkCnds.add(trkCand);
-			  						}
-		  						} else {
+			  						ArrayList<Seed> trkCands= this.findCandUsingMicroMegas(trkCand, bmt_crosses);			  						
+			  						trkCnds.addAll(trkCands);
+		  						} else { // no bmt
 		  							trkCnds.add(trkCand);
 		  						}
 		  					} else {
@@ -101,12 +99,10 @@ public class HelixCrossListFinder {
 				  					
 				  					if(trkCand!=null && crossList.ContainsNot(trkCnds,trkCand)) {
 				  						if(bmt_crosses.size()>0) {
-				  							// if the seed is found, match to micromegas
-					  						for(Cross bmt_cross : bmt_crosses) {
-					  							this.findCandUsingMicroMegas(trkCand, bmt_cross);
-					  							trkCnds.add(trkCand);
-					  						}
-				  						} else {
+				  							// if the seed is found, match to micromegas				  							
+					  					    ArrayList<Seed> trkCands = this.findCandUsingMicroMegas(trkCand, bmt_crosses);					  												  						
+					  						trkCnds.addAll(trkCands);
+				  						} else { // no bmt
 				  							trkCnds.add(trkCand);
 				  						}
 				  					}
@@ -125,8 +121,11 @@ public class HelixCrossListFinder {
 		  				Seed trkCand = 
 		  							this.findCandUsingThreeCrosses(theListsByRegion.get(0).get(i1),theListsByRegion.get(1).get(i2),theListsByRegion.get(2).get(i3));
 	  					if(trkCand!=null) 
-	  						trkCnds.add(trkCand);
-		  					
+	  						if(bmt_crosses.size()>0) {
+	  							// if the seed is found, match to micromegas
+		  						ArrayList<Seed> trkCands = this.findCandUsingMicroMegas(trkCand, bmt_crosses);	
+		  						trkCnds.addAll(trkCands);
+	  						}
 		  			}
 		  		}
 		 	}
@@ -155,11 +154,70 @@ public class HelixCrossListFinder {
 	 * 
 	 * @param trkCand the track seed
 	 * @param bmt_cross BMT cross
+	 * @return 
 	 */
-    private void findCandUsingMicroMegas(Seed trkCand,
-			Cross bmt_cross) {
+    private ArrayList<Seed> findCandUsingMicroMegas(Seed trkCand,
+			List<Cross> bmt_crosses) {
+    	ArrayList<Seed>  trkCands =new ArrayList<Seed>();
+    	ArrayList<ArrayList<Cross>>  trkBMTCands =new ArrayList<ArrayList<Cross>>();
+    	ArrayList<Cross> BMTCcrosses = new ArrayList<Cross>();
+    	ArrayList<Cross> BMTZcrosses = new ArrayList<Cross>();
+    	for(Cross bmt_cross : bmt_crosses) {
+    		if(!(Double.isNaN(bmt_cross.get_Point().z())))  // C-detector
+    			BMTCcrosses.add(bmt_cross);
+    		if(!(Double.isNaN(bmt_cross.get_Point().x())))  // Z-detector
+    			BMTZcrosses.add(bmt_cross);
+    	}
     	
-    	double dzdrsum = trkCand.avg_tandip*trkCand.size();
+    	
+    	if(BMTCcrosses.size()>0 && BMTZcrosses.size()>0)
+	    	for(Cross bmt_Ccross : BMTCcrosses) { // C-detector   		
+	    		for(Cross bmt_Zcross : BMTZcrosses) { // Z-detector
+		    		ArrayList<Cross> BMTTrkSeed = new ArrayList<Cross>();
+		    		
+		    		if(this.passCcross(trkCand, bmt_Ccross))
+		    			BMTTrkSeed.add(bmt_Ccross);
+		    		
+		    		if(this.passZcross(trkCand, bmt_Zcross))
+		    			BMTTrkSeed.add(bmt_Zcross);
+		    		trkBMTCands.add(BMTTrkSeed); 
+		    	}
+	    	}
+       	if(BMTCcrosses.size()>0 && BMTZcrosses.size()==0)
+	    	for(Cross bmt_Ccross : BMTCcrosses) { // C-detector   		
+	    		
+	    		ArrayList<Cross> BMTTrkSeed = new ArrayList<Cross>();
+	    		
+	    		if(this.passCcross(trkCand, bmt_Ccross))
+	    			BMTTrkSeed.add(bmt_Ccross);
+
+	    		trkBMTCands.add(BMTTrkSeed);
+		    	}
+    	if(BMTZcrosses.size()>0 && BMTCcrosses.size()==0)
+	    	for(Cross bmt_Zcross : BMTZcrosses) { // C-detector   		
+	    		
+	    		ArrayList<Cross> BMTTrkSeed = new ArrayList<Cross>();
+	    		
+	    		if(this.passZcross(trkCand, bmt_Zcross))
+	    			BMTTrkSeed.add(bmt_Zcross);
+
+	    		trkBMTCands.add(BMTTrkSeed);
+		    	}	    	
+    	
+    	for(int i = 0; i<trkBMTCands.size(); i++) {
+    		Seed trkSeed = new Seed(trkCand.avg_tandip, trkCand.delta_phi, trkCand.radius);
+    		trkSeed.addAll(trkCand);
+    		trkSeed.addAll(trkBMTCands.get(i));
+    		trkCands.add(trkSeed);
+    	}
+		return trkCands;
+    }
+
+	private boolean passCcross(Seed trkCand, Cross bmt_Ccross) {
+		
+		boolean pass = false;
+		
+		double dzdrsum = trkCand.avg_tandip*trkCand.size();
     	double ave_seed_rad =0;
     	
     	for (int i =0; i<trkCand.radius.length; i++) {
@@ -167,30 +225,33 @@ public class HelixCrossListFinder {
     	}
     	ave_seed_rad=ave_seed_rad/(double)trkCand.radius.length;
     	
-    	if(!(Double.isNaN(bmt_cross.get_Point().z()))) { // C-detector
-    		double z_bmt = bmt_cross.get_Point().z();
-    		double r_bmt = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[bmt_cross.get_Region()-1];
-    		double dzdr_bmt = z_bmt/r_bmt;
-    		
-    		if(Math.abs((dzdr_bmt-(dzdrsum+dzdr_bmt)/(double)(trkCand.size()+1))/((dzdrsum+dzdr_bmt)/(double)(trkCand.size()+1)))<=Constants.dzdrcut) // add this to the track
-    			trkCand.add(bmt_cross);
-    	}
-    	
-    	if(!(Double.isNaN(bmt_cross.get_Point().x()))) { // Z-detector
-    		double x_bmt = bmt_cross.get_Point().x();
-    		double y_bmt = bmt_cross.get_Point().y();
-    		boolean pass = true;
-    		for(int i = 0; i< trkCand.size()-1; i++) {
-    			double rad_withBmt = calc_radOfCurv(trkCand.get(i).get_Point().x(), trkCand.get(i+1).get_Point().x(), x_bmt, 
-    					                            trkCand.get(i).get_Point().y(), trkCand.get(i+1).get_Point().y(), y_bmt);
-    			if(rad_withBmt<Constants.radcut || Math.abs((rad_withBmt-ave_seed_rad)/ave_seed_rad)>0.3) // more than 30% different
-    				pass = false;
-    		}
-    		if(pass==true)
-    			trkCand.add(bmt_cross);
-    	}
-    }
+		double z_bmt = bmt_Ccross.get_Point().z();
+		double r_bmt = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[bmt_Ccross.get_Region()-1];
+		double dzdr_bmt = z_bmt/r_bmt;
+		if(Math.abs(1-(dzdrsum/(double)(trkCand.size()))/((dzdrsum+dzdr_bmt)/(double)(trkCand.size()+1)))<=Constants.dzdrcut)  // add this to the track
+			pass =true;
+	
+		return pass;
+	}
+    private boolean passZcross(Seed trkCand, Cross bmt_Zcross) {
 
+    	double ave_seed_rad =0;
+    	
+    	for (int i =0; i<trkCand.radius.length; i++) {
+    		ave_seed_rad+=trkCand.radius[i];
+    	}
+    	ave_seed_rad=ave_seed_rad/(double)trkCand.radius.length;
+		double x_bmt = bmt_Zcross.get_Point().x();
+		double y_bmt = bmt_Zcross.get_Point().y();
+		boolean pass = true;
+		for(int i = 0; i< trkCand.size()-1; i++) {
+			double rad_withBmt = calc_radOfCurv(trkCand.get(i).get_Point().x(), trkCand.get(i+1).get_Point().x(), x_bmt, 
+					                            trkCand.get(i).get_Point().y(), trkCand.get(i+1).get_Point().y(), y_bmt);
+			if(rad_withBmt<Constants.radcut || Math.abs((rad_withBmt-ave_seed_rad)/ave_seed_rad)>0.3) // more than 30% different
+				pass = false;
+		}
+		return pass;
+    }
 	private Seed findCandUsingFourCrosses(Cross c1, Cross c2, Cross c3, Cross c4) {
     	
 		// selection for first 3 hits:	

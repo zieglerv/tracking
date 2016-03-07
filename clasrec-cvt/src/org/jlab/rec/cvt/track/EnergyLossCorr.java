@@ -102,7 +102,7 @@ public class EnergyLossCorr {
 		this.set_UpdatedTrack(trkcandcopy);
 		
 		for(int m = 0; m<trkcand.size(); m++) {
-			
+			System.out.println(" Point on trk "+trkcand.get(m).get_Point().toString());
 			Points[m][0] = trkcand.get(m).get_Point().x();
 			Points[m][1] = trkcand.get(m).get_Point().y();
 			Points[m][2] = trkcand.get(m).get_Point().z();
