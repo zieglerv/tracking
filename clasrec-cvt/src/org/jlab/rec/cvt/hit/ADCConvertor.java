@@ -23,6 +23,8 @@ public class ADCConvertor {
      * Converts ADC values to DAQ units -- used for BST test stand analysis
      */
      public double SVTADCtoDAQ(int adc) {
+    	if(adc == -5)
+    		return 1; // this is for running with Geantinos.  Geantinos have adc -5
     	
     	if(adc<0 || adc>7) 
     		return 0;

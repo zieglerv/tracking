@@ -344,7 +344,7 @@ public class TrajectoryFinder {
 						if(c.get_DetectorType()=="Z") { //Z-detector measuring phi
 							//if(traj.isFinal) {
 								
-								c.set_Point(new Point3D(c.get_Point().x(),c.get_Point().x(),ZtrackIntersSurf));
+								c.set_Point(new Point3D(c.get_Point().x(),c.get_Point().y(),ZtrackIntersSurf));
 								c.set_Dir(ray.get_dirVec());
 							//}
 							
