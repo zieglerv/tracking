@@ -81,6 +81,8 @@ public class RecoBankWriter {
 			bank.setInt("seedStrip", i, cluslist.get(i).get_SeedStrip());
 			bank.setDouble("centroid", i, cluslist.get(i).get_Centroid());
 			bank.setDouble("seedE", i, cluslist.get(i).get_SeedEnergy());
+			bank.setDouble("centroidResidual", i, cluslist.get(i).get_CentroidResidual());
+			bank.setDouble("seedResidual", i, cluslist.get(i).get_SeedResidual());
 			
 			for(int j = 0; j<cluslist.get(i).size(); j++) {		
 				if(j<hitIdxArray.length)
