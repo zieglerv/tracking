@@ -415,6 +415,7 @@ public class Geometry {
 		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
 		int strip_group = 0;
 		int ClosestStrip =-1;
+		System.out.println((""+1*1+""+1*0+""));
 		// get group
 		int len = Constants.CRCGROUP[num_region].length;
 		double[] Z_lowBound = new double[len];

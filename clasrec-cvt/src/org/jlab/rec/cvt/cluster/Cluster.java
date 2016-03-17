@@ -309,6 +309,9 @@ public class Cluster extends ArrayList<FittedHit> {
 	private int _MaxStrip;			// the max strip number in the cluster
 	private int _SeedStrip;			// the seed: the strip with largest deposited energy
 	private double _SeedEnergy;		// the deposited energy of the seed
+
+	private double _SeedResidual;	// residual is doca to seed strip from trk intersection with module plane
+	private double _CentroidResidual;// residual is doca to centroid of cluster to trk inters with module plane
 	
 	
 	
@@ -341,7 +344,19 @@ public class Cluster extends ArrayList<FittedHit> {
 	
 
 
-    /**
+    public double get_SeedResidual() {
+		return _SeedResidual;
+	}
+	public void set_SeedResidual(double _SeedResidual) {
+		this._SeedResidual = _SeedResidual;
+	}
+	public double get_CentroidResidual() {
+		return _CentroidResidual;
+	}
+	public void set_CentroidResidual(double _CentroidResidual) {
+		this._CentroidResidual = _CentroidResidual;
+	}
+	/**
      * 
      * @return cluster info. about location and number of hits contained in it
      */

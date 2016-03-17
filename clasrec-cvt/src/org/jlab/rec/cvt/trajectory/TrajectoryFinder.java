@@ -170,7 +170,7 @@ public class TrajectoryFinder {
 				if(c.get_DetectorType()=="Z") { //Z-detector measuring phi
 					double z = InterPoint.z();
 					if(traj.isFinal) {  
-						c.set_Point(new Point3D(c.get_Point().x(),c.get_Point().x(),z));
+						c.set_Point(new Point3D(c.get_Point().x(),c.get_Point().y(),z));
 						c.set_Dir(trkDir);
 					}
 					
@@ -329,7 +329,7 @@ public class TrajectoryFinder {
 							continue;
 						if(this.matchCrossToStateVec(c, stVec, l+1, c.get_Sector())==false)
 							continue;
-						if(c.get_DetectorType()=="Z") { //C-detector measuring Z
+						if(c.get_DetectorType()=="C") { //C-detector measuring Z
 							//if(traj.isFinal) { // reset the cross only for final trajectory
 								
 								c.set_Point(new Point3D(XtrackIntersSurf,YtrackIntersSurf,c.get_Point().z()));
@@ -417,6 +417,10 @@ public class TrajectoryFinder {
 		int l = layer -1;
 		
 		if(detector=="SVT") {
+			double doca2Cls = svt_geo.getDOCAToStrip(sector, layer, cluster.get_Centroid(), new Point3D(stVec.x(),stVec.y(), stVec.z()));
+			double doca2Seed = svt_geo.getDOCAToStrip(sector, layer, (double)cluster.get_SeedStrip(), new Point3D(stVec.x(),stVec.y(), stVec.z()));
+			cluster.set_SeedResidual(doca2Seed);
+			cluster.set_CentroidResidual(doca2Cls);
 			for(FittedHit hit : cluster) {
 				double doca1 = svt_geo.getDOCAToStrip(sector, layer, (double)hit.get_Strip().get_Strip() , new Point3D(stVec.x(),stVec.y(), stVec.z()));
 				double sigma1 = svt_geo.getSingleStripResolution(layer, hit.get_Strip().get_Strip(),stVec.z());
