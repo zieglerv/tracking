@@ -216,6 +216,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 	    // Load the fields
 			if (DCSwimmer.areFieldsLoaded == false) {
 				DCSwimmer.getMagneticFields();
+				
 			}
 	}
 	@Override

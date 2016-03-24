@@ -119,11 +119,13 @@ public class TrackMicroMegasMatching {
     	
     	double[] VecAtMMPl1 = swim.SwimToPlane(MMZ[0]);
     	
-    	swim.SetSwimParameters(VecAtMMPl1[0],VecAtMMPl1[1],VecAtMMPl1[2],VecAtMMPl1[3],VecAtMMPl1[4],VecAtMMPl1[5],q);
+    	if(VecAtMMPl1!=null)
+    		swim.SetSwimParameters(VecAtMMPl1[0],VecAtMMPl1[1],VecAtMMPl1[2],VecAtMMPl1[3],VecAtMMPl1[4],VecAtMMPl1[5],q);
     	
     	double[] VecAtMMPl2 = swim.SwimToPlane(MMZ[1]);
     	
-    	swim.SetSwimParameters(VecAtMMPl2[0],VecAtMMPl2[1],VecAtMMPl2[2],VecAtMMPl2[3],VecAtMMPl2[4],VecAtMMPl2[5],q);
+    	if(VecAtMMPl2 !=null)
+    		swim.SetSwimParameters(VecAtMMPl2[0],VecAtMMPl2[1],VecAtMMPl2[2],VecAtMMPl2[3],VecAtMMPl2[4],VecAtMMPl2[5],q);
     	
     	double[] VecAtMMPl3 = swim.SwimToPlane(MMZ[2]);
 		

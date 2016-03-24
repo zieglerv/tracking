@@ -5,7 +5,6 @@ import java.util.Collections;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.hit.FittedHit;
 
 import trackfitter.fitter.LineFitPars;
@@ -32,8 +31,10 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 		// adding the hits to the defined cluster
 		for(int i = 0; i<rawCluster.size(); i++) {
 			FittedHit fhit = new FittedHit(rawCluster.get(i).get_Sector(), rawCluster.get(i).get_Superlayer(),
-					rawCluster.get(i).get_Layer(),rawCluster.get(i).get_Wire(), rawCluster.get(i).get_Time(),rawCluster.get(i).get_TimeErr(),rawCluster.get(i).get_Id());
+					rawCluster.get(i).get_Layer(),rawCluster.get(i).get_Wire(), rawCluster.get(i).get_Time(),rawCluster.get(i).get_DocaErr(),rawCluster.get(i).get_Id());
 			fhit.set_Id(rawCluster.get(i).get_Id());
+			fhit.set_Doca(rawCluster.get(i).get_Doca());
+			
 			this.add(fhit);
 		}
 	}
@@ -280,7 +281,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 				x[i] = hit.get_Z();
 				ex[i] = 0;
 				y[i] = hit.get_X();
-				ey[i]= hit.get_PosErr(); 
+				ey[i]= hit.get_DocaErr()/Math.cos(Math.toRadians(6.)); 
 			}			
 		}
 		LineFitter linefit = new LineFitter();
@@ -331,7 +332,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 					}
 					
 					if( (trking.equals("HitBased") && Math.abs((y[i]-fit_slope*x[i]-fit_interc))<0.01 ) ||(trking.equals("TimeBased") && LRassigned==false &&
-						 Constants.TIMETODIST[clus.get(i).get_Region()-1]*clus.get(i).get_Time()/clus.get(i).get_CellSize() < 0.4)  ) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment 
+						 clus.get(i).get_Doca()/clus.get(i).get_CellSize() < 0.4)  ) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment 
 						clus.get(i).set_LeftRightAmb(0);
 					}
 		        }

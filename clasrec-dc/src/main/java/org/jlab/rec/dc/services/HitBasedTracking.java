@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.jlab.clasrec.main.DetectorReconstruction;
 import org.jlab.clasrec.utils.ServiceConfiguration;
+import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
@@ -42,7 +43,12 @@ public class HitBasedTracking extends DetectorReconstruction {
     	super("DCHB", "ziegler", "2.0");
     	
     }
-	
+    public void configure() {
+        
+        System.err.println("DCReconstruction::configure is not implemented.");
+        
+    } // end of configure()
+    
     // init SNR 
     Clas12NoiseResult results = new Clas12NoiseResult(); 
 	Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
@@ -101,15 +107,16 @@ public class HitBasedTracking extends DetectorReconstruction {
 			ClusterFinder clusFinder = new ClusterFinder();
 			clusters = clusFinder.findClusters(hits);
 			
+			EvioDataBank effbank = (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::LayerEffs",0);
 			if(Constants.LAYEREFFS)
-				clusFinder.getLayerEfficiencies(hits, event);
+				 effbank = clusFinder.getLayerEfficiencies(hits, event);
 			
 			if(Constants.DEBUGPRINTMODE==true)  
 				System.out.println("Nb of clusters "+clusters.size());
 			
 			if(clusters.size()==0) {
 				
-				rbc.fillAllHBBanks(event, rbc, fhits, null, null, null, null);
+				rbc.fillAllHBBanks(event, rbc, fhits, null, null, null, null,effbank);
 				return;
 			}
 		
@@ -122,7 +129,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 				System.out.println("Nb of segments "+segments.size());
 			if(segments.size()==0) { // need 6 segments to make a trajectory
 				
-				rbc.fillAllHBBanks(event, rbc, fhits, clusters, null, null, null);
+				rbc.fillAllHBBanks(event, rbc, fhits, clusters, null, null, null, effbank);
 				return;
 			}
 								
@@ -134,7 +141,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 				System.out.println("Nb of crosses "+crosses.size());
 			if(crosses.size()==0 ) {
 				
-				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, null, null);
+				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, null, null, effbank);
 				return;
 			}
 			
@@ -161,7 +168,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 				if(Constants.DEBUGPRINTMODE==true)  
 					System.out.println("No cross list found !!!");
 				
-				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null);
+				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null, effbank);
 				return;
 			}
 
@@ -178,13 +185,13 @@ public class HitBasedTracking extends DetectorReconstruction {
 				System.out.println("Nb of tracks "+trkcands.size());
 			if(trkcands.size()==0) {
 				
-				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
+				rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null,effbank); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
 				return;
 			}
 			// track found
 			
 			
-			rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
+			rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands, effbank);
 			if(Constants.DEBUGPRINTMODE==true)
 				System.out.println("all DCHB banks should be appended !!!");
 			
@@ -218,6 +225,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 			public void configure(ServiceConfiguration config) {
 				
 				System.out.println(" CONFIGURING SERVICE DCHB ************************************** ");
+				config.show();
 				if(config.hasItem("DATA", "mc")) {
 					String isMC = config.asString("DATA", "mc");
 					boolean isMCdata = Boolean.parseBoolean(isMC);
@@ -231,34 +239,25 @@ public class HitBasedTracking extends DetectorReconstruction {
 				}	
 				
 				if(config.hasItem("MAG", "torus")) {
-					Constants.FieldConfig="variable";
-					String TorusScale = config.asString("MAG", "torus");
-					double scale = Double.parseDouble(TorusScale);
-					Constants.TORSCALE = scale;					
+					Constants.TORSCALE = Double.parseDouble(config.asString("MAG", "torus"));
 				}
 				if(config.hasItem("MAG", "solenoid")) {
-					Constants.FieldConfig="variable";
-					String SolenoidScale = config.asString("MAG", "solenoid");
-					double scale = Double.parseDouble(SolenoidScale);
-					Constants.SOLSCALE = scale;
+					Constants.SOLSCALE = Double.parseDouble(config.asString("MAG", "solenoid"))	;				
 				}
 				
-				if(config.hasItem("MAG", "fields")) {
-					String FieldsConf = config.asString("MAG", "fields");
-					Constants.FieldConfig = FieldsConf;
-				}
 				
 				if(config.hasItem("TIME", "T0")) {
 					String TimeConf = config.asString("TIME", "T0");
 					double t0 = Double.parseDouble(TimeConf);
 					Constants.T0 = t0;
 				}
+				if(config.hasItem("LAYEREFFS", "on")) {
+					String effs = config.asString("LAYEREFFS", "on");
+					boolean layerE = Boolean.parseBoolean(effs);
+					Constants.LAYEREFFS = layerE;
+				}
 				
-				if(config.hasItem("SMEAR", "docas")) {
-					String Docas = config.asString("SMEAR", "docas");
-					boolean smearDocas = Boolean.parseBoolean(Docas);
-					Constants.smearDocas = smearDocas;
-				}		
+				
 				
 			}
 }

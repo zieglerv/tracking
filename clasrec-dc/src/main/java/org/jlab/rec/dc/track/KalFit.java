@@ -27,6 +27,9 @@ public class KalFit {
 	// Speed of light in cm/ns
 	public static final double C = 0.002997924580;
 
+
+	public double GainScaleFac = 1.0; // to be optimized...
+
 	
 	/**
 	 *  Field instantiated using the torus and the solenoid
@@ -79,7 +82,6 @@ public class KalFit {
 			
 			VecAtFirstMeasSite = dcSwim.SwimToPlane(measVecs[0][0]);
 			
-			
 		}
 		
 		
@@ -112,8 +114,9 @@ public class KalFit {
 				VecAtFirstMeasSite[0],VecAtFirstMeasSite[1],
 				VecAtFirstMeasSite[3]/VecAtFirstMeasSite[5],VecAtFirstMeasSite[4]/VecAtFirstMeasSite[5]);		
 		
-		setcovMat(VecAtFirstMeasSite[0],VecAtFirstMeasSite[1],VecAtFirstMeasSite[2], 
-				-VecAtFirstMeasSite[3],-VecAtFirstMeasSite[4],-VecAtFirstMeasSite[5]);
+		/*setcovMat(VecAtFirstMeasSite[0],VecAtFirstMeasSite[1],VecAtFirstMeasSite[2], 
+				-VecAtFirstMeasSite[3],-VecAtFirstMeasSite[4],-VecAtFirstMeasSite[5]); */
+		setcovMat(trkcand.get(0).get_PointErr().x(), trkcand.get(0).get_PointErr().y(), trkcand.get(0).get_DirErr().x(), trkcand.get(0).get_DirErr().y(), trkcand.get(0).get_DirErr().z(), trkcand.get_P());
 		
 	}
 	
@@ -210,19 +213,25 @@ public class KalFit {
 					//System.out.println("Covariance Matrix is non-invertible - quit filter!");
 					return;
 				}
-			if(Ca.inverse()!=null) {
-				covMat = Ca.inverse();
+			if(Ca!=null) {
+				if(Ca.inverse()!=null) {
+				Matrix CaInv = Ca.inverse();
+				covMat = CaInv;
+				//System.err.println("Error: e");
+				} else {
+				return;
+				}
 			} else {
 				return;
 			}
 			
 			for(int j = 0; j < 5; j++) {
 				// the gain matrix
-				K[j] = (h[0]*covMat.get(j, 0) + h[1]*covMat.get(j, 1))/V;				
+				K[j] = this.GainScaleFac*(h[0]*covMat.get(j, 0) + h[1]*covMat.get(j, 1))/V;				
 			}
 			resVal = measVecs[1][i1] - get_Proj(stateVec, (int) measVecs[2][i1]);
 			
-			double c2 = ((1 - (h[0]*K[0] + h[1]*K[1]))*resVal*resVal/V);
+			double c2 = ((1 - (h[0]*K[0] + h[1]*K[1]))*(1 - (h[0]*K[0] + h[1]*K[1]))*resVal*resVal/V);
 			if(c2<thehitChisq) {
 				thehitChisq = c2;
 				KF_p = 1./Math.abs(stateVec[4]); // temp patch ---> fix this.
@@ -459,16 +468,27 @@ public class KalFit {
 		return covMat;
 	}
 
-	public void setcovMat(double x, double y, double z, double px, double py, double pz) {
-		double p2 = (px*px+py*py+pz*pz);
-		
-			covMat = new Matrix( new double[][]{
+	public void setcovMat(double ex, double ey, double ez, double etx, double ety, double p) { // use the uncertainty in the cross in region 1 to determine the init covMat
+		//public void setcovMat(double x, double y, double z, double px, double py, double pz) {
+		//double p2 = (px*px+py*py+pz*pz);
+		// the error matrix is estimated from the uncertainty in the cross in region 1
+		double p2 = p*p;
+		covMat = new Matrix( new double[][]{
+				{ex*ex,  			0, 									0,         						  	0,         							 	0},
+				{0, 				ey*ey, 								0,         							0,         								0},
+				{0, 				0, 		  							etx*etx,							0,										0},
+				{0, 				0, 									0, 									ety*ety, 							    0},
+				{0, 				0, 									0,         							0,							           0.25*p2}
+		});
+			/*
+			 * covMat = new Matrix( new double[][]{
 					{0.0025,  			0, 									0,         						  	0,         						 	0},
 					{0, 				0.0625, 							0,         							0,         							0},
-					{0, 				0, 		  							0.000004,							0,									0},
+					{0, 				0, 		  							0.000004,	//0.0001,							0,									0},
 					{0, 				0, 									0, 									0.01, 							    0},
 					{0, 				0, 									0,         							0,							        0.001*p2}
 			});
+			 */
 			
 	}
 
@@ -511,7 +531,7 @@ public class KalFit {
 	 */
 	public void setMeasVecs(Track trkcand, String fitsTo) {
 		
-		if(fitsTo == "wires") {
+		if(fitsTo.equals("wires")) {
 			// 36 planes measuring x & z  // allowing for double hits gives a factor of 10*36 in the array
 			double[] X = new double[10*36];
 			double[] Z = new double[10*36];
@@ -528,11 +548,11 @@ public class KalFit {
 						
 						hitOnTrk = trkcand.get(c).get(s).get(h);
 						int slayr = trkcand.get(c).get(s).get(h).get_Superlayer();
-						
 						X[index] = hitOnTrk.get_X();
 						Z[index] = hitOnTrk.get_Z();
 						// make the hit on track and add it to the list
 						HitOnTrack hot = new HitOnTrack(slayr, X[index], Z[index]);
+						hot.hitError = trkcand.get(c).get(s).get(h).get_DocaErr()/Math.cos(Math.toRadians(6.)); 
 						hOTS.add(hot);
 						
 						index++;	
@@ -557,10 +577,16 @@ public class KalFit {
 				measVecErrs[0][i] = hOTS.get(i).hitError;
 				if( i > 0 ) {
 					if(measVecs[0][i-1] == measVecs[0][i]) {
-						measVecs[1][i-1] = (measVecs[1][i-1] + measVecs[1][i])/2;
+						//measVecs[1][i-1] = (measVecs[1][i-1] + measVecs[1][i])/2.;
+						// uncertainty - weighted average measurement
+						measVecs[1][i-1] = (measVecs[1][i-1]/(measVecErrs[0][i-1]*measVecErrs[0][i-1]) + measVecs[1][i]/(measVecErrs[0][i]*measVecErrs[0][i]) )/(1./(measVecErrs[0][i-1]*measVecErrs[0][i-1]) + 1./(measVecErrs[0][i]*measVecErrs[0][i]) );
+						//measVecErrs[0][i-1] = Math.sqrt((measVecErrs[0][i-1]*measVecErrs[0][i-1] + measVecErrs[0][i]*measVecErrs[0][i])/2.);
+						// uncertainty for measurement that is sigma weighted
+						measVecErrs[0][i-1] = 1./Math.sqrt(1./(measVecErrs[0][i-1]*measVecErrs[0][i-1]) + 1./(measVecErrs[0][i]*measVecErrs[0][i]) );
+						
 						hOTS.remove(i); 
 						// rescale the hit error accordingly
-						hOTS.get(hOTS.size()-1).hitError/=Math.sqrt(2.);
+						//hOTS.get(hOTS.size()-1).hitError/=Math.sqrt(2.);
 					}
 				}
 			}
@@ -599,7 +625,7 @@ public class KalFit {
 			}
 			
 		}
-		if(fitsTo == "crosses") {
+		if(fitsTo.equals("crosses")) {
 			measVecs = new double[5][4];
 			measVecErrs = new double[4][4];
 			
@@ -679,7 +705,9 @@ public class KalFit {
 	  
 	    double t_ov_X0 = stepSize/Constants.ARGONRADLEN; //path length in radiation length units = t/X0 [true path length/ X0] ; Ar radiation length = 14 cm
 	    
-	    double mass = MassHypothesis("pion"); // assume given mass hypothesis
+	    double mass = MassHypothesis("electron"); // assume given mass hypothesis
+	    if(Q_ov_P>0)
+	    	mass = MassHypothesis("proton");
 	    double beta = p/Math.sqrt(p*p+mass*mass); // use particle momentum
 	    double cosEntranceAngle = Math.abs((x0*px+y0*py+z0*pz)/(Math.sqrt(x0*x0+y0*y0+z0*z0)*p));
 	    double pathLength = t_ov_X0/cosEntranceAngle;  

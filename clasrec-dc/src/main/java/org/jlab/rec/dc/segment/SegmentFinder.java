@@ -1,5 +1,7 @@
 package org.jlab.rec.dc.segment;
 
+import static java.lang.Math.cos;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,7 +53,7 @@ public class SegmentFinder {
 				segList.add(newSeg);
 			}
 			
-			if(trkg == "TimeBased") {
+			if(trkg.equals("TimeBased")) {
 				
 				//int index=0;
 				for(int i =0; i<seg.size(); i++) {
@@ -79,7 +81,7 @@ public class SegmentFinder {
 				double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().x();
 				double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().z();
 				
-				double calc_doca = (x-sgt.get_fittedCluster().get_clusterLineFitSlope()*z-sgt.get_fittedCluster().get_clusterLineFitIntercept());
+				double calc_doca = (x-sgt.get_fittedCluster().get_clusterLineFitSlope()*z-sgt.get_fittedCluster().get_clusterLineFitIntercept())*cos(Math.toRadians(6.));
 				
 				fhit.set_ClusFitDoca(calc_doca);
 			}
@@ -95,9 +97,11 @@ public class SegmentFinder {
 		// remove out of time hits
 		for(int i = 0; i<fClus.size(); i++) {			
 			if(fClus.get(i).get_OutOfTimeFlag()==true) {
-				//fClus.remove(i);
+				
 				if(Constants.DEBUGPRINTMODE == true)
-					System.out.println(" out of timer ? "+fClus.get(i).printInfo());
+					System.out.println("flag out of timer ? "+fClus.get(i).printInfo()+" removing this hit from segment...");
+                
+                fClus.remove(i);
 			}
 		}
 	}
@@ -148,8 +152,8 @@ public class SegmentFinder {
 			for(FittedHit hit : notLRClus) {
 
 				FittedHit newhitPos = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
-						hit.get_Time(), hit.get_TimeErr(), hit.get_Id()) ;
-				
+						hit.get_Time(), hit.get_DocaErr(), hit.get_Id()) ;
+				newhitPos.set_Doca(hit.get_Doca());
 				newhitPos.set_Id(hit.get_Id());
 				newhitPos.set_TrkgStatus(0);
 				
@@ -159,7 +163,8 @@ public class SegmentFinder {
 				newhitPos.set_AssociatedClusterID(hit.get_AssociatedClusterID());
 				
 				FittedHit newhitNeg = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
-						hit.get_Time(), hit.get_TimeErr(), hit.get_Id()) ;
+						hit.get_Time(), hit.get_DocaErr(), hit.get_Id()) ;
+				newhitNeg.set_Doca(hit.get_Doca());
 				newhitNeg.set_Id(hit.get_Id());
 				newhitNeg.set_TrkgStatus(0);
 				

@@ -45,11 +45,11 @@ public class Constants {
 	/// |Xwires2-Xwires1| = a*Xwires1 + b
 	/// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .
 	public static final double DC_RSEG_A = 0.18;
-	public static final double DC_RSEG_B = 5;
+	public static final double DC_RSEG_B = 5; 
 
 	public static final double PASSINGHITRESIDUAL = 5.0;  //  refine later
 
-	public static final double CELLRESOL = 0.0300; //300 microns
+	public static final double CELLRESOL = 0.0300; //300 microns = 300 * 10^-4 cm
 
 	
 	/**
@@ -100,19 +100,21 @@ public class Constants {
 	public static final double MAXCHI2 = 600;
 
 
-	public static final boolean LAYEREFFS = false;
-
+	public static boolean LAYEREFFS = false;
+	
 	public static  boolean DEBUGPRINTMODE = false;
 	
 	public static boolean areConstantsLoaded = false;
 
 	public static boolean useKalmanFilter = true;
 
+	public static boolean OUTOFTIMEFLAG = true;
+
 	// the nominal configuration is tor -1 sol +1
 	// the reverse configuration is tor +1 sol +1
 	// ---------------------------------------------
 	
-	public static String FieldConfig = "nominal";
+	//public static String FieldConfig = "nominal";
 	
 	public static double TORSCALE = -1.;
 	public static double SOLSCALE = 1.;
@@ -129,10 +131,8 @@ public class Constants {
 
 	public static boolean useRaster = false;
 
-	public static boolean smearDocas = false;
-
-
 	public static double T0 =0;
+	public static boolean useParametricResol = true;
 
 	
 	public static synchronized void Load() {
@@ -140,7 +140,7 @@ public class Constants {
 		
 		NoiseReductionParameters.setLookForTracks(false);
 		
-		if(Constants.FieldConfig.equalsIgnoreCase("nominal")) {
+		/*if(Constants.FieldConfig.equalsIgnoreCase("nominal")) {
 			
 			Constants.TORSCALE = -1;
 			Constants.SOLSCALE = 1;
@@ -150,9 +150,9 @@ public class Constants {
 			
 			Constants.TORSCALE = 1;
 			Constants.SOLSCALE = 1;
-		}
+		}*/
 		
-		TIMETODIST[0] = 0.0053;  //in cm
+		TIMETODIST[0] = 0.0053;  //in cm per ns
 		TIMETODIST[1] = 0.0026;
 		TIMETODIST[2] = 0.0036;
 

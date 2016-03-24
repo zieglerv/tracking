@@ -1,5 +1,7 @@
 package org.jlab.rec.dc.cluster;
 
+import static java.lang.Math.cos;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -322,7 +324,7 @@ public class ClusterFinder  {
 					double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().x();
 					double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().z();
 					
-					double calc_doca = (x-clus.get_clusterLineFitSlope()*z-clus.get_clusterLineFitIntercept());
+					double calc_doca = (x-clus.get_clusterLineFitSlope()*z-clus.get_clusterLineFitIntercept())*cos(Math.toRadians(6.));
 					
 					fhit.set_ClusFitDoca(calc_doca);
 				}
@@ -396,7 +398,7 @@ public class ClusterFinder  {
 					double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().x();
 					double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(fhit.get_Superlayer()-1).getLayer(fhit.get_Layer()-1).getComponent(fhit.get_Wire()-1).getMidpoint().z();
 					
-					double calc_doca = (x-clus.get_clusterLineFitSlope()*z-clus.get_clusterLineFitIntercept());
+					double calc_doca = (x-clus.get_clusterLineFitSlope()*z-clus.get_clusterLineFitIntercept())*cos(Math.toRadians(6.));
 					fhit.set_ClusFitDoca(calc_doca);
 				}
 			}
@@ -767,13 +769,13 @@ public class ClusterFinder  {
 	 * @return layer efficiencies
 	 * .....
 	 */
-	public void getLayerEfficiencies(List<Hit> allhits, EvioDataEvent event) {
+	public EvioDataBank getLayerEfficiencies(List<Hit> allhits, EvioDataEvent event) {
 
 		ClusterFinder gcf;
 		
-		int[][][] EffArray = new int[6][2][6]; //6 sectors,  2 superlayers, 6 layers
+		int[][][] EffArray = new int[6][6][6]; //6 sectors,  6 superlayers, 6 layers
 		for(int i=0; i<6; i++)
-			for(int j=0; j<2; j++)
+			for(int j=0; j<6; j++)
 				for(int k=0; k<6; k++)
 					EffArray[i][j][k]=-1;
 		
@@ -832,7 +834,7 @@ public class ClusterFinder  {
 		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::LayerEffs",bankSize);
 		int bankEntry = 0;
 		for(int i=0; i<6; i++)
-			for(int j=0; j<2; j++)
+			for(int j=0; j<6; j++)
 				for(int k=0; k<6; k++) {
 					bank.setInt("sector",bankEntry, i+1);
 					bank.setInt("superlayer",bankEntry, j+1);
@@ -840,7 +842,7 @@ public class ClusterFinder  {
 					bank.setInt("status", bankEntry,EffArray[i][j][k]);
 					bankEntry++;
 				}
-		event.appendBank(bank);
+		return bank;
 		
 	}
 }

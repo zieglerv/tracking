@@ -1,6 +1,5 @@
 package org.jlab.rec.dc.hit;
 
-import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
 
 /**
@@ -25,14 +24,14 @@ public class Hit implements Comparable<Hit>{
 	 * @param time (for gemc output without digitization)
 	 * @param timeEr the error on the time
 	 */
-	public Hit(int sector, int superlayer, int layer, int wire, double time, double timeEr, int Id) {
+	public Hit(int sector, int superlayer, int layer, int wire, double time, double docaEr, int Id) {
 		this._Sector = sector;
 		this._Superlayer = superlayer;
 		this._Layer = layer;
 		this._Wire = wire;
 		this._Time = time;
-		this._TimeErr = timeEr; 	// Time set to a constant in unit of ns		
-		this._Id = Id; 	// Time set to a constant in unit of ns		
+		this._DocaErr = docaEr; 	
+		this._Id = Id; 	
 		
 	}
 	
@@ -43,7 +42,8 @@ public class Hit implements Comparable<Hit>{
 	private int _Wire;    	 							//	   wire [1...112]
 
 	private double _Time;      							//	   Reconstructed time, for now it is the gemc time
-	private double _TimeErr;      						//	   Error on time, for now it is a constant
+	private double _Doca;								//     Reconstructed doca, for now it is using the linear parametrization that is in  gemc 
+	private double _DocaErr;      						//	   Error on doca
 	
 	private int _Id;									//		Hit Id
 	
@@ -129,20 +129,28 @@ public class Hit implements Comparable<Hit>{
 		this._Time = _Time;
 	}
 
+	public double get_Doca() {
+		return _Doca;
+	}
+
+	public void set_Doca(double _Doca) {
+		this._Doca = _Doca;
+	}
+
 	/**
 	 * 
 	 * @return error on the time in ns (4ns time window used by default in reconstructing simulated data)
 	 */
-	public double get_TimeErr() {
-		return _TimeErr;
+	public double get_DocaErr() {
+		return _DocaErr;
 	}
 
 	/**
-	 * Sets the time
-	 * @param _TimeErr
+	 * Sets the doca uncertainty
+	 * @param _docaErr
 	 */
-	public void set_TimeErr(double _TimeErr) {
-		this._TimeErr = _TimeErr;
+	public void set_DocaErr(double _docaErr) {
+		this._DocaErr = _docaErr;
 	}
 
 
@@ -222,11 +230,13 @@ public class Hit implements Comparable<Hit>{
 	 * @return the cell size in a given superlayer
 	 */
 	public double get_CellSize() {
+		// fix cell size = w_{i+1} -w_{i}
+		double layerDiffAtMPln  = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(0).getMidpoint().x()
+	                     - GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(1).getMidpoint().x();
 		
-		double cellSize  = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(10).getMidpoint().z()
-	                     - GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(10).getMidpoint().z();
+		double cellSize = 0.5*Math.abs(layerDiffAtMPln*Math.cos(Math.toRadians(6.)));
 		
-		return (cellSize/2.);
+		return cellSize;
 	}
 	/**
 	 * 

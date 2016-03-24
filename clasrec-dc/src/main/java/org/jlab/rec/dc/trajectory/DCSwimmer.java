@@ -374,11 +374,14 @@ public class DCSwimmer {
 			}
 			solenoid.setScaleField(true); */
 			solenoid.setScaleFactor(Constants.SOLSCALE);
+			System.out.println(" Sol at orig = "+solenoid.fieldMagnitude(0, 0, 0));
 			System.out.println("***** ****** ****** THE SOLENOID IS BEING SCALED BY "+ (Constants.SOLSCALE*100) +"  %   *******  ****** **** ");
-			if(Constants.useSolenoid == true) {
-				
+			if(Constants.SOLSCALE==0)
+				Constants.useSolenoid = false;
+			if(Constants.useSolenoid == true) {				
 				rcompositeField.add(solenoid);
 				compositeField.add(solenoid);
+				System.out.println(" Compos at orig = "+compositeField.fieldMagnitude(0, 0, 0)+" "+rcompositeField.fieldMagnitude(0, 0, 0));
 			}
 		}
 		areFieldsLoaded = true;

@@ -91,7 +91,8 @@ public class RecoBankWriter {
 			bank.setInt("sector",i, hitlist.get(i).get_Sector());
 			bank.setInt("wire",i, hitlist.get(i).get_Wire());
 			bank.setDouble("time",i, hitlist.get(i).get_Time());
-			bank.setDouble("timeError",i, hitlist.get(i).get_TimeErr());
+			bank.setDouble("doca",i, hitlist.get(i).get_Doca());
+			bank.setDouble("docaError",i, hitlist.get(i).get_DocaErr());
 			bank.setDouble("trkDoca", i, hitlist.get(i).get_ClusFitDoca());
 			bank.setDouble("locX",i, hitlist.get(i).get_lX());
 			bank.setDouble("locY",i, hitlist.get(i).get_lY());
@@ -302,9 +303,12 @@ public class RecoBankWriter {
 			bank.setDouble("X",i, hitlist.get(i).get_X());
 			bank.setDouble("Z",i, hitlist.get(i).get_Z());
 			bank.setInt("LR",i, hitlist.get(i).get_LeftRightAmb());
+			
 			bank.setDouble("time",i, hitlist.get(i).get_Time());
-			bank.setDouble("doca",i, hitlist.get(i).get_TimeToDistance());
+			bank.setDouble("doca",i, hitlist.get(i).get_Doca());
+			bank.setDouble("docaError",i, hitlist.get(i).get_DocaErr());
 			bank.setDouble("trkDoca", i, hitlist.get(i).get_ClusFitDoca());
+			
 			bank.setInt("clusterID", i, hitlist.get(i).get_AssociatedClusterID());
 			bank.setDouble("timeResidual", i, hitlist.get(i).get_TimeResidual());
 			
@@ -539,8 +543,8 @@ public class RecoBankWriter {
 		for(int i = 0; i<hits.size(); i++) {
 			
 			FittedHit fhit = new FittedHit(hits.get(i).get_Sector(), hits.get(i).get_Superlayer(),
-					hits.get(i).get_Layer(), hits.get(i).get_Wire(), hits.get(i).get_Time(),hits.get(i).get_TimeErr(), hits.get(i).get_Id());
-			
+					hits.get(i).get_Layer(), hits.get(i).get_Wire(), hits.get(i).get_Time(),hits.get(i).get_DocaErr(), hits.get(i).get_Id());
+			fhit.set_Doca(hits.get(i).get_Doca());
 			fhits.add(fhit);
 		}
 		return fhits;
@@ -548,7 +552,7 @@ public class RecoBankWriter {
 	
 	public void fillAllHBBanks(EvioDataEvent event, RecoBankWriter rbc, List<FittedHit> fhits, List<FittedCluster> clusters,
 			List<Segment> segments, List<Cross> crosses,
-			List<Track> trkcands) {
+			List<Track> trkcands, EvioDataBank effbank) {
 		
 		if(event == null)
 			return;
@@ -560,28 +564,33 @@ public class RecoBankWriter {
 					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
 					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
 					rbc.fillHBCrossesBank((EvioDataEvent) event, crosses), 
-					rbc.fillHBTracksBank((EvioDataEvent) event, trkcands));
+					rbc.fillHBTracksBank((EvioDataEvent) event, trkcands),
+					effbank);
 		}
 		if(crosses!=null && trkcands == null) {
 			
 			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
 					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
 					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
-					rbc.fillHBCrossesBank((EvioDataEvent) event, crosses));
+					rbc.fillHBCrossesBank((EvioDataEvent) event, crosses),
+					effbank);
 		}
 		if(segments!=null && crosses == null) {
 			
 			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
 					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
-					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments));
+					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+					effbank);
 		}
 		if(clusters!=null && segments == null) {
 
 			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
-					rbc.fillHBClustersBank((EvioDataEvent) event, clusters));
+					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
+					effbank);
 		}
 		if(fhits!=null && clusters == null) {
-			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits));
+			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
+					effbank);
 		}
 	}
 	

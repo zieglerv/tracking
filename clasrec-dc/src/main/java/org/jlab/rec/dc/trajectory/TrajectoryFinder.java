@@ -91,14 +91,16 @@ public class TrajectoryFinder {
 			counter++;
 			double x = x_fitCoeff[0]*z*z+x_fitCoeff[1]*z+x_fitCoeff[2];
 			double y = y_fitCoeff[0]*z*z+y_fitCoeff[1]*z+y_fitCoeff[2];
-			
+			//System.out.println(" trj x0 "+x0+" y0 "+y0+" z0 "+z0);
+			//System.out.println(" trj x "+x+" y "+y+" z "+z);
 			//Point3D bf = dcSwim.Bfield(x0, y0, z0);
 
 			Point3D bf = dcSwim.Bfield((x+x0)*0.5,(y+y0)*0.5,(z+z0)*0.5);
-			
+			//System.out.println("bf "+bf.toString());
 			Vector3D dl = new Vector3D(x-x0,0,z-z0);
 			
 			Vector3D Bf = new Vector3D(bf.x(),bf.y(),bf.z());
+			
 			
 			intBdl+= dl.cross(Bf).mag();
 			

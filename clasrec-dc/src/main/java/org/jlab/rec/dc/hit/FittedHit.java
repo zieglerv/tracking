@@ -24,8 +24,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	 */
 	
 	public FittedHit(int sector, int superlayer, int layer, int wire,
-			double time, double timeEr, int id) {
-		super(sector, superlayer, layer, wire, time, timeEr, id);
+			double time, double docaEr, int id) {
+		super(sector, superlayer, layer, wire, time, docaEr, id);
 		
 		this.set_lX(layer);
 		this.set_lY(layer, wire);
@@ -110,15 +110,21 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	 */
 	public double get_PosErr() {
 		
-		double err = this.get_CellSize()/Math.sqrt(12.);
+		double err = this.get_DocaErr();
 		
-		if(this._TrkgStatus!=-1 && this.get_TimeToDistance()!=0) {
+		if(this._TrkgStatus!=-1) {
+			if(this.get_TimeToDistance()==0) // if the time-to-dist is not set ... set it
+				set_TimeToDistance(0);
 			
-			err = this.get_TimeErr()*Constants.TIMETODIST[this.get_Region()-1]; 
-			
+			err = Constants.CELLRESOL; 
+			if(Constants.useParametricResol==true) {
+				double x = this.get_Doca()/this.get_CellSize();
+				err = 0.016 + 0.0005/((0.1+x)*(0.1+x)) + 0.08 * Math.pow(x, 8); //gives a reasonable approximation to the measured CLAS resolution (in cm!)
+				
+			}
 		}
 		
-		return err/100.;
+		return err;
 	}
 	
 	/**
@@ -239,10 +245,11 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 		
 		double d =0;
 		int regionIdx = this.get_Region()-1;
-		if(_TrkgStatus!=-1) 
+		if(_TrkgStatus!=-1) {
 			d = Constants.TIMETODIST[regionIdx]/cos(Math.toRadians(6.));
-		//	d = Constants.TIMETODIST[regionIdx]/cos(Math.toRadians(6.))/cosTrkAngle;
-		//	d = Constants.TIMETODIST[regionIdx]/cosTrkAngle;
+			if(cosTrkAngle>0.9 & cosTrkAngle<=1) // trk angle correction
+				d /= cosTrkAngle;
+		}
 		this._TimeToDistance = d*this.get_Time();
 	}
 
@@ -319,10 +326,14 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 		if(this.get_Time()>0)
 			this.set_TimeToDistance(cosTrkAngle);
 		
-		if(Constants.TIMETODIST[this.get_Region()-1]*this.get_Time()>this.get_CellSize()*1.5 ) {
+		if(this.get_Doca()>this.get_CellSize()*1.5 ) {
 			//this.fix_TimeToDistance(this.get_CellSize()/cos(Math.toRadians(6.)));
-			this.set_OutOfTimeFlag(true);
+			this.set_OutOfTimeFlag(Constants.OUTOFTIMEFLAG); 
     	}
+
+		if(this.get_Doca()>this.get_CellSize()*1. ) 
+			this.fix_TimeToDistance(this.get_CellSize()/cos(Math.toRadians(6.)));
+		
 		double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
 		double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
 		

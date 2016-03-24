@@ -33,13 +33,17 @@ public class GeometryLoader {
 
 		// mark the geometry as loaded
 		isGeometryLoaded = true;
-		System.out.println("DC Geometry constants are Loaded -- MC geometry = "+Constants.newGeometry);
+		System.out.println("DC Geometry constants are Loaded -- new geometry = "+Constants.newGeometry);
 	}
 	
 	public static void main (String arg[]) throws FileNotFoundException {
 		PrintWriter pw = new PrintWriter(new File("/Users/ziegler/testdcgeo.txt"));
-		Constants.isSimulation = true;
+		Constants.newGeometry = true;
 		GeometryLoader.Load();
+		System.out.println("dx; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().x()-
+				GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(1).getMidpoint().x())*Math.cos(Math.toRadians(6.)));
+		System.out.println("dz; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().z()-
+				GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(0).getMidpoint().z()));
 		System.out.println("layer 1 x; = "+GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(1).getMidpoint().x());
 		System.out.println("layer 2 x; = "+GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(1).getMidpoint().x());
 			pw.printf("%f\n",GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(1).getMidpoint().x()
@@ -47,5 +51,6 @@ public class GeometryLoader {
 			);
 		
 		pw.close();
+		
 	}
 }

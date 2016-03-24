@@ -69,9 +69,9 @@ public class TrackCandListFinder {
 					double theta3 = Math.atan(cand.get(2).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
 			        double theta1 = Math.atan(cand.get(0).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
 			        
-			        double deltaTheta = theta3-theta1;
+			        double deltaTheta = theta3-theta1; 
 			       
-			        double iBdl = traj.get_IntegralBdl();
+			        double iBdl = traj.get_IntegralBdl(); 
 			        
 			        double pxz = Math.abs(Constants.LIGHTVEL*iBdl/deltaTheta);
 			        double thX = (cand.get(0).get_Dir().x()/cand.get(0).get_Dir().z());
@@ -120,6 +120,7 @@ public class TrackCandListFinder {
 								if(kf.KalFitFail==true) {
 									break;
 								}
+								
 								kf.runKalFit(); 
 																
 								if(kf.chi2>fitChisq || kf.chi2>Constants.MAXCHI2+1 || Math.abs(kf.chi2-fitChisq)<0.0000001) {
@@ -138,7 +139,7 @@ public class TrackCandListFinder {
 								fitChisq = kf.chi2;
 								iterationNb++;
 								printiterationNb++;
-								cand.set_FitChi2(fitChisq);
+								cand.set_FitChi2(fitChisq); 
 							}
 								
 						}	
@@ -153,7 +154,8 @@ public class TrackCandListFinder {
 						if(Constants.DEBUGPRINTMODE)
 							System.out.println(" fit chis "+cand.get_FitChi2() + " at iteration "+printiterationNb);
 						cand.set_Id(cands.size());
-						cands.add(cand);
+						
+							cands.add(cand);
 						
 					}
 				}
@@ -174,6 +176,7 @@ public class TrackCandListFinder {
 				 -cand.get_Q());
 		
 		double[] VecAtTar = dcSwim.SwimToPlane(0);
+		
 		if(VecAtTar==null) {
 			cand.fit_Successful=false;
 			return;

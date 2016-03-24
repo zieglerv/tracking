@@ -132,7 +132,9 @@ public class Segment extends ArrayList<FittedHit> {
 		/// and region and satisfy the proximity condition: \n\n
 		/// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
 		/// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
-		boolean value = false;
+		boolean value = false; 
+		//System.out.println("in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
+			//	" < ? "+(Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B));
          if( Math.abs(this.getAvgwire()-otherseg.getAvgwire() ) < Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B) 
         	 value = true;
          
