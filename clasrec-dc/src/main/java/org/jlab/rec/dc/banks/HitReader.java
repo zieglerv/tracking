@@ -118,42 +118,14 @@ public class HitReader {
 		for(int i = 0; i<size; i++) {
 			
 			double smearedTime = 0;
-			/*
-			if(Constants.isSimulation == true) {
-				if(Constants.smearDocas) {
-					double invTimeToDist = Constants.TIMETODIST[(int) (slayer[i]+1)/2-1];
-					smearedTime = smear.smearedTime(invTimeToDist, doca[i], slayer[i]);
-					timeError = smear.smearedTimeSigma(invTimeToDist, doca[i], slayer[i]);
-				} else {
-					smearedTime = stime[i];
-				}
-			} 
-			if(Constants.isSimulation == false) {
-				if(tdc!=null) {
-					smearedTime = (double) tdc[i];
-				}
-			}
-			*/
+			
 			if(Constants.isSimulation == false) {
 				if(tdc!=null) {
 					smearedTime = (double) tdc[i];
 				}
 			} else {
-				double deltaCellMidPlane = Math.abs(GeometryLoader.dcDetector.getSector(0).getSuperlayer(slayer[i]-1).getLayer(0).getComponent(0).getMidpoint().x() - GeometryLoader.dcDetector.getSector(0).getSuperlayer(slayer[i]-1).getLayer(0).getComponent(1).getMidpoint().x());
-				double deltaCell =  Math.cos(Math.toRadians(6.))*deltaCellMidPlane; //  max doca as a tube along the direction of the wire
-				double x =Constants.TIMETODIST[(slayer[i]+1)/2-1]* time[i]/deltaCell; // doca is driftvel * time = tube along the direction of the wire. x is the ratio
-				if(x>1)
-					x=1;
-				double err = 0.016 + 0.0005/((0.1+x)*(0.1+x)) + 0.08 * Math.pow(x, 8);
-				double smearing = err*rn.nextGaussian();
 				
-				if( (time[i]*Constants.TIMETODIST[(slayer[i]+1)/2-1] + smearing) <0) {
-					smearing*=-1;
-				}
-				
-				smearedTime = stime[i]+0*smearing/Constants.TIMETODIST[(slayer[i]+1)/2-1] ; 
-				//System.out.println(" stime "+time[i]+" --> "+smearedTime+" m  "
-				//		+stime[i]+" "+doca[i]/10+" doca "+smearing+ " x "+smearedTime*Constants.TIMETODIST[(slayer[i]+1)/2-1]);
+				smearedTime = stime[i];
 			}
 			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], smearedTime, 0, i);
 			double posError = hit.get_CellSize()/Math.sqrt(12.);
