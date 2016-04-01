@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 
 
 
+
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.trajectory.Helix;
@@ -587,5 +588,64 @@ public class Geometry {
 		 public static void main (String arg[]) throws FileNotFoundException {
 	    	 
 		 }
+		 
+		public double[][] getStripEndPoints(int strip, int slyr) { //1 top, 0 bottom
+			
+			double[][] X = new double[2][2];
+			
+			double z1 = 0;
+			double x1 = 0;
+			double z2 = 0;
+			double x2 = 0;
+
+			// Equation for strip line is x = mz + b [i.e. z is the direction of the length of the module]
+			// -------------------------------------
+			if(slyr == 0) {
+				double s1 = strip;
+				double ialpha1 = (s1-1)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1); 
+				//the active area starts at the first strip 	
+				double interc1 = (s1)*Constants.PITCH;			
+				double m1 = -Math.tan(ialpha1);
+				double b1 = Constants.ACTIVESENWIDTH - interc1 ;
+				
+				z1 = 0;
+				x1 = m1*z1 +b1;
+				z2 = Constants.MODULELENGTH;
+				x2 = m1*z2 +b1;
+				
+				if(x2<0) {
+					x2 = 0;
+					z2 = -b1/m1;
+				}			
+			}
+			
+			if(slyr == 1) {
+				double s2 = strip;
+				double ialpha2 = (s2-1)*Constants.STEREOANGLE/(double) (Constants.NSTRIP-1); 
+				//the active area starts at the first strip 	
+				double interc2 = (s2)*Constants.PITCH;
+				double m2 =  Math.tan(ialpha2);		
+				double b2 = interc2;
+				
+				z1 = 0;
+				x1 = m2*z1 +b2;
+				z2 = Constants.MODULELENGTH;
+				x2 = m2*z2 +b2;
+				
+				if(x2>Constants.ACTIVESENWIDTH) {
+					x2 = Constants.ACTIVESENWIDTH;
+					z2 = (x2 - b2)/m2;
+				}			
+			}
+			X[0][0] = x1;
+			X[0][1] = z1;
+			X[1][0] = x2;
+			X[1][1] = z2;
+			
+			return X;
+
+		}
+
+
 		
 }

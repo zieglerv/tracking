@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.jlab.clasrec.main.DetectorReconstruction;
 import org.jlab.clasrec.utils.ServiceConfiguration;
-import org.jlab.data.io.DataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.banks.HitReader;
@@ -115,8 +114,11 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			
 			return; //exiting
 		}
+		
 		//clean up svt crosses
 		List<Cross> crossesToRm = crossMake.crossLooperCands(crosses);		
+		crosses.get(0).removeAll(crossesToRm);
+		/*
 		for(int j =0; j< crosses.get(0).size(); j++) {
 			for(int j2 =0; j2< crossesToRm.size(); j2++) {
 				if(crosses.get(0).get(j).get_Id()==crossesToRm.get(j2).get_Id())
@@ -124,7 +126,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 				
 			}
 		}
-		
+		*/
 		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
 		if(crosses.size()==0 ) {
@@ -238,6 +240,14 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			org.jlab.rec.cvt.Constants.DEBUGMODE = kFlag;
 		}
 		
+		if(config.hasItem("SVT", "FirstThr")) {
+			org.jlab.rec.cvt.svt.Constants.initThresholds = Integer.parseInt(config.asString("SVT", "FirstThr"));
+			System.out.println("\n\n**********First threshold " + org.jlab.rec.cvt.svt.Constants.initThresholds  + "  *************");
+		}
+		if(config.hasItem("SVT", "Step")) {
+			org.jlab.rec.cvt.svt.Constants.deltaThresholds = Integer.parseInt(config.asString("SVT", "Step"));
+			System.out.println("\n\n**********Step" + org.jlab.rec.cvt.svt.Constants.deltaThresholds  + "  *************");
+		}
 		
 	}
 	

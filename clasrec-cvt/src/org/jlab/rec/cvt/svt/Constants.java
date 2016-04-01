@@ -111,7 +111,7 @@ public class Constants {
 
 	public static final int MAXNUMCROSSES = 50;
 
-	public static final int MAXNUMCROSSESINMODULE = 25;
+	public static final int MAXNUMCROSSESINMODULE = 3;
 	
 	// these are the constants for ADC to energy conversion 
 	public static final int NBITSADC = 3; // 3bit adc for BST

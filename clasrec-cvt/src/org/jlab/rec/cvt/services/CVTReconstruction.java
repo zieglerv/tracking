@@ -116,18 +116,12 @@ public class CVTReconstruction extends DetectorReconstruction{
 			return; //exiting
 		}
 		//clean up svt crosses
-		List<Cross> crossesToRm = crossMake.crossLooperCands(crosses);		
-		for(int j =0; j< crosses.get(0).size(); j++) {
-			for(int j2 =0; j2< crossesToRm.size(); j2++) {
-				if(crosses.get(0).get(j).get_Id()==crossesToRm.get(j2).get_Id())
-					crosses.get(0).remove(j);
-				
-			}
-		}
+		List<Cross> crossesToRm = crossMake.crossLooperCands(crosses);			
+		crosses.get(0).removeAll(crossesToRm);
 		
 		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
-		if(crosses.size()==0 ) {
+		if(crosses.size()==0  || crosses.get(0).size()==0) {
 			// create the clusters and fitted hits banks
 			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, null, null);
 			
