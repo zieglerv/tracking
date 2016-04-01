@@ -121,13 +121,21 @@ public class CVTReconstruction extends DetectorReconstruction{
 		
 		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 			System.out.println("number of reconstructed svt crosses after looper rejection = "+ (crosses.get(0).size()));
-		if(crosses.size()==0  || crosses.get(0).size()==0) {
+		if(crosses.size()==0) {
 			// create the clusters and fitted hits banks
 			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, null, null);
 			
 			return; //exiting
 		}
-		
+		// if the looper finder kills all svt crosses save all crosses anyway
+		if(crosses.get(0).size()==0) {
+			List<ArrayList<Cross>> crosses2 = new ArrayList<ArrayList<Cross>>();
+			crosses2.add(0,(ArrayList<Cross>) crossesToRm);
+			crosses2.add(1, crosses.get(1));
+			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses2, null);
+			
+			return;
+		}
 		//Find cross lists for Helix
 		//4) make list of crosses consistent with a track candidate
 		HelixCrossListFinder crossLister = new HelixCrossListFinder();
