@@ -6,11 +6,14 @@ import java.util.List;
 import org.jlab.clasrec.main.DetectorReconstruction;
 import org.jlab.clasrec.utils.ServiceConfiguration;
 import org.jlab.evio.clas12.EvioDataEvent;
+import org.jlab.rec.dc.CalibrationConstantsLoader;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
+import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
+import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
@@ -36,7 +39,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 	
     public TimeBasedTracking() {
 
-    	super("DCTB", "ziegler", "2.0");
+    	super("DCTB", "ziegler", "2.1");
     	
 		
     }
@@ -49,6 +52,9 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 	int fidNb = 0;
 	int recNb = 0;
 	
+	ClusterFitter cf = new ClusterFitter();
+    ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
+    
 	@Override
 	public void processEvent(EvioDataEvent event) {
 				
@@ -83,7 +89,8 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 		//2) find the clusters from these hits
 		ClusterFinder clusFinder = new ClusterFinder();
 		
-		clusters = clusFinder.timeBasedClusters(hits);
+		clusters = clusFinder.FindTimeBasedClusters(hits, cf, ct);
+		
 		if(clusters.size()==0) {
 			rbc.fillAllTBBanks(event, rbc, hits, null, null, null, null);
 			return;
@@ -91,6 +98,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 		if(Constants.DEBUGPRINTMODE==true) {
 			int NSeg = 0;;
 			for(FittedCluster cls : clusters) {
+				System.out.println(cls.printInfo());
 				NSeg+= cls.get_Superlayer();
 			}
 			if(NSeg == 21)	
@@ -213,6 +221,12 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 		if (Constants.areConstantsLoaded == false) {
 			Constants.Load();
 		}
+		
+		// Load the calibration constants
+			if (CalibrationConstantsLoader.CSTLOADED == false) {
+				CalibrationConstantsLoader.Load();
+			}
+			this.requireCalibration("DC");
 	    // Load the fields
 			if (DCSwimmer.areFieldsLoaded == false) {
 				DCSwimmer.getMagneticFields();

@@ -548,7 +548,7 @@ public class KalFit {
 						
 						hitOnTrk = trkcand.get(c).get(s).get(h);
 						int slayr = trkcand.get(c).get(s).get(h).get_Superlayer();
-						X[index] = hitOnTrk.get_X();
+						X[index] = hitOnTrk.get_XMP();
 						Z[index] = hitOnTrk.get_Z();
 						// make the hit on track and add it to the list
 						HitOnTrack hot = new HitOnTrack(slayr, X[index], Z[index]);

@@ -5,12 +5,14 @@ import java.util.List;
 
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
+import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
+import org.jlab.rec.dc.trajectory.SegmentTrajectory;
 
 import trackfitter.fitter.utilities.*;
 import Jama.Matrix;
@@ -215,6 +217,29 @@ public class RecoBankWriter {
 		
 	}
 
+	/**
+	 * 
+	 * @param event the EvioEvent
+	 * @return segments bank
+	 */
+	public EvioDataBank fillHBSegmentsTrajectoryBank(EvioDataEvent event, List<Segment> seglist) {
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::HBSegmentTrajectory", seglist.size()*6);
+	   		
+		int index =0;
+		for(int i =0; i< seglist.size(); i++) {
+			SegmentTrajectory trj = seglist.get(i).get_Trajectory();
+			for(int l =0; l<6; l++) {
+				bank.setInt("segmentID",index, trj.get_SegmentId());
+				bank.setInt("sector",index, trj.get_Sector());	
+				bank.setInt("superlayer",index, trj.get_Superlayer());
+				bank.setInt("layer",index, (l+1));
+				bank.setInt("matchedHitID", index, trj.getMatchedHitId()[l]);
+				bank.setDouble("trkDoca", index, trj.getTrkDoca()[l]);
+				index++;
+			}
+		}
+		return bank;
+	}
 	/**
 	 * 
 	 * @param event the EvioEvent
@@ -428,6 +453,29 @@ public class RecoBankWriter {
 	/**
 	 * 
 	 * @param event the EvioEvent
+	 * @return segments bank
+	 */
+	public EvioDataBank fillTBSegmentsTrajectoryBank(EvioDataEvent event, List<Segment> seglist) {
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("TimeBasedTrkg::TBSegmentTrajectory", seglist.size()*6);
+	   	
+		int index =0;
+		for(int i =0; i< seglist.size(); i++) {
+			SegmentTrajectory trj = seglist.get(i).get_Trajectory();
+			for(int l =0; l<6; l++) {
+				bank.setInt("segmentID",index, trj.get_SegmentId());
+				bank.setInt("sector",index, trj.get_Sector());	
+				bank.setInt("superlayer",index, trj.get_Superlayer());
+				bank.setInt("layer",index, (l+1));
+				bank.setInt("matchedHitID", index, trj.getMatchedHitId()[l]);
+				bank.setDouble("trkDoca", index, trj.getTrkDoca()[l]);
+				index++;
+			}
+		}
+		return bank;
+	}
+	/**
+	 * 
+	 * @param event the EvioEvent
 	 * @return crosses bank
 	 */
 	public EvioDataBank fillTBCrossesBank(EvioDataEvent event, List<Cross> crosslist) {
@@ -559,28 +607,53 @@ public class RecoBankWriter {
 		
 		
 		if(trkcands!=null) {
+			if(Constants.isCalibrationRun==true) {	
+				event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillHBSegmentsTrajectoryBank((EvioDataEvent) event, segments),
+						rbc.fillHBCrossesBank((EvioDataEvent) event, crosses), 
+						rbc.fillHBTracksBank((EvioDataEvent) event, trkcands),
+						effbank);
+			} else {
+				event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillHBCrossesBank((EvioDataEvent) event, crosses), 
+						rbc.fillHBTracksBank((EvioDataEvent) event, trkcands),
+						effbank);
+			}
 				
-			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
-					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
-					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
-					rbc.fillHBCrossesBank((EvioDataEvent) event, crosses), 
-					rbc.fillHBTracksBank((EvioDataEvent) event, trkcands),
-					effbank);
 		}
 		if(crosses!=null && trkcands == null) {
-			
+			if(Constants.isCalibrationRun==true) {	
 			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
 					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
 					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+					rbc.fillHBSegmentsTrajectoryBank((EvioDataEvent) event, segments),
 					rbc.fillHBCrossesBank((EvioDataEvent) event, crosses),
 					effbank);
+			} else {
+				event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillHBCrossesBank((EvioDataEvent) event, crosses),
+						effbank);
+			}
 		}
 		if(segments!=null && crosses == null) {
-			
-			event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
-					rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
-					rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
-					effbank);
+			if(Constants.isCalibrationRun==true) {	
+				event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillHBSegmentsTrajectoryBank((EvioDataEvent) event, segments),
+						effbank);
+			} else {
+				event.appendBanks(rbc.fillHBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillHBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillHBSegmentsBank((EvioDataEvent) event, segments),
+						effbank);
+			}
 		}
 		if(clusters!=null && segments == null) {
 
@@ -603,19 +676,47 @@ public class RecoBankWriter {
 			return;
 		
 		if(trkcands!=null) {
-			
-			event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
-					rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
-					rbc.fillTBSegmentsBank((EvioDataEvent) event, segments),
-					rbc.fillTBCrossesBank((EvioDataEvent) event, crosses), 
-					rbc.fillTBTracksBank((EvioDataEvent) event, trkcands));
+			if(Constants.isCalibrationRun==true) {	
+				event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillTBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillTBSegmentsTrajectoryBank((EvioDataEvent) event, segments),
+						rbc.fillTBCrossesBank((EvioDataEvent) event, crosses), 
+						rbc.fillTBTracksBank((EvioDataEvent) event, trkcands));
+			} else {
+				event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillTBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillTBCrossesBank((EvioDataEvent) event, crosses), 
+						rbc.fillTBTracksBank((EvioDataEvent) event, trkcands));
+			}
+				
 		}
 		if(crosses!=null && trkcands == null) {
-			
+			if(Constants.isCalibrationRun==true) {	
 			event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
 					rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
 					rbc.fillTBSegmentsBank((EvioDataEvent) event, segments),
+					rbc.fillTBSegmentsTrajectoryBank((EvioDataEvent) event, segments),
 					rbc.fillTBCrossesBank((EvioDataEvent) event, crosses));
+			} else {
+				event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillTBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillTBCrossesBank((EvioDataEvent) event, crosses));
+			}
+		}
+		if(segments!=null && crosses == null) {
+			if(Constants.isCalibrationRun==true) {	
+				event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillTBSegmentsBank((EvioDataEvent) event, segments),
+						rbc.fillTBSegmentsTrajectoryBank((EvioDataEvent) event, segments));
+			} else {
+				event.appendBanks(rbc.fillTBHitsBank((EvioDataEvent) event, fhits),
+						rbc.fillTBClustersBank((EvioDataEvent) event, clusters),
+						rbc.fillTBSegmentsBank((EvioDataEvent) event, segments));
+			}
 		}
 		if(segments!=null && crosses == null) {
 

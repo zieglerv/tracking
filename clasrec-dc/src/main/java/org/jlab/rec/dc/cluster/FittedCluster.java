@@ -1,14 +1,10 @@
 package org.jlab.rec.dc.cluster;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.hit.FittedHit;
 
-import trackfitter.fitter.LineFitPars;
-import trackfitter.fitter.LineFitter;
 
 /**
  * A fitted cluster in the DC consists of an array of hits that are grouped together according to the algorithm of the ClusterFinder class and have been fit using the wire position information and subsequent time-based information (at the midplane)
@@ -52,7 +48,14 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 	private double _clusterLineFitintercept;
 	private double _clusterLineFitSlopeErr;
 	private double _clusterLineFitinterceptErr;
+	
+	private double _clusterLineFitSlopeMP;
+	private double _clusterLineFitInterceptMP;
+	private double _clusterLineFitSlopeErrMP;
+	private double _clusterLineFitInterceptErrMP;
 
+	private int[][] _Status;
+	
 	/**
 	 * 
 	 * @return the sector (1...6)
@@ -101,6 +104,14 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 		this._Id = _Id;
 	}
 
+	public int[][] get_Status() {
+		return _Status;
+	}
+
+	public void set_Status(int[][] _Status) {
+		this._Status = _Status;
+	}
+
 	/**
 	 * 
 	 * @return the line corresponding to the linear fit to the cluster hits
@@ -117,7 +128,8 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 		this._clusLine = _clusLine; 
 	}
 
-	private Line3D _clusLineErr;
+	 Line3D _clusLineErr;
+	
 	/**
 	 * 
 	 * @return the line corresponding to the linear fit to the cluster hits
@@ -252,101 +264,41 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 	public void set_clusterLineFitInterceptErr(double _clusterLineFitinterceptErr) {
 		this._clusterLineFitinterceptErr = _clusterLineFitinterceptErr;
 	}
-	
-	/**
-	 * Fits a cluster to a line
-	 *
-	 */
-	public void clusterFitter(String trking, boolean LRassigned) {
-		FittedCluster clus = this;
-		Collections.sort(clus);
-		
-		int clusterSize = clus.size();
-		double[] x = new double[clusterSize];
-		double[] y = new double[clusterSize];
-		double[] ex = new double[clusterSize];
-		double[] ey = new double[clusterSize];
-		
-		for(int i = 0; i < clusterSize; i++) {
-		
-			FittedHit hit = clus.get(i); 
-			if(clus.get_TrkgStatus()==-1) {
-				x[i] = hit.get_lX();
-				ex[i] = 0;
-				y[i] = hit.get_lY();
-				ey[i] = 1;
-			} 
-			if(clus.get_TrkgStatus()==0) {
-				
-				x[i] = hit.get_Z();
-				ex[i] = 0;
-				y[i] = hit.get_X();
-				ey[i]= hit.get_DocaErr()/Math.cos(Math.toRadians(6.)); 
-			}			
-		}
-		LineFitter linefit = new LineFitter();
-		boolean linefitstatusOK = linefit.fitStatus(x, y, ex, ey, clusterSize);
-		
-		if(linefitstatusOK) {
-		      //  Get the results of the fits
-		        LineFitPars linefitpars = linefit.getFit();
-		       
-		        double fit_slope = linefitpars.slope();
-		        double fit_interc = linefitpars.intercept();
 
-                 // nominal line:
-		        double the_slope = fit_slope;
-		        double the_interc = fit_interc;
-		        
-                Point3D pointOnLine = get_PointOnLine(x[0], the_slope, the_interc);
-                Point3D dirOfLine = get_DirOnLine(the_slope, the_interc);
-		        
-		        clus.set_clusLine(new Line3D(pointOnLine, dirOfLine));
-		        
-		        
-		        Point3D pointOnLineErr = get_PointOnLine(x[0], linefitpars.slopeErr(), linefitpars.interceptErr());
-		        Point3D dirOfLineErr = get_DirOnLine(linefitpars.slopeErr(), linefitpars.interceptErr());
-		        
-		        clus.set_clusLineErr(new Line3D(pointOnLineErr, dirOfLineErr));
-		        
-		        double chi2 =0;
-		        for(int i = 0; i < clusterSize; i++) {
-		        	
-		        	double residual = (y[i]-fit_slope*x[i]-fit_interc);
-		        	
-		        	if(trking=="TimeBased") {		        	
-		        		double timeResidual = Math.abs(fit_slope*x[i]+fit_interc) - Math.abs(y[i]);
-		        		//System.out.println("In Cluster Finder at point "+x[i]+" , "+y[i]+" fit = "+(fit_slope*x[i]+fit_interc)+
-		        		//		" with residual "+timeResidual);
-		        		clus.get(i).set_TimeResidual(timeResidual);
-		        	}
-		        	
-		        	chi2=chi2+residual*residual;
-					clus.get(i).set_Residual(residual);
-					
-					if(this.get_TrkgStatus()==-1 && residual<0) {
-						clus.get(i).set_LeftRightAmb(1);
-					}
-					if(this.get_TrkgStatus()==-1 && residual>0) {
-						clus.get(i).set_LeftRightAmb(-1);
-					}
-					
-					if( (trking.equals("HitBased") && Math.abs((y[i]-fit_slope*x[i]-fit_interc))<0.01 ) ||(trking.equals("TimeBased") && LRassigned==false &&
-						 clus.get(i).get_Doca()/clus.get(i).get_CellSize() < 0.4)  ) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment 
-						clus.get(i).set_LeftRightAmb(0);
-					}
-		        }
-		        clus.set_clusterLineFitSlope(fit_slope); 
-		        clus.set_clusterLineFitSlopeErr(linefitpars.slopeErr());
-		        clus.set_clusterLineFitIntercept(fit_interc);
-		        clus.set_clusterLineFitInterceptErr(linefitpars.interceptErr());
-		        clus.set_fitProb(linefitpars.getProb());
-		        clus.set_Chisq(linefitpars.chisq());
-		        
-		}
-		
+
+	
+	public double get_clusterLineFitSlopeMP() {
+		return _clusterLineFitSlopeMP;
 	}
 
+	public void set_clusterLineFitSlopeMP(double _clusterLineFitSlopeMP) {
+		this._clusterLineFitSlopeMP = _clusterLineFitSlopeMP;
+	}
+
+	public double get_clusterLineFitSlopeErrMP() {
+		return _clusterLineFitSlopeErrMP;
+	}
+
+	public void set_clusterLineFitSlopeErrMP(double _clusterLineFitSlopeErrMP) {
+		this._clusterLineFitSlopeErrMP = _clusterLineFitSlopeErrMP;
+	}
+
+	public double get_clusterLineFitInterceptMP() {
+		return _clusterLineFitInterceptMP;
+	}
+
+	public void set_clusterLineFitInterceptMP(double _clusterLineFitInterceptMP) {
+		this._clusterLineFitInterceptMP = _clusterLineFitInterceptMP;
+	}
+
+	public double get_clusterLineFitInterceptErrMP() {
+		return _clusterLineFitInterceptErrMP;
+	}
+
+	public void set_clusterLineFitInterceptErrMP(
+			double _clusterLineFitInterceptErrMP) {
+		this._clusterLineFitInterceptErrMP = _clusterLineFitInterceptErrMP;
+	}
 
 	/**
 	 * 
@@ -372,31 +324,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 			value = 1;
 		return value;
 	}
-	
-	/**
-	 * 
-	 * @param the_slope the cluster fitted-line slope
-	 * @param the_interc the fitted-line intercept
-	 * @return the cluster fitted-line unit direction vector
-	 */
-	private Point3D get_DirOnLine(double the_slope, double the_interc) {
-		return new Point3D(the_slope/Math.sqrt(1.+the_slope*the_slope),0,1./Math.sqrt(1.+the_slope*the_slope));
-	}
-	
-	/**
-	 * 
-	 * @param d the point z coordinate
-	 * @param the_slope the cluster fitted-line slope
-	 * @param the_interc the fitted-line intercept
-	 * @return  point (the_slope*d+the_interc,0,d) on the fitted cluster line
-	 */
-	private Point3D get_PointOnLine(double d, double the_slope,
-			double the_interc) {
-		
-		return new Point3D(the_slope*d+the_interc,0,d);
-	}
-	
-	
+
 	
 	/**
 	 * 

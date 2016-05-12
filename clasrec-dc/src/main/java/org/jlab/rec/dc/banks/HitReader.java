@@ -2,15 +2,12 @@ package org.jlab.rec.dc.banks;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import org.jlab.data.io.DataEvent;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
-import org.jlab.rec.dc.hit.SmearDCHit;
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.GeometryLoader;
 
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
@@ -66,10 +63,8 @@ public class HitReader {
 	 * @param event DataEvent
 	 */
 	public void fetch_DCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,NoiseReductionParameters parameters,
-			Clas12NoiseResult results, SmearDCHit smear) {
+			Clas12NoiseResult results) {
 		
-		 Random rn= new Random();
-
 		if(event.hasBank("DC::dgtz")==false) {
 			//System.err.println("there is no dc bank ");
 			_DCHits= new ArrayList<Hit>();
@@ -81,6 +76,7 @@ public class HitReader {
 		
 		EvioDataBank bankDGTZ = (EvioDataBank) event.getBank("DC::dgtz");
         
+		int[] hitno = bankDGTZ.getInt("hitn");
         int[] sector = bankDGTZ.getInt("sector");
 		int[] slayer = bankDGTZ.getInt("superlayer");
 		int[] layer = bankDGTZ.getInt("layer");
@@ -121,16 +117,26 @@ public class HitReader {
 			
 			if(Constants.isSimulation == false) {
 				if(tdc!=null) {
+					if(tdc[i]<0)
+						continue;
 					smearedTime = (double) tdc[i];
 				}
 			} else {
 				
 				smearedTime = stime[i];
 			}
-			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], smearedTime, 0, i);
+			if(smearedTime<0)
+				continue;
+			
+			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], smearedTime, 0, hitno[i]);
+			
 			double posError = hit.get_CellSize()/Math.sqrt(12.);
 			hit.set_DocaErr(posError);
 			hit.set_Doca(Constants.TIMETODIST[hit.get_Region()-1]*hit.get_Time());
+			if(hit.get_Doca()>hit.get_CellSize()) {
+				//this.fix_TimeToDistance(this.get_CellSize());
+				hit.set_OutOfTimeFlag(true); 
+			}
 			//use only hits with signal on wires
 			if(Constants.useNoiseAlgo == true)
 				if(wire[i]!=-1 && results.noise[i]==false){		

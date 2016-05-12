@@ -7,11 +7,14 @@ import org.jlab.clasrec.main.DetectorReconstruction;
 import org.jlab.clasrec.utils.ServiceConfiguration;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
+import org.jlab.rec.dc.CalibrationConstantsLoader;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
+import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
+import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
@@ -19,7 +22,6 @@ import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.cross.CrossMaker;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
-import org.jlab.rec.dc.hit.SmearDCHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.track.Track;
@@ -40,7 +42,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 
     
     public HitBasedTracking() {
-    	super("DCHB", "ziegler", "2.0");
+    	super("DCHB", "ziegler", "2.1");
     	
     }
     public void configure() {
@@ -54,6 +56,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 	Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
 
 	
+	
 	int[] rightShifts = Constants.SNR_RIGHTSHIFTS;
 	int[] leftShifts  = Constants.SNR_LEFTSHIFTS;
 	NoiseReductionParameters parameters = new NoiseReductionParameters (
@@ -63,7 +66,8 @@ public class HitBasedTracking extends DetectorReconstruction {
     int eventNb =0;
     int recNb = 0;
     
-    SmearDCHit hsmear = new SmearDCHit();
+    ClusterFitter cf = new ClusterFitter();
+    ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
     
 	@Override
 	public void processEvent(EvioDataEvent event) {
@@ -82,7 +86,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 		RecoBankWriter rbc = new RecoBankWriter();
 		
 		HitReader hitRead = new HitReader();
-		hitRead.fetch_DCHits(event, noiseAnalysis, parameters, results, hsmear);
+		hitRead.fetch_DCHits(event, noiseAnalysis, parameters, results);
 
 		if(Constants.DEBUGPRINTMODE==true)
 			System.out.println("*********  HIT-BASED TRACKING  ********* \n event number "+eventNb);
@@ -105,11 +109,12 @@ public class HitBasedTracking extends DetectorReconstruction {
 		
 		//2) find the clusters from these hits
 			ClusterFinder clusFinder = new ClusterFinder();
-			clusters = clusFinder.findClusters(hits);
+			clusters = clusFinder.FindHitBasedClusters(hits, ct, cf);
+			
 			
 			EvioDataBank effbank = (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::LayerEffs",0);
-			if(Constants.LAYEREFFS)
-				 effbank = clusFinder.getLayerEfficiencies(hits, event);
+			//if(Constants.LAYEREFFS)
+			//	 effbank = clusFinder.getLayerEfficiencies(hits, event);
 			
 			if(Constants.DEBUGPRINTMODE==true)  
 				System.out.println("Nb of clusters "+clusters.size());
@@ -213,8 +218,13 @@ public class HitBasedTracking extends DetectorReconstruction {
 			// Load the Constants
 			if (Constants.areConstantsLoaded == false) {
 				Constants.Load();
+				System.out.println(" DB VARIATION LOADED AS "+Constants.DBVAR);
 			}
-
+			// Load the calibration constants
+			if (CalibrationConstantsLoader.CSTLOADED == false) {
+				CalibrationConstantsLoader.Load();
+			}
+			this.requireCalibration("DC");
 			// Load the fields
 			if (DCSwimmer.areFieldsLoaded == false) {
 				DCSwimmer.getMagneticFields();
@@ -236,6 +246,11 @@ public class HitBasedTracking extends DetectorReconstruction {
 					String inNewG = config.asString("GEOM", "new");
 					boolean isNewGeom = Boolean.parseBoolean(inNewG);
 					Constants.newGeometry = isNewGeom;
+				}	
+				
+				if(config.hasItem("CCDB", "VAR")) {
+					 String Variation = config.asString("CCDB", "VAR");
+					 Constants.DBVAR = Variation.trim().toString();
 				}	
 				
 				if(config.hasItem("MAG", "torus")) {

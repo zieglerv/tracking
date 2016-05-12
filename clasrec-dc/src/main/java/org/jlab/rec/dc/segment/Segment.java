@@ -1,12 +1,14 @@
 package org.jlab.rec.dc.segment;
 
 import java.util.ArrayList;
+
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.trajectory.SegmentTrajectory;
 
 /**
  * A class to describe segment objects, where a Segment is a fitted cluster that has been pruned of hits with bad residuals
@@ -145,8 +147,7 @@ public class Segment extends ArrayList<FittedHit> {
 		boolean value = false;
 		
 		if(this.get_fitPlane()!= null && otherseg.get_fitPlane()!=null) {
-			
-			if(Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal())))-12.)<Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 12 degrees with some tolerance
+			 if(Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal())))-12.)<Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 12 degrees with some tolerance
 				value = true;
 		}
 		
@@ -167,6 +168,8 @@ public class Segment extends ArrayList<FittedHit> {
     
 	
 	private Plane3D _fitPlane;
+	private SegmentTrajectory _Trajectory;
+	private int _Status = 1;
 	
 	/**
 	 * 
@@ -181,7 +184,7 @@ public class Segment extends ArrayList<FittedHit> {
 	 */
 	public void set_fitPlane() {
 		if(this.get_fittedCluster().get_clusLine()==null) {
-			
+			System.err.println(" no clusterline for "+this.get_fittedCluster().printInfo());
 			return;
 		}
 		
@@ -212,7 +215,7 @@ public class Segment extends ArrayList<FittedHit> {
 	private Plane3D calc_fitPlane(Point3D refPoint, Vector3D refDir) {
 				
 		double X = Math.pow(-1, (this.get_Superlayer()-1))*Math.sin(Math.toRadians(6));
-		double Y = Math.cos(Math.toRadians(6));
+		double Y = Math.cos(Math.toRadians(6.));
 		
 		Vector3D plDir = new Vector3D(X,Y,0);
 		
@@ -232,6 +235,22 @@ public class Segment extends ArrayList<FittedHit> {
 	
 	
 	
+	public SegmentTrajectory get_Trajectory() {
+		return _Trajectory;
+	}
+
+	public void set_Trajectory(SegmentTrajectory _Trajectory) {
+		this._Trajectory = _Trajectory;
+	}
+
+	public int get_Status() {
+		return _Status;
+	}
+
+	public void set_Status(int _Status) {
+		this._Status = _Status;
+	}
+
 	/**
 	 * 
 	 * @return the segment info.

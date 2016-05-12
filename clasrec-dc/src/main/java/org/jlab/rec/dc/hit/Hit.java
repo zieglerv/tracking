@@ -192,12 +192,17 @@ public class Hit implements Comparable<Hit>{
 	 * @return an int used to sort a collection of hits by wire number. Sorting by wire is used in clustering.
 	 */
 	@Override
-	public int compareTo(Hit arg0) {
-		if(this._Wire>arg0._Wire) {
-			return 1;
-		} else {
-			return 0;
-		}
+	public int compareTo(Hit arg) {
+		int return_val = 0 ;
+		int CompSec = this.get_Sector() < arg.get_Sector()  ? -1 : this.get_Sector()  == arg.get_Sector()  ? 0 : 1;
+		int CompPan = this.get_Layer()  < arg.get_Layer()   ? -1 : this.get_Layer()   == arg.get_Layer()   ? 0 : 1;
+		int CompPad = this.get_Wire() < arg.get_Wire()  ? -1 : this.get_Wire()  == arg.get_Wire()  ? 0 : 1;
+		
+		int return_val1 = ((CompPan ==0) ? CompPad : CompPan); 
+		return_val = ((CompSec ==0) ? return_val1 : CompSec);
+		
+		return return_val;
+		
 	}
 		
 	/**
@@ -215,16 +220,28 @@ public class Hit implements Comparable<Hit>{
 		double brickwallSign = Math.signum(brickwallPattern);
 		
 		//center of the cell asfcn wire num
-		double y= (double)wire*(1.+0.25*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.)));
-		
+		//double y= (double)wire*(1.+0.25*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.)));
+		double y= (double)wire*2*Math.tan(Math.PI/6.);
 		if(layer%2==1) {
-			y = y-brickwallSign*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.));
+			//y = y-brickwallSign*Math.sin(Math.PI/3.)/(1.+Math.sin(Math.PI/6.));
+			y = y-brickwallSign*Math.tan(Math.PI/6.);
 		}
 		return y;
 		
 		
 	}
 	
+	/**
+	 * identifying outoftimehits;
+	 */
+	private boolean _OutOfTimeFlag;
+	
+	public void set_OutOfTimeFlag(boolean b) {
+		_OutOfTimeFlag =b;
+	}
+	public boolean get_OutOfTimeFlag() {
+		return _OutOfTimeFlag;
+	}
 	/**
 	 * 
 	 * @return the cell size in a given superlayer
@@ -234,7 +251,8 @@ public class Hit implements Comparable<Hit>{
 		double layerDiffAtMPln  = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(0).getMidpoint().x()
 	                     - GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(1).getMidpoint().x();
 		
-		double cellSize = 0.5*Math.abs(layerDiffAtMPln*Math.cos(Math.toRadians(6.)));
+		//double cellSize = 0.5*Math.cos(Math.toRadians(6.)*Math.abs(layerDiffAtMPln*Math.cos(Math.toRadians(6.)));
+		double cellSize = 0.5*Math.abs(layerDiffAtMPln);
 		
 		return cellSize;
 	}

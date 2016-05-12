@@ -1,5 +1,7 @@
 package org.jlab.rec.dc;
 
+import java.util.ArrayList;
+
 import cnuphys.snr.NoiseReductionParameters;
 
 /**
@@ -15,6 +17,9 @@ public class Constants {
 	// RECONSTRUCTION PARAMETERS
 	public static int DC_MIN_NLAYERS = 4;
 
+	// DATABASE VARIATION
+	public static String DBVAR = "default";
+	
 	// GEOMETRY PARAMETERS
 
 	// other CLAS12 parameters
@@ -47,7 +52,7 @@ public class Constants {
 	public static final double DC_RSEG_A = 0.18;
 	public static final double DC_RSEG_B = 5; 
 
-	public static final double PASSINGHITRESIDUAL = 5.0;  //  refine later
+	public static final double PASSINGHITRESIDUAL = 2.0;  //  refine later
 
 	public static final double CELLRESOL = 0.0300; //300 microns = 300 * 10^-4 cm
 
@@ -123,9 +128,9 @@ public class Constants {
 	public static  int[] SNR_RIGHTSHIFTS = {0,1,2,2,4,4};
 	public static  int[] SNR_LEFTSHIFTS  = {0,1,2,2,4,4};	
 	
-	public static boolean useSolenoid = true;
+	public static boolean useSolenoid = false;
 	
-	public static boolean useNoiseAlgo =false;
+	public static boolean useNoiseAlgo =true;
 
 	public static boolean turnOnMicroMegas = true;
 
@@ -133,17 +138,36 @@ public class Constants {
 
 	public static double T0 =0;
 	public static boolean useParametricResol = true;
+	public static boolean isCalibrationRun = true;
 
+	// Arrays for combinatorial cluster compositions
+    static final int[][] CombArray1Layer = new int[][]{{0},{1}};
+    static final int[][] CombArray2Layers = new int[][]{{0,0},{1,0},{0,1},{1,1}};
+    static final int[][] CombArray3Layers = new int[][]{{0,0,0},{1,0,0},{0,1,0},{1,1,0},{0,0,1},{1,0,1},{0,1,1},{1,1,1}};
+    static final int[][] CombArray4Layers = new int[][]{{0,0,0,0},{1,0,0,0},{0,1,0,0},{1,1,0,0},{0,0,1,0},{1,0,1,0},{0,1,1,0},{1,1,1,0},{0,0,0,1},{1,0,0,1},{0,1,0,1},{1,1,0,1},{0,0,1,1},{1,0,1,1},{0,1,1,1},{1,1,1,1}};
+    static final int[][] CombArray5Layers = new int[][]{{0,0,0,0,0},{1,0,0,0,0},{0,1,0,0,0},{1,1,0,0,0},{0,0,1,0,0},{1,0,1,0,0},{0,1,1,0,0},{1,1,1,0,0},{0,0,0,1,0},{1,0,0,1,0},{0,1,0,1,0},{1,1,0,1,0},{0,0,1,1,0},{1,0,1,1,0},{0,1,1,1,0},{1,1,1,1,0},{0,0,0,0,1},{1,0,0,0,1},{0,1,0,0,1},{1,1,0,0,1},{0,0,1,0,1},{1,0,1,0,1},{0,1,1,0,1},{1,1,1,0,1},{0,0,0,1,1},{1,0,0,1,1},{0,1,0,1,1},{1,1,0,1,1},{0,0,1,1,1},{1,0,1,1,1},{0,1,1,1,1},{1,1,1,1,1}};
+    static final int[][] CombArray6Layers = new int[][]{{0,0,0,0,0,0},{1,0,0,0,0,0},{0,1,0,0,0,0},{1,1,0,0,0,0},{0,0,1,0,0,0},{1,0,1,0,0,0},{0,1,1,0,0,0},{1,1,1,0,0,0},{0,0,0,1,0,0},{1,0,0,1,0,0},{0,1,0,1,0,0},{1,1,0,1,0,0},{0,0,1,1,0,0},{1,0,1,1,0,0},{0,1,1,1,0,0},{1,1,1,1,0,0},{0,0,0,0,1,0},{1,0,0,0,1,0},{0,1,0,0,1,0},{1,1,0,0,1,0},{0,0,1,0,1,0},{1,0,1,0,1,0},{0,1,1,0,1,0},{1,1,1,0,1,0},{0,0,0,1,1,0},{1,0,0,1,1,0},{0,1,0,1,1,0},{1,1,0,1,1,0},{0,0,1,1,1,0},{1,0,1,1,1,0},{0,1,1,1,1,0},{1,1,1,1,1,0},{0,0,0,0,0,1},{1,0,0,0,0,1},{0,1,0,0,0,1},{1,1,0,0,0,1},{0,0,1,0,0,1},{1,0,1,0,0,1},{0,1,1,0,0,1},{1,1,1,0,0,1},{0,0,0,1,0,1},{1,0,0,1,0,1},{0,1,0,1,0,1},{1,1,0,1,0,1},{0,0,1,1,0,1},{1,0,1,1,0,1},{0,1,1,1,0,1},{1,1,1,1,0,1},{0,0,0,0,1,1},{1,0,0,0,1,1},{0,1,0,0,1,1},{1,1,0,0,1,1},{0,0,1,0,1,1},{1,0,1,0,1,1},{0,1,1,0,1,1},{1,1,1,0,1,1},{0,0,0,1,1,1},{1,0,0,1,1,1},{0,1,0,1,1,1},{1,1,0,1,1,1},{0,0,1,1,1,1},{1,0,1,1,1,1},{0,1,1,1,1,1},{1,1,1,1,1,1}};
+
+	public static final ArrayList<int[][]> CombArray = new ArrayList<int[][]>(6);
+	
 	
 	public static synchronized void Load() {
 		if (areConstantsLoaded) return;
+		
+		CombArray.add(CombArray1Layer);
+		CombArray.add(CombArray2Layers);
+		CombArray.add(CombArray3Layers);
+		CombArray.add(CombArray4Layers);
+		CombArray.add(CombArray5Layers);
+		CombArray.add(CombArray6Layers);
+		
 		
 		NoiseReductionParameters.setLookForTracks(false);
 		
 		/*if(Constants.FieldConfig.equalsIgnoreCase("nominal")) {
 			
 			Constants.TORSCALE = -1;
-			Constants.SOLSCALE = 1;
+			Constants.SOLSCALE = 1;`
 		}
 		
 		if(Constants.FieldConfig.equalsIgnoreCase("reverse")) {
@@ -163,6 +187,6 @@ public class Constants {
 		areConstantsLoaded = true;
 		
 		System.out.println("Is the Kalman Filter on ? "+useKalmanFilter);
-		
+		System.out.println(" DB VAR in Calib "+Constants.DBVAR);
 	}
 }

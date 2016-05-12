@@ -40,7 +40,7 @@ public class GeometryLoader {
 		PrintWriter pw = new PrintWriter(new File("/Users/ziegler/testdcgeo.txt"));
 		Constants.newGeometry = true;
 		GeometryLoader.Load();
-		System.out.println("dx; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().x()-
+	/*	System.out.println("dx; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().x()-
 				GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(1).getMidpoint().x())*Math.cos(Math.toRadians(6.)));
 		System.out.println("dz; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().z()-
 				GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(0).getMidpoint().z()));
@@ -50,7 +50,37 @@ public class GeometryLoader {
 					-0*GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(2).getComponent(1).getMidpoint().x()
 			);
 		
-		pw.close();
+		pw.close();*/
+		/*
+		int superlayer =1;
+		int layer =1;
+		double trkX = -43.41;
+		
+		double x1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(1).getMidpoint().x();
+		double x0 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(0).getMidpoint().x();
+		
+		double deltax = Math.abs(x1-x0);
+		
+		double xFirstCell = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(0).getMidpoint().x();
+		
+		System.out.println(Math.ceil((trkX-xFirstCell+deltax/2.)/deltax) );
+		
+		*/
+		int superlayer =1;
+		int layer =1;
+		for(int i =0; i<10; i++) {
+			double x1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(i+1).getMidpoint().x();
+			double x0 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(i).getMidpoint().x();
+			
+			double z1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(i).getMidpoint().z();
+			double z0 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1+1).getComponent(i).getMidpoint().z();
+			
+			double deltax = Math.abs(x1-x0);
+			double deltaz = Math.abs(z1-z0);
+			System.out.println(Math.toDegrees(Math.cos(2*deltaz*Math.tan(Math.PI/6)/deltax))+" "+deltax+" "+2*deltaz*Math.tan(Math.PI/6)+" "+deltax*Math.cos(Math.PI/6.)+" "+GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(0).getMidpoint().x());
+		
+		}
+		
 		
 	}
 }

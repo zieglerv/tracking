@@ -3,6 +3,7 @@ package org.jlab.rec.dc.trajectory;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.cross.Cross;
 
 /**
@@ -77,5 +78,7 @@ public class Trajectory extends ArrayList<Cross> {
 	 * 
 	 */
 	private static final long serialVersionUID = 358913937206455870L;
+	
+	
 
 }
