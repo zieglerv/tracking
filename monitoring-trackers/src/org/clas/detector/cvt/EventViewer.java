@@ -5,12 +5,10 @@ import java.awt.FlowLayout;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JSplitPane;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.jlab.clas.detector.DetectorCollection;
 import org.jlab.clas.detector.DetectorDescriptor;
@@ -19,6 +17,7 @@ import org.jlab.clas12.basic.IDetectorModule;
 import org.jlab.clas12.basic.IDetectorProcessor;
 import org.jlab.clas12.calib.DetectorShape2D;
 import org.jlab.clas12.calib.DetectorShapeTabView;
+import org.jlab.clas12.calib.DetectorShapeView2D;
 import org.jlab.clas12.calib.IDetectorListener;
 import org.jlab.clas12.detector.EventDecoder;
 import org.jlab.clas12.detector.FADCMaxFinder;
@@ -28,7 +27,8 @@ import org.jlab.data.io.DataEvent;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.cvt.services.CVTCosmicsReconstruction;
 import org.root.histogram.H1D;
-import org.root.pad.EmbeddedCanvas;
+import org.root.pad.TEmbeddedCanvas;
+
 
 public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetectorModule, ActionListener {
 	// Initialize Cosmics Rec
@@ -39,17 +39,19 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 	DetectorDrawOnlineRecoComponents displays 	= new DetectorDrawOnlineRecoComponents();
 	org.jlab.rec.cvt.svt.Geometry svt_geo 		= new org.jlab.rec.cvt.svt.Geometry();
 	org.jlab.rec.cvt.bmt.Geometry bmt_geo 		= new org.jlab.rec.cvt.bmt.Geometry();
-	
+
 	 // Define the panel and views
-    JPanel  detectorPanel  = null;
-    JPanel  detectorPanel2 = null;
-    JPanel  detectorPanel3 = null;
-    JPanel  plotsPanel 	   = null;
+	DetectorShapeView2D  detectorPanel  = null;
+	DetectorShapeView2D  detectorPanel2 = null;
+	DetectorShapeView2D  detectorPanel3 = null;
+	DetectorShapeView2D  plotsPanel 	= null;
     
     DetectorDrawComponents detFrm 		= new DetectorDrawComponents();
     OnlineRecoFillHistograms histos 	= new OnlineRecoFillHistograms();
     DetectorEventProcessorPane evPane 	= new DetectorEventProcessorPane();
-    EmbeddedCanvas canvas 				= new EmbeddedCanvas();
+    TEmbeddedCanvas canvas 				= new TEmbeddedCanvas();
+    DetectorShapeTabView  view 			= new DetectorShapeTabView();
+    JFrame frame = new JFrame();
     
 	public EventViewer() {
 		// configure reconstruction
@@ -61,21 +63,22 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
     	config.addItem("SVT", "newGeometry", "true");
     	reco.configure(config);
     	
+    	
     	// configure views	   
-        this.plotsPanel = new JPanel();
+        this.plotsPanel = new DetectorShapeView2D("Histograms");
         this.plotsPanel.setLayout(new BorderLayout());
         this.plotsPanel.add(this.canvas);
         histos.CreateHistos();
 	    
-        this.detectorPanel = new JPanel();
+        this.detectorPanel = new DetectorShapeView2D("CVT Views");
 	    detFrm.CreateViews(this);
 	    histos.CreateDetectorShapes(new ArrayList<DetectorCollection<H1D>>());
 	    this.detectorPanel.setLayout(new BorderLayout());
 	    
-	    this.detectorPanel2 = new JPanel();
+	    this.detectorPanel2 = new DetectorShapeView2D("SVT Modules");
 	    this.detectorPanel2.setLayout(new BorderLayout());
 	    
-	    this.detectorPanel3 = new JPanel();
+	    this.detectorPanel3 = new DetectorShapeView2D("BMT Modules");
 	    this.detectorPanel3.setLayout(new BorderLayout());
 	    
 	    this.evPane.addProcessor(this);
@@ -92,12 +95,22 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 	    ModView.add(detFrm.get_TabViews().get(2)); 		 		// SVT modules
 	    ModView2.add(detFrm.get_TabViews().get(3)); 		 	// BMT modules
 	    // add borders
+	   
 	    this.detectorPanel.add(topView,BorderLayout.PAGE_START);
 	    this.detectorPanel2.add(ModView,BorderLayout.PAGE_START);
 	    this.detectorPanel3.add(ModView2,BorderLayout.PAGE_START);
 	    this.detectorPanel.add(this.evPane,BorderLayout.PAGE_END);
-	   
 	    
+	    this.view.addDetectorLayer(this.detectorPanel);
+	    this.view.addDetectorLayer(this.detectorPanel2);
+	    this.view.addDetectorLayer(this.detectorPanel3);
+        view.addDetectorListener(this);
+       
+       
+        
+        frame.add(this.view);
+        frame.pack();
+        frame.setVisible(true);
 	}
 
 	@Override
@@ -149,8 +162,7 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 
 	@Override
 	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Central Tracker Monitoring";
 	}
 
 	@Override
@@ -180,13 +192,13 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
         displays.PlotCrosses(decodedEvent, detFrm.get_ShapeViews().get(0), detFrm.get_ShapeViews().get(1), detFrm.get_TabViews().get(0), detFrm.get_TabViews().get(1), svt_geo);
         displays.PlotSVTStrips(decodedEvent, SVTHits, SVTStrips,detFrm.get_ShapeViews().get(2), svt_geo);
         displays.PlotBMTStrips(decodedEvent, BMTHits, BMTStrips,detFrm.get_ShapeViews().get(3), bmt_geo);    
-        histos.FillHistos(decodedEvent);
+        //histos.FillHistos(decodedEvent);
 	}
 
 	public static void main(String[] args){
     	
-        EventViewer module = new EventViewer();
-        JFrame frame = new JFrame();
+        
+        /*
         frame.add(module.detectorPanel);
         frame.pack();
         frame.setVisible(true);
@@ -198,10 +210,17 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
         frame3.add(module.detectorPanel3);
         frame3.pack();
         frame3.setVisible(true);
-        JFrame frame4 = new JFrame();
-        frame4.add(module.plotsPanel);
-        frame4.pack();
-        frame4.setVisible(true);
+        */
+        
+	//EventViewer module = new EventViewer();
+    //    JFrame frame = new JFrame();
+    //    frame.add(module.view);
+    //    frame.pack();
+    //    frame.setVisible(true);
+        //JFrame frame4 = new JFrame();
+        //frame4.add(module.plotsPanel);
+        //frame4.pack();
+        //frame4.setVisible(true);
     }
 
 	@Override

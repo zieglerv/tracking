@@ -17,8 +17,9 @@ public class Decoder {
 	EvioDataEvent DecodeEvent(EvioDataEvent event, EventDecoder decoder) {
 		EvioDataEvent decodedEvent = EvioFactory.createEvioEvent();
 	    if(event.hasBank("BMT::dgtz")==false){
-	    	System.out.println("====================== Decoding BMT ===================");       	
+	    	//System.out.println("====================== Decoding BMT ===================");       	
 	    	decoder.decode(event);
+	    	
 	    	List<DetectorCounter> counters =  decoder.getDetectorCounters(DetectorType.BMT);
 	    	EvioDataBank bank = EvioFactory.createBank("BMT::dgtz", counters.size());
 	    	
@@ -47,7 +48,7 @@ public class Decoder {
 	    	//decodedEvent.show();
 	    }
         if(event.hasBank("BST::dgtz")==false){
-        	System.out.println("==================== Decoding SVT =====================");
+        	//System.out.println("==================== Decoding SVT =====================");
         	decoder.decode(event);
         	List<DetectorCounter> counters =  decoder.getDetectorCounters(DetectorType.SVT);
         	EvioDataBank bank = EvioFactory.createBank("BST::dgtz", counters.size());

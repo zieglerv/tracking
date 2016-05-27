@@ -8,14 +8,11 @@ import org.clas.detector.IHistograms;
 import org.jlab.clas.detector.DetectorCollection;
 import org.jlab.clas.detector.DetectorDescriptor;
 import org.jlab.clas12.calib.DetectorShape2D;
-import org.jlab.clas12.calib.DetectorShapeTabView;
-import org.jlab.clas12.calib.DetectorShapeView2D;
-import org.jlab.clas12.calib.IDetectorListener;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.root.attr.ColorPalette;
 import org.root.histogram.H1D;
-import org.root.pad.EmbeddedCanvas;
+import org.root.pad.TEmbeddedCanvas;
 
 public class OnlineRecoFillHistograms implements IHistograms {
 
@@ -98,7 +95,7 @@ public class OnlineRecoFillHistograms implements IHistograms {
      * When the detector is clicked, this function is called
      * @param desc the descriptor
      */
-	public void DetectorSelected(DetectorDescriptor desc, EmbeddedCanvas canvas) {
+	public void DetectorSelected(DetectorDescriptor desc, TEmbeddedCanvas canvas) {
 		 canvas.divide(1,3);
 	        if(_DetectorComponentsHistos.get(0).hasEntry(desc.getSector(),desc.getLayer(),0)){ // nb hits
 	            H1D h1 = _DetectorComponentsHistos.get(0).get(desc.getSector(),desc.getLayer(),0);
@@ -173,5 +170,7 @@ public class OnlineRecoFillHistograms implements IHistograms {
 	            			_DetectorComponentsHistos.get(2).get(i,j,0).fill(array[i][j]);
 		 }
 	}
+
+	
 
 }
