@@ -6,6 +6,7 @@ import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.trajectory.SegmentTrajectory;
@@ -170,6 +171,7 @@ public class Segment extends ArrayList<FittedHit> {
 	private Plane3D _fitPlane;
 	private SegmentTrajectory _Trajectory;
 	private int _Status = 1;
+	private double[] _SegmentEndPoints;
 	
 	/**
 	 * 
@@ -180,6 +182,31 @@ public class Segment extends ArrayList<FittedHit> {
 	}
 
 	/**
+	 * Sets the segment endpoints in the sector coordinate system for ced display
+	 */
+	public void set_SegmentEndPointsSecCoordSys() {
+		
+		double Z_1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(0).getMidpoint().z();
+		double X_1 = this.get_fittedCluster().get_clusterLineFitSlope()*Z_1 + this.get_fittedCluster().get_clusterLineFitIntercept();
+		
+		double x1 = Math.cos(Math.toRadians(25.))*X_1 + Math.sin(Math.toRadians(25.))*Z_1;
+		double z1 = -Math.sin(Math.toRadians(25.))*X_1 + Math.cos(Math.toRadians(25.))*Z_1;
+		
+		double Z_2 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(5).getComponent(0).getMidpoint().z();
+		double X_2 = this.get_fittedCluster().get_clusterLineFitSlope()*Z_2 + this.get_fittedCluster().get_clusterLineFitIntercept();
+		
+		double x2 = Math.cos(Math.toRadians(25.))*X_2 + Math.sin(Math.toRadians(25.))*Z_2;
+		double z2 = -Math.sin(Math.toRadians(25.))*X_2 + Math.cos(Math.toRadians(25.))*Z_2;
+		
+		double[] EndPointsArray = new double[4];
+		EndPointsArray[0] = x1;
+		EndPointsArray[1] = z1;
+		EndPointsArray[2] = x2;
+		EndPointsArray[3] = z2;
+		
+		this.set_SegmentEndPoints(EndPointsArray);
+	}
+	/**
 	 * Sets the plane containing the segment fitted-line representation
 	 */
 	public void set_fitPlane() {
@@ -187,7 +214,7 @@ public class Segment extends ArrayList<FittedHit> {
 			System.err.println(" no clusterline for "+this.get_fittedCluster().printInfo());
 			return;
 		}
-		
+		set_SegmentEndPointsSecCoordSys();
 		double dir_x = this.get_fittedCluster().get_clusLine().end().x() - this.get_fittedCluster().get_clusLine().origin().x();
 		double dir_y = this.get_fittedCluster().get_clusLine().end().y() - this.get_fittedCluster().get_clusLine().origin().y();
 		double dir_z = this.get_fittedCluster().get_clusLine().end().z() - this.get_fittedCluster().get_clusLine().origin().z();
@@ -206,6 +233,14 @@ public class Segment extends ArrayList<FittedHit> {
 
 	
 	
+	public double[] get_SegmentEndPoints() {
+		return _SegmentEndPoints;
+	}
+
+	public void set_SegmentEndPoints(double[] _SegmentEndPoints) {
+		this._SegmentEndPoints = _SegmentEndPoints;
+	}
+
 	/**
 	 * 
 	 * @param refPoint the reference point on the segment plane

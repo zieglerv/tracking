@@ -52,12 +52,12 @@ public class RecoBankWriter {
 		for(FittedHit updatedHit : clsfhits) {
 			for(FittedHit hit : fhits) {
 				if(hit.get_Id() == updatedHit.get_Id()) { //remove the hits that have already been associated with a cluster
-					hit.set_Id(-1);
+					hit.RemoveFlag = true;
 				}
 			}
 		}
 		for(FittedHit hit : fhits) {
-			if(hit.get_Id()!=-1) {
+			if(hit.RemoveFlag) {
 				ufhits.add(hit);
 				
 			}
@@ -195,6 +195,11 @@ public class RecoBankWriter {
 			bank.setDouble("fitSlopeErr", i, cls.get_clusterLineFitSlopeErr());
 			bank.setDouble("fitInterc", i, cls.get_clusterLineFitIntercept());
 			bank.setDouble("fitIntercErr", i, cls.get_clusterLineFitInterceptErr());
+			
+			bank.setDouble("SegEndPoint1X", i, seglist.get(i).get_SegmentEndPoints()[0]);
+			bank.setDouble("SegEndPoint1Z", i, seglist.get(i).get_SegmentEndPoints()[1]);
+			bank.setDouble("SegEndPoint2X", i, seglist.get(i).get_SegmentEndPoints()[2]);
+			bank.setDouble("SegEndPoint2Z", i, seglist.get(i).get_SegmentEndPoints()[3]);
 			
 			for(int j = 0; j<seglist.get(i).size(); j++) {	
 				if(j<hitIdxArray.length)
@@ -427,6 +432,11 @@ public class RecoBankWriter {
 			bank.setDouble("fitSlopeErr", i, cls.get_clusterLineFitSlopeErr());
 			bank.setDouble("fitInterc", i, cls.get_clusterLineFitIntercept());
 			bank.setDouble("fitIntercErr", i, cls.get_clusterLineFitInterceptErr());
+			
+			bank.setDouble("SegEndPoint1X", i, seglist.get(i).get_SegmentEndPoints()[0]);
+			bank.setDouble("SegEndPoint1Z", i, seglist.get(i).get_SegmentEndPoints()[1]);
+			bank.setDouble("SegEndPoint2X", i, seglist.get(i).get_SegmentEndPoints()[2]);
+			bank.setDouble("SegEndPoint2Z", i, seglist.get(i).get_SegmentEndPoints()[3]);
 			
 			for(int j = 0; j<seglist.get(i).size(); j++) {	
 				if(j<hitIdxArray.length)

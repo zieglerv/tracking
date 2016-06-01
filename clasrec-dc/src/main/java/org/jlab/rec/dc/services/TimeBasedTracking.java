@@ -22,6 +22,7 @@ import org.jlab.rec.dc.cross.CrossMaker;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
+import org.jlab.rec.dc.timetodistance.TableLoader;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.track.TrackMicroMegasMatching;
@@ -112,7 +113,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 		
 		//3) find the segments from the fitted clusters
 		SegmentFinder segFinder = new SegmentFinder();
-		segments =  segFinder.get_Segments(clusters,"TimeBased");
+		segments =  segFinder.get_Segments(clusters, event);
 		
 		
 	
@@ -179,7 +180,8 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 			return;
 		}
 		
-
+		trkcandFinder.removeOverlappingTracks(trkcands);
+		
 		if(Constants.turnOnMicroMegas==true) {
 			
 			TrackMicroMegasMatching mms = new TrackMicroMegasMatching();
@@ -192,6 +194,7 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 				mms.reFitTrackWithMicroMegas(thecand, trkcandFinder, 3);
 			}
 		}
+		
 		
 		// track found
 		if(Constants.useRaster==true) {
@@ -229,9 +232,13 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 			this.requireCalibration("DC");
 	    // Load the fields
 			if (DCSwimmer.areFieldsLoaded == false) {
-				DCSwimmer.getMagneticFields();
-				
+				DCSwimmer.getMagneticFields();		
 			}
+	    // Load the time-to-distance function
+			if( TableLoader.T2DLOADED == false) {
+				TableLoader.Fill();
+			}
+			
 	}
 	@Override
 	public void configure(ServiceConfiguration config) {

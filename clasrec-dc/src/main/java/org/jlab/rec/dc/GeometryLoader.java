@@ -37,9 +37,12 @@ public class GeometryLoader {
 	}
 	
 	public static void main (String arg[]) throws FileNotFoundException {
-		PrintWriter pw = new PrintWriter(new File("/Users/ziegler/testdcgeo.txt"));
+		//PrintWriter pw = new PrintWriter(new File("/Users/ziegler/workspace/coatjava-2.4/cpFiles.csh"));
 		Constants.newGeometry = true;
 		GeometryLoader.Load();
+		double x1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(1).getComponent(16).getMidpoint().x();
+		System.out.println(x1);
+		//pw.close();
 	/*	System.out.println("dx; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().x()-
 				GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(1).getMidpoint().x())*Math.cos(Math.toRadians(6.)));
 		System.out.println("dz; = "+(GeometryLoader.dcDetector.getSector(0).getSuperlayer(0).getLayer(0).getComponent(0).getMidpoint().z()-
@@ -66,7 +69,8 @@ public class GeometryLoader {
 		System.out.println(Math.ceil((trkX-xFirstCell+deltax/2.)/deltax) );
 		
 		*/
-		int superlayer =1;
+		/*
+		int superlayer =2;
 		int layer =1;
 		for(int i =0; i<10; i++) {
 			double x1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(i+1).getMidpoint().x();
@@ -75,12 +79,13 @@ public class GeometryLoader {
 			double z1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(i).getMidpoint().z();
 			double z0 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1+1).getComponent(i).getMidpoint().z();
 			
+			
 			double deltax = Math.abs(x1-x0);
 			double deltaz = Math.abs(z1-z0);
-			System.out.println(Math.toDegrees(Math.cos(2*deltaz*Math.tan(Math.PI/6)/deltax))+" "+deltax+" "+2*deltaz*Math.tan(Math.PI/6)+" "+deltax*Math.cos(Math.PI/6.)+" "+GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(0).getMidpoint().x());
-		
+			//System.out.println(Math.toDegrees(Math.cos(2*deltaz*Math.tan(Math.PI/6)/deltax))+" "+deltax+" "+2*deltaz*Math.tan(Math.PI/6)+" "+deltax*Math.cos(Math.PI/6.)+" "+GeometryLoader.dcDetector.getSector(0).getSuperlayer(superlayer-1).getLayer(layer-1).getComponent(0).getMidpoint().x());
+			System.out.println(deltax+" "+2*deltaz*Math.tan(Math.PI/6));
 		}
-		
+		*/
 		
 	}
 }

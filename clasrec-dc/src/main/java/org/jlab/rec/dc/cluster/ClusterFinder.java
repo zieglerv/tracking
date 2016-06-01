@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jlab.evio.clas12.EvioDataBank;
+import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.hit.FittedHit;
@@ -72,7 +74,7 @@ public class ClusterFinder  {
 
 		// initializing non-zero Hit Array entries
 		// with valid hits
-		for(Hit hit : hits)  {
+		for(Hit hit : hits)  { 
 			if(passHitSelection(hit) && hit.get_Layer()!=rejectLayer) {
 				int ssl = (hit.get_Sector()-1)*nsect + (hit.get_Superlayer() - 1);
 				int wi  = hit.get_Wire() - 1;
@@ -172,11 +174,16 @@ public class ClusterFinder  {
 		List<FittedCluster> selectedClusList =  new ArrayList<FittedCluster>();
 
 		for(Cluster clus : clusters) {
+			
 			//System.out.println(" I passed this cluster "+clus.printInfo());
 			FittedCluster fclus = new FittedCluster(clus);
 			FittedCluster fClus = ct.IsolatedHitsPruner(fclus);  
 			// Flag out-of-timers
-			ct.outOfTimersRemover(fClus, true); // remove outoftimers
+			if(Constants.isSimulation==true) {
+				ct.outOfTimersRemover(fClus, true); // remove outoftimers
+			} else {
+				ct.outOfTimersRemover(fClus, false); // correct outoftimers
+			}
 			// add cluster
 			selectedClusList.add(fClus); 
 		}
@@ -207,8 +214,8 @@ public class ClusterFinder  {
 
 		
 		for(FittedCluster clus : fittedClusList) {
-			if(clus!=null) {
-	            
+			if(clus!=null && clus.size()>3) {
+				
 				// update the hits
 				for(FittedHit fhit : clus) {					
 					fhit.set_TrkgStatus(0);
@@ -287,7 +294,7 @@ public class ClusterFinder  {
 				for(FittedHit fhit : clus) {
 					fhit.set_TrkgStatus(0);
 					fhit.updateHitPositionWithTime(1);	
-					fhit.set_AssociatedClusterID(clus.get_Id());				
+					fhit.set_AssociatedClusterID(clus.get_Id());		
 				}
 			}
 		}
@@ -306,12 +313,56 @@ public class ClusterFinder  {
 			FittedCluster cleanClus = ct.SecondariesRemover(clus, cf) ;
 			clus = cleanClus;
 			
-			//cf.SetFitArray(clus, "TSC");
-            //cf.Fit(clus);
-           
+			
 			FittedCluster LRresolvClus = ct.LRAmbiguityResolver(clus, cf);
 			clus = LRresolvClus;
 			
+			if(clus==null)
+				continue;
+			
+			// resolves segments where there are only single hits in layers thereby resulting in a two-fold LR ambiguity
+			// hence there are 2 solutions to the segments
+			int SumLR =0;
+			for(FittedHit fhit : clus) {
+				SumLR += fhit.get_LeftRightAmb();	
+			}
+			if(SumLR==clus.size() || SumLR== -clus.size()) {
+				FittedCluster Clus2 = new FittedCluster(clus.getBaseCluster());
+				for(FittedHit hit : clus) {
+					
+					if(hit.get_LeftRightAmb()>0) {
+						FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
+								hit.get_Time(), hit.get_DocaErr(), hit.get_Id()) ;
+						newhit.set_Doca(hit.get_Doca());
+						newhit.set_Id(hit.get_Id());
+						newhit.set_TrkgStatus(hit.get_TrkgStatus());						
+						newhit.set_LeftRightAmb(-1);
+						newhit.updateHitPositionWithTime(1); // assume the track angle is // to the layer						
+						newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
+						Clus2.add(newhit);
+					}
+					if(hit.get_LeftRightAmb()<0) {
+						FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
+								hit.get_Time(), hit.get_DocaErr(), hit.get_Id()) ;
+						newhit.set_Doca(hit.get_Doca());
+						newhit.set_Id(hit.get_Id());
+						newhit.set_TrkgStatus(hit.get_TrkgStatus());						
+						newhit.set_LeftRightAmb(1);
+						newhit.updateHitPositionWithTime(1); // assume the track angle is // to the layer						
+						newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
+						Clus2.add(newhit);
+					}		
+				}
+				clusters.add(Clus2);
+			} 
+			 clusters.add(clus);	
+		}
+		
+		for(FittedCluster clus : clusters) {
+			
+			cf.SetFitArray(clus, "TSC");
+            cf.Fit(clus, true);
+          
 			double cosTrkAngle = 1./Math.sqrt(1.+clus.get_clusterLineFitSlope()*clus.get_clusterLineFitSlope());
 			
 			// update the hits
@@ -348,7 +399,7 @@ public class ClusterFinder  {
            
             cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus) ;
 			
-            clusters.add(clus);
+           
 		}
 			
 		return clusters;
@@ -369,5 +420,82 @@ public class ClusterFinder  {
 		return true;
 	}
 
+	public EvioDataBank getLayerEfficiencies(List<FittedCluster> fclusters, List<Hit> allhits, ClusterCleanerUtilities ct, ClusterFitter cf, EvioDataEvent event) {
+
+		ArrayList<Hit> clusteredHits = new ArrayList<Hit>();
+		for(FittedCluster fclus : fclusters) {
+			for(int k =0; k< fclus.size(); k++) {
+				clusteredHits.add(fclus.get(k)); 
+			}
+		}
+		int[][][] EffArray = new int[6][6][6]; //6 sectors,  6 superlayers, 6 layers
+		for(int i=0; i<6; i++)
+			for(int j=0; j<6; j++)
+				for(int k=0; k<6; k++)
+					EffArray[i][j][k]=-1;
+		
+		for(int rejLy=1; rejLy<=6; rejLy++) {
+			
+			//fill array of hit
+			this.fillHitArray(clusteredHits, rejLy);		
+			//find clumps of hits
+			List<Cluster> clusters = this.findClumps(clusteredHits, ct);
+			// create cluster list to be fitted
+			List<FittedCluster> selectedClusList =  new ArrayList<FittedCluster>();
 	
+			for(Cluster clus : clusters) {
+				//System.out.println(" I passed this cluster "+clus.printInfo());
+				FittedCluster fclus = new FittedCluster(clus);			
+				selectedClusList.add(fclus);
+				
+			}
+	
+			
+			for(FittedCluster clus : selectedClusList) {
+				if(clus!=null) {
+					
+					int status = 0;
+					//fit
+					cf.SetFitArray(clus, "LC");
+		            cf.Fit(clus, true);
+		            
+					for(Hit hit : allhits) {
+						
+						if(hit.get_Sector()!=clus.get_Sector() || hit.get_Superlayer()!=clus.get_Superlayer() || hit.get_Layer()!=rejLy)
+							continue;
+						
+						double locX = hit.calcLocY(hit.get_Layer(), hit.get_Wire());
+						double locZ = hit.get_Layer();
+						
+						double calc_doca = Math.abs(locX-clus.get_clusterLineFitSlope()*locZ-clus.get_clusterLineFitIntercept());
+						
+						if(calc_doca<2*Math.tan(Math.PI/6.))
+							status =1; //found a hit close enough to the track to assume that the layer is live
+						
+						int sec = clus.get_Sector()-1;
+						int slay = clus.get_Superlayer()-1;
+						int lay = rejLy -1;
+						
+						EffArray[sec][slay][lay] = status;
+						
+					}
+				}
+			}
+		}
+		// now fill the bank
+		int bankSize =6*6*6;
+		EvioDataBank bank =  (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::LayerEffs",bankSize);
+		int bankEntry = 0;
+		for(int i=0; i<6; i++)
+			for(int j=0; j<6; j++)
+				for(int k=0; k<6; k++) {
+					bank.setInt("sector",bankEntry, i+1);
+					bank.setInt("superlayer",bankEntry, j+1);
+					bank.setInt("layer",bankEntry, k+1);
+					bank.setInt("status", bankEntry,EffArray[i][j][k]);
+					bankEntry++;
+				}
+		return bank;
+		
+	}
 }

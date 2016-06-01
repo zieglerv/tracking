@@ -113,22 +113,23 @@ public class HitBasedTracking extends DetectorReconstruction {
 			
 			
 			EvioDataBank effbank = (EvioDataBank) event.getDictionary().createBank("HitBasedTrkg::LayerEffs",0);
-			//if(Constants.LAYEREFFS)
-			//	 effbank = clusFinder.getLayerEfficiencies(hits, event);
 			
 			if(Constants.DEBUGPRINTMODE==true)  
 				System.out.println("Nb of clusters "+clusters.size());
 			
-			if(clusters.size()==0) {
-				
+			if(clusters.size()==0) {				
 				rbc.fillAllHBBanks(event, rbc, fhits, null, null, null, null,effbank);
 				return;
 			}
 		
+			if(Constants.LAYEREFFS) 
+				effbank = clusFinder.getLayerEfficiencies(clusters, hits, ct, cf, event);
+			
+			
 			rbc.updateListsListWithClusterInfo(fhits, clusters);
 			//3) find the segments from the fitted clusters
 			SegmentFinder segFinder = new SegmentFinder();
-			segments =  segFinder.get_Segments(clusters,"HitBased");
+			segments =  segFinder.get_Segments(clusters, event);
 			
 			if(Constants.DEBUGPRINTMODE==true)  
 				System.out.println("Nb of segments "+segments.size());
@@ -253,11 +254,11 @@ public class HitBasedTracking extends DetectorReconstruction {
 					 Constants.DBVAR = Variation.trim().toString();
 				}	
 				
-				if(config.hasItem("MAG", "torus")) {
-					Constants.TORSCALE = Double.parseDouble(config.asString("MAG", "torus"));
+				if(config.hasItem("MAGF", "torus")) {
+					Constants.TORSCALE = Double.parseDouble(config.asString("MAGF", "torus"));
 				}
-				if(config.hasItem("MAG", "solenoid")) {
-					Constants.SOLSCALE = Double.parseDouble(config.asString("MAG", "solenoid"))	;				
+				if(config.hasItem("MAGF", "solenoid")) {
+					Constants.SOLSCALE = Double.parseDouble(config.asString("MAGF", "solenoid"))	;	System.out.println("************************* solenoid scale = "+Constants.SOLSCALE)		;	
 				}
 				
 				
@@ -270,8 +271,11 @@ public class HitBasedTracking extends DetectorReconstruction {
 					String effs = config.asString("LAYEREFFS", "on");
 					boolean layerE = Boolean.parseBoolean(effs);
 					Constants.LAYEREFFS = layerE;
+					if(layerE)
+						Constants.isCalibrationRun = true;
+					System.out.println("CALIBRATION BNKS "+Constants.isCalibrationRun);
 				}
-				
+			
 				
 				
 			}

@@ -4,6 +4,7 @@ package org.jlab.rec.dc.hit;
 import org.jlab.rec.dc.CalibrationConstantsLoader;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
+import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 /**
  * A hit that was used in a fitted cluster.  It extends the Hit class and contains local and sector coordinate information at the MidPlane.  
  * An estimate for the Left-right Ambiguity is assigned based on the linear fit to the wire position residual.
@@ -214,13 +215,22 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	/**
 	 * sets the calculated distance (in cm) from the time (in ns)
 	 */
-	
+	 
 	public void set_TimeToDistance(double cosTrkAngle) {
 		
 		double d =0;
 		int regionIdx = this.get_Region()-1;
 		if(_TrkgStatus!=-1) { 
 			d = Constants.TIMETODIST[regionIdx]; 
+	//		TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
+	//		double dtd = tde.interpolateOnGrid(0, Math.acos(cosTrkAngle), this.get_Time());
+	//		System.out.println(" alpha "+Math.toDegrees(Math.acos(cosTrkAngle))+" doca "+dtd);
+			// chose method to get the distance from the time -- for now this is only used for cosmics so B =0
+	/*		if(Constants.useTimeToDistanceGrid==true) {
+				TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
+				d = tde.interpolateOnGrid(0, Math.acos(cosTrkAngle), this.get_Time());
+			}
+	*/		
 			if(cosTrkAngle>0.8 & cosTrkAngle<=1) // trk angle correction 
 				d /= cosTrkAngle;
 		}
@@ -301,7 +311,11 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 		double x = xMin + (this.get_Wire()-1)*2*deltaz*Math.tan(Math.PI/6);
 		if(this.get_Layer()%2==1)
 			x+=deltaz*Math.tan(Math.PI/6);
-		
+		//
+		//double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
+		 x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
+
+		//
 		this.set_X(x);
 		this.set_Z(z);
 		
@@ -325,8 +339,10 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 			x+=deltaz*Math.tan(Math.PI/6);
 		
 		double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
+		 x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
 
-		this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance());
+		//this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance());
+		this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance()/Math.cos(Math.toRadians(6.)));
 		this.set_Z(z);
 		
 	}
@@ -376,6 +392,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	
 	
 	private int _AssociatedClusterID = -1;
+	public boolean RemoveFlag = false;
     
 	public int get_AssociatedClusterID() {
 		return _AssociatedClusterID;

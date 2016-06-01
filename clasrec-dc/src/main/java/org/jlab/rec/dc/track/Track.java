@@ -16,7 +16,7 @@ import Jama.Matrix;
  * @author ziegler
  *
  */
-public class Track extends Trajectory {
+public class Track extends Trajectory implements Comparable<Track>{
 
 	/**
 	 * serialVersionUID
@@ -171,6 +171,19 @@ public class Track extends Trajectory {
 		System.out.println("Track in sector "+this.get_Sector()+" p = "+this.get_P()+" --> "+" P = "+this.get_pAtOrig().mag()+ "("+this.get_pAtOrig().toString()+
 				") Vtx = "+ "("+this.get_Vtx0()+
 				") q = "+this.get_Q()+" pathLength = "+this.get_TotPathLen()+" chi^2 "+this.get_FitChi2());
+	}
+	@Override
+	public int compareTo(Track arg) {
+		// Sort by cross in R1, R2, R3
+		int return_val = 0 ;
+		int CompCross1 = this.get(0).get_Id() < arg.get(0).get_Id()   ? -1 : this.get(0).get_Id()  == arg.get(0).get_Id()   ? 0 : 1;
+		int CompCross2 = this.get(1).get_Id() < arg.get(1).get_Id()   ? -1 : this.get(1).get_Id()  == arg.get(1).get_Id()   ? 0 : 1;
+		int CompCross3 = this.get(2).get_Id() < arg.get(2).get_Id()   ? -1 : this.get(2).get_Id()  == arg.get(2).get_Id()   ? 0 : 1;
+		
+		int return_val1 = ((CompCross2 ==0) ? CompCross3 : CompCross2); 
+		return_val = ((CompCross1 ==0) ? return_val1 : CompCross1);
+		
+		return return_val;
 	}
 	
 }

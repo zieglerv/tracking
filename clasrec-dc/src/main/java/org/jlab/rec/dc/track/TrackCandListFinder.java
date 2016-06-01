@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.track;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.jlab.geom.prim.Point3D;
@@ -216,6 +217,26 @@ public class TrackCandListFinder {
 		
 		cand.fit_Successful=true;
 		cand.set_TrackingInfoString(trking);
+	}
+
+
+
+	public void removeOverlappingTracks(List<Track> trkcands) {
+		
+		Collections.sort(trkcands);
+		for(int i =1; i<trkcands.size(); i++) {
+			
+			if(trkcands.get(i-1).get(0).get_Id()==trkcands.get(i).get(0).get_Id() || 
+					trkcands.get(i-1).get(1).get_Id()==trkcands.get(i).get(1).get_Id() || 
+					trkcands.get(i-1).get(2).get_Id()==trkcands.get(i).get(2).get_Id() ) {
+				if(trkcands.get(i-1).get_FitChi2()>trkcands.get(i).get_FitChi2()) {
+					trkcands.remove(i-1); 
+				} else {
+					trkcands.remove(i); 
+				}
+			}
+			
+		}
 	}
 
 

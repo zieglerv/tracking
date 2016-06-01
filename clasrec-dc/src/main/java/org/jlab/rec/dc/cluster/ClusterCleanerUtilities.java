@@ -805,7 +805,8 @@ public class ClusterCleanerUtilities {
 	                if(removeHit==true) {
 	                	fClus.remove(i);
 	                } else {
-	                	fClus.get(i).set_Doca(fClus.get(i).get_CellSize());
+	                	if(Constants.isSimulation==false)
+	                		fClus.get(i).set_Doca(fClus.get(i).get_CellSize());
 	                }
 				}
 			}

@@ -138,7 +138,8 @@ public class Constants {
 
 	public static double T0 =0;
 	public static boolean useParametricResol = true;
-	public static boolean isCalibrationRun = true;
+	public static boolean isCalibrationRun = false;
+	public static boolean useTimeToDistanceGrid = true;
 
 	// Arrays for combinatorial cluster compositions
     static final int[][] CombArray1Layer = new int[][]{{0},{1}};

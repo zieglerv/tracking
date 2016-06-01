@@ -20,8 +20,8 @@ public class TableLoader {
 	static int maxBinIdxT0 = -1;
 	static int minBinIdxT  = 0;
 	static int maxBinIdxT  = -1;
-	
-	 public static synchronized void Fill() {
+
+	public static synchronized void Fill() {
 	    	
 			if (T2DLOADED) return;
 			double dmax = 1.35; // chamber specific --> 3 tables for each region
@@ -109,81 +109,7 @@ public class TableLoader {
 					
 			T2DLOADED = true;
 	 }
-	
-	 private double interpolateLinear(double x, double xa, double xb, double ya, double yb) {
-		 double y = ya*(xb - x)/(xb - xa) + yb*(x - xa)/(xb - xa);
-		 return y;
-	 }
-	 
-	 public double interpolateOnGrid(double B, double alpha, double t) {
-		 // for a given value of B find the bin edges in Tesla and the corresponding index:
-		 int binlowB  = this.getBIdx(B);
-		 int binhighB = binlowB +1; 
-		 double B1 = binlowB*0.5;
-		 double B2 = binhighB*0.5;
-		 
-		 // for alpha there are only 2 bins
-		 double alpha1 = 0;
-		 double alpha2 = Math.toRadians(30.);
-		 if(alpha<alpha1)
-			 alpha=alpha1;
-		 if(alpha>alpha2)
-			 alpha=alpha2;
-		 
-		 int binlowAlpha  = 0;
-		 int binhighAlpha = 1;
-		 // get the time bin edges:
-		 int binlowT = this.getTimeIdx(t);
-		 int binhighT = binlowT +1; 
-		 double t1 = binlowT*2.;
-		 double t2 = binhighT*2.;
-		// System.out.println(" binlowT "+binlowT);
-		 // interpolate in B:
-		 double f_B_alpha1_t1 = interpolateLinear(B*B, B1*B1, B2*B2, 
-				 DISTFROMTIME[binlowB][binlowAlpha][binlowT],
-				 DISTFROMTIME[binhighB][binlowAlpha][binlowT]);
-		 double f_B_alpha2_t1 = interpolateLinear(B*B, B1*B1, B2*B2, 
-				 DISTFROMTIME[binlowB][binhighAlpha][binlowT],
-				 DISTFROMTIME[binhighB][binhighAlpha][binlowT]);
-		 double f_B_alpha1_t2 = interpolateLinear(B*B, B1*B1, B2*B2, 
-				 DISTFROMTIME[binlowB][binlowAlpha][binhighT],
-				 DISTFROMTIME[binhighB][binlowAlpha][binhighT]);
-		 double f_B_alpha2_t2 = interpolateLinear(B*B, B1*B1, B2*B2, 
-				 DISTFROMTIME[binlowB][binhighAlpha][binhighT],
-				 DISTFROMTIME[binhighB][binhighAlpha][binhighT]);
-
-		 // interpolate in d for 2 values of alpha:		 
-		 double f_B_alpha1_t = interpolateLinear(t, t1, t2, f_B_alpha1_t1, f_B_alpha1_t2);
-		 double f_B_alpha2_t = interpolateLinear(t, t1, t2, f_B_alpha2_t1, f_B_alpha2_t2);
-		 
-		 // interpolate in alpha:
-		 double f_B_alpha_t = interpolateLinear(Math.cos(alpha), Math.cos(alpha1), Math.cos(alpha2), f_B_alpha1_t, f_B_alpha2_t);
-		
-		 return f_B_alpha_t;
-	 }
-	
-	   private int getTimeIdx(double t1) {
-		DecimalFormat df = new DecimalFormat("#");
-		df.setRoundingMode(RoundingMode.CEILING);
-		int binIdx = Integer.parseInt(df.format(t1/2.) ) -1;
-		if(binIdx<0)
-			binIdx = minBinIdxT;
-		if(binIdx>maxBinIdxT)
-			binIdx = maxBinIdxT;
-		return binIdx;
-	}
-
-	private int getBIdx(double b1) {
-		// double bfield = (double)ibfield*0.5;
-		int binIdx = (int) ((1+b1)*2) -2;
-		if(binIdx<0)
-			binIdx = minBinIdxB;
-		if(binIdx>maxBinIdxB)
-			binIdx = maxBinIdxB;
-		return binIdx;
-	}
-
-	private static double[] calcnm(int deltanm, double minVelDriftDist) {
+	 private static double[] calcnm(int deltanm, double minVelDriftDist) {
 		
 		   double[] nm = new double[2];
 		   double v1 = Math.pow((deltanm-1.)*minVelDriftDist, deltanm)  ;
@@ -209,7 +135,7 @@ public class TableLoader {
 		   System.out.println(array[1][3][5]); */
 		TableLoader tbl = new TableLoader();
 		TableLoader.Fill();
-		System.out.println(tbl.interpolateOnGrid(2.5, Math.toRadians(0.000000), 1000) );
+	//	System.out.println(tbl.interpolateOnGrid(2.5, Math.toRadians(0.000000), 1000) );
 	  //579: B 2.5 alpha 0 d 1.3419999999999992 alpha 1 1.3474999999999997
 	   
 	}

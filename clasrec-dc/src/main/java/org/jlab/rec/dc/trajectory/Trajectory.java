@@ -3,7 +3,6 @@ package org.jlab.rec.dc.trajectory;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.cross.Cross;
 
 /**

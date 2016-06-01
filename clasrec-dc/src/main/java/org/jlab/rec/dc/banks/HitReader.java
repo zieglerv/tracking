@@ -125,18 +125,21 @@ public class HitReader {
 				
 				smearedTime = stime[i];
 			}
-			if(smearedTime<0)
-				continue;
+			//if(smearedTime<0)
+			//	continue;
+			if(smearedTime<0) {
+				if(Constants.isSimulation) {
+					continue;
+				} else {
+					smearedTime =0;
+				}
+			}
 			
 			Hit hit = new Hit(sector[i], slayer[i], layer[i], wire[i], smearedTime, 0, hitno[i]);
 			
 			double posError = hit.get_CellSize()/Math.sqrt(12.);
 			hit.set_DocaErr(posError);
-			hit.set_Doca(Constants.TIMETODIST[hit.get_Region()-1]*hit.get_Time());
-			if(hit.get_Doca()>hit.get_CellSize()) {
-				//this.fix_TimeToDistance(this.get_CellSize());
-				hit.set_OutOfTimeFlag(true); 
-			}
+			
 			//use only hits with signal on wires
 			if(Constants.useNoiseAlgo == true)
 				if(wire[i]!=-1 && results.noise[i]==false){		
@@ -192,7 +195,12 @@ public class HitReader {
 			FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], time[i]-Constants.T0, 0, id[i]);
 			hit.set_LeftRightAmb(LR[i]);
 			hit.set_TrkgStatus(0);
+			
 			hit.set_Doca(Constants.TIMETODIST[hit.get_Region()-1]*hit.get_Time());
+			if(hit.get_Doca()>hit.get_CellSize()) {
+				//this.fix_TimeToDistance(this.get_CellSize());
+				hit.set_OutOfTimeFlag(true); 
+			}
 			hit.set_DocaErr(hit.get_PosErr());
 			hit.set_AssociatedClusterID(clusterID[i]);
 			
