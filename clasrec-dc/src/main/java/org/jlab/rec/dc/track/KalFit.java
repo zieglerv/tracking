@@ -548,11 +548,15 @@ public class KalFit {
 						
 						hitOnTrk = trkcand.get(c).get(s).get(h);
 						int slayr = trkcand.get(c).get(s).get(h).get_Superlayer();
-						X[index] = hitOnTrk.get_XMP();
+						//X[index] = hitOnTrk.get_XMP();
 						Z[index] = hitOnTrk.get_Z(); 
+						X[index] = trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitSlope()*Z[index]
+								+ trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitIntercept();
 						// make the hit on track and add it to the list
 						HitOnTrack hot = new HitOnTrack(slayr, X[index], Z[index]);
-						hot.hitError = trkcand.get(c).get(s).get(h).get_DocaErr()/Math.cos(Math.toRadians(6.)); 
+						//hot.hitError = trkcand.get(c).get(s).get(h).get_DocaErr()/Math.cos(Math.toRadians(6.)); 
+						hot.hitError = Math.sqrt(trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitSlopeErr()*Z[index]*trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitSlopeErr()*Z[index]
+								+ trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitInterceptErr()*trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitInterceptErr());
 						//hot.hitError = trkcand.get(c).get(s).get(h).get_CellSize()/Math.sqrt(12);
 						hOTS.add(hot);
 						

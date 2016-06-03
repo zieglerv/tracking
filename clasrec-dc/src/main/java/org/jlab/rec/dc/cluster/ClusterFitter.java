@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.rec.dc.GeometryLoader;
 
 import trackfitter.fitter.LineFitPars;
 import trackfitter.fitter.LineFitter;
@@ -128,8 +129,15 @@ public class ClusterFitter {
 			
 	    	double residual = (FitArray[2][i]-FitPars.slope()*FitArray[0][i]-FitPars.intercept());
 	    	clus.get(i).set_Residual(residual); 
-	    	clus.get(i).set_ClusFitDoca(FitPars.slope()*FitArray[0][i]+FitPars.intercept());
+	    	//clus.get(i).set_ClusFitDoca(FitPars.slope()*FitArray[0][i]+FitPars.intercept());
+	    	double xWire = GeometryLoader.dcDetector.getSector(0).getSuperlayer(clus.get(i).get_Superlayer()-1).getLayer(clus.get(i).get_Layer()-1).getComponent(clus.get(i).get_Wire()-1).getMidpoint().x();
+	    	double trkDocaMP = -xWire + (FitPars.slope()*FitArray[0][i]+FitPars.intercept());
+	    	double trkDoca = trkDocaMP*Math.cos(Math.toRadians(6.));
 	    	
+	    	clus.get(i).set_ClusFitDoca(trkDoca);
+
+	    	
+	    	//
 	    	if(Math.abs(residual)<0.350) // less than the average resolution
 	    		nPassingResAccCut[clus.get(i).get_Layer()-1]++;
 	    	
