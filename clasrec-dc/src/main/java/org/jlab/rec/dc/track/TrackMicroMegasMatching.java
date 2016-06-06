@@ -7,6 +7,7 @@ import org.jlab.data.io.DataEvent;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.services.Initialization;
 import org.jlab.rec.dc.trajectory.DCSwimmer;
 import org.jlab.rec.dc.trajectory.StateVec;
 
@@ -109,7 +110,7 @@ public class TrackMicroMegasMatching {
 		double[][] PointArray = new double[3][3];
 		
     	//swim in lab frame to MM planes
-		DCSwimmer swim = new DCSwimmer();
+		DCSwimmer swim = new DCSwimmer(Initialization.rcompositeField, Initialization.compositeField);
 		swim.isRotatedCoordinateSystem = false;
 		
 		

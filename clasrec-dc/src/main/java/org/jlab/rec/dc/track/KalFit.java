@@ -9,6 +9,7 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.services.Initialization;
 import org.jlab.rec.dc.trajectory.DCSwimmer;
 
 import Jama.Matrix;
@@ -34,7 +35,7 @@ public class KalFit {
 	/**
 	 *  Field instantiated using the torus and the solenoid
 	*/
-	public DCSwimmer dcSwim = new DCSwimmer();
+	public DCSwimmer dcSwim = new DCSwimmer(Initialization.rcompositeField, Initialization.compositeField);
 	/**
 	 * The state vector is a 5-vector (x,y,px/pz,py/pz, q/p) evalutated at a constant z in the tilted sector coordinate system.	
 	 */

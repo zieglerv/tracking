@@ -26,8 +26,6 @@ import org.jlab.rec.dc.timetodistance.TableLoader;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.track.TrackMicroMegasMatching;
-import org.jlab.rec.dc.trajectory.DCSwimmer;
-//import org.jlab.rec.dc.trajectory.Vertex;
 import org.jlab.rec.dc.trajectory.Vertex;
 
 /**
@@ -231,8 +229,8 @@ public class TimeBasedTracking  extends DetectorReconstruction {
 			}
 			this.requireCalibration("DC");
 	    // Load the fields
-			if (DCSwimmer.areFieldsLoaded == false) {
-				DCSwimmer.getMagneticFields();		
+			if (Initialization.areFieldsLoaded == false) {
+				Initialization.getMagneticFields();		
 			}
 	    // Load the time-to-distance function
 			if( TableLoader.T2DLOADED == false) {

@@ -6,13 +6,14 @@ import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
+import org.jlab.rec.dc.services.Initialization;
 import org.jlab.rec.dc.track.Track;
 
 public class Vertex {
 
 	Random rn = new Random();
 	public static double SMEARING_FAC = 0;
-	DCSwimmer swim2 = new DCSwimmer();
+	DCSwimmer swim2 = new DCSwimmer(Initialization.rcompositeField, Initialization.compositeField);
 	
 	public Vertex() {
 

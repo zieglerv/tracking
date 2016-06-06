@@ -8,6 +8,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
+import org.jlab.rec.dc.services.Initialization;
 import org.jlab.rec.dc.trajectory.DCSwimmer;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
@@ -29,7 +30,7 @@ public class TrackCandListFinder {
 	public TrackCandListFinder(String stat) {
 		trking = stat;
 	}
-	public DCSwimmer dcSwim = new DCSwimmer();
+	public DCSwimmer dcSwim = new DCSwimmer(Initialization.rcompositeField, Initialization.compositeField);
 	/**
 	 * 
 	 * @param crossList the input list of crosses

@@ -219,17 +219,14 @@ public class ClusterFinder  {
 				// update the hits
 				for(FittedHit fhit : clus) {					
 					fhit.set_TrkgStatus(0);
-					fhit.updateHitPosition();	
+					fhit.updateHitPosition(false);	
 					fhit.set_AssociatedClusterID(clus.get_Id());	
 				}
 				cf.SetFitArray(clus, "TSC");
 	            cf.Fit(clus, true);
-				cf.SetResidualDerivedParams(clus, false, false); //calcTimeResidual=false, resetLRAmbig=false
+				cf.SetResidualDerivedParams(clus, false, false, false); //calcTimeResidual=false, resetLRAmbig=false, local= false
 				
-				// Refit using the wire position in the TSC system
-				for(FittedHit fhit : clus) {
-					fhit.projectToMidPlane(false);					
-				}
+				
 				cf.SetFitArray(clus, "TSC");
 	            cf.Fit(clus, false);
 	            cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus) ;
@@ -267,7 +264,7 @@ public class ClusterFinder  {
 			if(hit.get_AssociatedClusterID()==-1)
 				continue;
 			HitArray[index][hit.get_AssociatedClusterID()] = hit;
-			hit.updateHitPosition();
+			hit.updateHitPosition(true);
 			
 			index++;
 		}
@@ -293,7 +290,7 @@ public class ClusterFinder  {
 				// update the hits
 				for(FittedHit fhit : clus) {
 					fhit.set_TrkgStatus(0);
-					fhit.updateHitPositionWithTime(1);	
+					fhit.updateHitPositionWithTime(1, true);	
 					fhit.set_AssociatedClusterID(clus.get_Id());		
 				}
 			}
@@ -337,7 +334,7 @@ public class ClusterFinder  {
 						newhit.set_Id(hit.get_Id());
 						newhit.set_TrkgStatus(hit.get_TrkgStatus());						
 						newhit.set_LeftRightAmb(-1);
-						newhit.updateHitPositionWithTime(1); // assume the track angle is // to the layer						
+						newhit.updateHitPositionWithTime(1, true); // assume the track angle is // to the layer						
 						newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
 						Clus2.add(newhit);
 					}
@@ -348,7 +345,7 @@ public class ClusterFinder  {
 						newhit.set_Id(hit.get_Id());
 						newhit.set_TrkgStatus(hit.get_TrkgStatus());						
 						newhit.set_LeftRightAmb(1);
-						newhit.updateHitPositionWithTime(1); // assume the track angle is // to the layer						
+						newhit.updateHitPositionWithTime(1, true); // assume the track angle is // to the layer						
 						newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
 						Clus2.add(newhit);
 					}		
@@ -367,12 +364,12 @@ public class ClusterFinder  {
 			
 			// update the hits
 			for(FittedHit fhit : clus) {
-				fhit.updateHitPositionWithTime(cosTrkAngle);	
+				fhit.updateHitPositionWithTime(cosTrkAngle, true);	
 			}
 			// iterate till convergence of trkAngle
 			double Chi2Diff=1;
 			double prevChi2=999999999;
-			
+			double cosTrkAngleFinal = 0;
 			while(Chi2Diff>0) {
 				cf.SetFitArray(clus, "TSC");
 	            cf.Fit(clus, true);
@@ -381,19 +378,22 @@ public class ClusterFinder  {
 					cosTrkAngle = 1./Math.sqrt(1.+clus.get_clusterLineFitSlope()*clus.get_clusterLineFitSlope());					
 					// update the hits
 					for(FittedHit fhit : clus) {
-						fhit.updateHitPositionWithTime(cosTrkAngle);					
+						fhit.updateHitPositionWithTime(cosTrkAngle, true);					
 					}
+					cosTrkAngleFinal = cosTrkAngle;
 	            }
 				prevChi2 = clus.get_Chisq();
 			}
+			
+			// update to MP
+			for(FittedHit fhit : clus) {
+				fhit.updateHitPositionWithTime(cosTrkAngleFinal, false);					
+			}
 			cf.SetFitArray(clus, "TSC");
             cf.Fit(clus, true);
-            cf.SetResidualDerivedParams(clus, true, false); //calcTimeResidual=false, resetLRAmbig=false
+            cf.SetResidualDerivedParams(clus, true, false, false); //calcTimeResidual=false, resetLRAmbig=false , not local coord sys
             
-            // update to MP
-			for(FittedHit fhit : clus) {
-				fhit.projectToMidPlane(true);					
-			}
+            
 			cf.SetFitArray(clus, "TSC");
             cf.Fit(clus, false);
            

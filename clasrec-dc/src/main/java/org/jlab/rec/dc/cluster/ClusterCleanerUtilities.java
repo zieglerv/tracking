@@ -354,7 +354,7 @@ public class ClusterCleanerUtilities {
 			newhitPos.set_TrkgStatus(0);
 			
 			newhitPos.set_LeftRightAmb(1);
-			newhitPos.updateHitPositionWithTime(1); // assume the track angle is // to the layer, so that cosTrkAng =1
+			newhitPos.updateHitPositionWithTime(1, true); // assume the track angle is // to the layer, so that cosTrkAng =1
 			
 			newhitPos.set_AssociatedClusterID(hit.get_AssociatedClusterID());
 			
@@ -365,7 +365,7 @@ public class ClusterCleanerUtilities {
 			newhitNeg.set_TrkgStatus(0);
 			
 			newhitNeg.set_LeftRightAmb(-1);
-			newhitNeg.updateHitPositionWithTime(1); // assume the track angle is // to the layer
+			newhitNeg.updateHitPositionWithTime(1, true); // assume the track angle is // to the layer
 			
 			newhitNeg.set_AssociatedClusterID(hit.get_AssociatedClusterID());
 			
@@ -552,7 +552,7 @@ public class ClusterCleanerUtilities {
 				baseClusterHits.addAll(hitsInLayer); // safe all good hits to base cluster		
 				for(int j =0; j<hitsInLayer.size(); j++) {
 					hitsInLayer.get(j).set_LeftRightAmb(0);
-					hitsInLayer.get(j).updateHitPositionWithTime(1);
+					hitsInLayer.get(j).updateHitPositionWithTime(1, true);
 				}
 			}
 			if(hitsInLayer.size() ==2) {
@@ -565,7 +565,7 @@ public class ClusterCleanerUtilities {
 				if(docaSum<passingCut) { // reset LR to 0
 					for(int j =0; j<hitsInLayer.size(); j++) {
 						hitsInLayer.get(j).set_LeftRightAmb(0);
-						hitsInLayer.get(j).updateHitPositionWithTime(1);
+						hitsInLayer.get(j).updateHitPositionWithTime(1, true);
 					}
 					hitsInSameLayerLists.add(hitsInLayer);
 				} else {

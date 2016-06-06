@@ -34,7 +34,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	}
 
 	private double _X;              // X at Z in local coord. system
-	private double _XMP;            // X at the MidPlane in sector coord. system
+	//private double _XMP;            // X at the MidPlane in sector coord. system
 	private double _Z;              // Z in the sector coord. system
 	private double _lX;				// X in local coordinate system used in hit-based fit to cluster line
 	private double _lY;				// Y in local coordinate system used in hit-based fit to cluster line
@@ -47,7 +47,6 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	private double _ClusFitDoca;
 	private double _TrkFitDoca;
 	private double _TimeToDistance =0;
-
 	
 	/**
 	 * 
@@ -272,7 +271,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	public void set_X(double _X) {
 		this._X = _X;
 	}
-
+/*
 	public double get_XMP() {
 		return _XMP;
 	}
@@ -280,7 +279,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	public void set_XMP(double _XMP) {
 		this._XMP = _XMP;
 	}
-
+*/
 	/**
 	 * 
 	 * @return the hit z-position at the mid-plane (y=0) in the tilted sector coordinate system
@@ -300,22 +299,24 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	/**
 	 * A method to update the hit position information after the fit to the local coord.sys. wire positions 
 	 */
-	public void updateHitPosition() {		
+	public void updateHitPosition( boolean localSyst) {		
+		double x =0;
 		double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
 		
 		double z1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(this.get_Wire()-1).getMidpoint().z();
 		double z0 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(this.get_Wire()-1).getMidpoint().z();
 		double deltaz = Math.abs(z1-z0);
-		double xMin = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(0).getMidpoint().x();
+		double xMin = 0.; //GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(0).getMidpoint().x();
 		
-		double x = xMin + (this.get_Wire()-1)*2*deltaz*Math.tan(Math.PI/6);
-		if(this.get_Layer()%2==1)
-			x+=deltaz*Math.tan(Math.PI/6);
-		//
-		//double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
-		 x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
+		if(localSyst ==true) {
+			x = xMin + (this.get_Wire()-1)*2*deltaz*Math.tan(Math.PI/6);
+			if(this.get_Layer()%2==1)
+				x+=deltaz*Math.tan(Math.PI/6);
+		}
+		 if(localSyst ==false)
+			 x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
 
-		//
+		
 		this.set_X(x);
 		this.set_Z(z);
 		
@@ -325,28 +326,35 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 	 * A method to update the hit position information after the fit to the wire positions employing 
 	 * hit-based tracking algorithms has been performed.
 	 */
-	public void updateHitPositionWithTime(double cosTrkAngle) {
+	public void updateHitPositionWithTime(double cosTrkAngle, boolean localSyst ) {
 		if(this.get_Time()>0)
 			this.set_TimeToDistance(cosTrkAngle);
+		
+		double x =0;
+		double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
+		
 		
 		double z1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(this.get_Wire()-1).getMidpoint().z();
 		double z0 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(this.get_Wire()-1).getMidpoint().z();
 		double deltaz = Math.abs(z1-z0);
-		double xMin = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(0).getMidpoint().x();
+		double xMin = 0.; //GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(1).getComponent(0).getMidpoint().x();
 		
-		double x = xMin + (this.get_Wire()-1)*2*deltaz*Math.tan(Math.PI/6);
-		if(this.get_Layer()%2==1)
-			x+=deltaz*Math.tan(Math.PI/6);
+		if(localSyst ==true) {
+			x = xMin + (this.get_Wire()-1)*2*deltaz*Math.tan(Math.PI/6);
+			
+			if(this.get_Layer()%2==1)
+				x+=deltaz*Math.tan(Math.PI/6);
+			this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance());
+		}
+		if(localSyst ==false) {
+			x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
+			this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance()/Math.cos(Math.toRadians(6.)));
+		}
 		
-		double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
-		 x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
-
-		//this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance());
-		this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance()/Math.cos(Math.toRadians(6.)));
 		this.set_Z(z);
 		
 	}
-
+/*
 	public void projectToMidPlane(boolean Timebased) {
 		double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
 		double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().x();
@@ -357,7 +365,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 		this.set_XMP(x+TB*this.get_LeftRightAmb()*this.get_TimeToDistance()/Math.cos(Math.toRadians(6.)) );
 		this.set_Z(z);
 	}
-	
+	*/
 	/**
 	 * 
 	 * @param otherHit
@@ -420,6 +428,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 				this._AssociatedClusterID;
 		return s;
 	}
+
 
 	
 

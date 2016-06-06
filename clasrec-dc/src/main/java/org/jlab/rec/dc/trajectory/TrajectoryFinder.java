@@ -7,6 +7,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.services.Initialization;
 import org.jlab.rec.dc.trajectory.DCSwimmer;
 import org.jlab.geom.prim.Vector3D;
 
@@ -31,7 +32,7 @@ public class TrajectoryFinder {
 	/**
 	 *  Field instantiated using the torus and the solenoid
 	*/
-	public DCSwimmer dcSwim = new DCSwimmer();
+	public DCSwimmer dcSwim = new DCSwimmer(Initialization.rcompositeField, Initialization.compositeField);
 	
 	/**
 	 * Step size used in integral Bdl Riemann integration

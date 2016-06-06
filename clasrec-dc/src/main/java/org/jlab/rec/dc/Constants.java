@@ -128,11 +128,9 @@ public class Constants {
 	public static  int[] SNR_RIGHTSHIFTS = {0,1,2,2,4,4};
 	public static  int[] SNR_LEFTSHIFTS  = {0,1,2,2,4,4};	
 	
-	public static boolean useSolenoid = false;
-	
 	public static boolean useNoiseAlgo =true;
 
-	public static boolean turnOnMicroMegas = true;
+	public static boolean turnOnMicroMegas = false;
 
 	public static boolean useRaster = false;
 

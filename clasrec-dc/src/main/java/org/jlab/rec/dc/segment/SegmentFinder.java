@@ -60,16 +60,15 @@ public class SegmentFinder {
 				
 				for(int l = 0; l<6; l++) {
 					double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(seg.get_Superlayer()-1).getLayer(l).getComponent(0).getMidpoint().z();
-					double trkXMP = seg.get_fittedCluster().get_clusterLineFitSlopeMP()*z+seg.get_fittedCluster().get_clusterLineFitInterceptMP();				
-					double trkX = seg.get_fittedCluster().get_clusterLineFitSlope()*z+seg.get_fittedCluster().get_clusterLineFitIntercept();
+					double trkX = seg.get_fittedCluster().get_clusterLineFitSlopeMP()*z+seg.get_fittedCluster().get_clusterLineFitInterceptMP();				
 					
 					if(trkX==0)
 						continue; // should always get a cluster fit
-					int trjWire = trj.getWireOnTrajectory(seg.get_Superlayer(), l+1, trkXMP);
+					int trjWire = trj.getWireOnTrajectory(seg.get_Superlayer(), l+1, trkX);
 					
 					double x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(seg.get_Superlayer()-1).getLayer(l).getComponent(trjWire-1).getMidpoint().x();
-					double cosTrkAngle = Math.cos(Math.toRadians(6.))*Math.sqrt(1.+seg.get_fittedCluster().get_clusterLineFitSlope()*seg.get_fittedCluster().get_clusterLineFitSlope());
-					double calc_doca = (x-trkX)*cosTrkAngle;
+					double cosTrkAngle = 1./Math.sqrt(1.+fClus.get_clusterLineFitSlope()*fClus.get_clusterLineFitSlope());		
+					double calc_doca = (x-trkX)*cosTrkAngle*Math.cos(Math.toRadians(6.));
 					trkDocas[l] = calc_doca;
 					
 					for(int j = 0; j< hitno.length; j++) {

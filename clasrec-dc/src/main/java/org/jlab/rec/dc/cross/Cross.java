@@ -255,11 +255,11 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
 		
 		Point3D dirVec = new Point3D(ux,uy,uz);
 		
-		if(Constants.useSolenoid) {
-			this.set_Dir(fdirVec);
-		} else {
+		//if(Constants.useSolenoid) {
+		//	this.set_Dir(fdirVec);
+	//	} else {
 			this.set_Dir(dirVec);
-		}
+	//	}
 			
 		if(this.get_Dir().z()==0) {
 			System.err.print("Error in tangent to trajectory calculation");

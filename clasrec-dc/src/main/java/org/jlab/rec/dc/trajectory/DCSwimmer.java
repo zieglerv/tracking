@@ -1,14 +1,9 @@
 package org.jlab.rec.dc.trajectory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
 import org.jlab.geom.prim.Point3D;
 
 import cnuphys.magfield.CompositeField;
 import cnuphys.magfield.RotatedCompositeField;
-import cnuphys.magfield.Solenoid;
-import cnuphys.magfield.Torus;
 import cnuphys.rk4.IStopper;
 import cnuphys.rk4.RungeKuttaException;
 import cnuphys.swim.SwimTrajectory;
@@ -16,8 +11,6 @@ import cnuphys.swim.Swimmer;
 
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
-import org.jlab.utils.CLASResources;
-
 
 
 /**
@@ -27,8 +20,8 @@ import org.jlab.utils.CLASResources;
  */
 public class DCSwimmer {
 
-	private static RotatedCompositeField rcompositeField;
-	private static CompositeField compositeField;
+	private  RotatedCompositeField rcompositeField;
+	private  CompositeField compositeField;
 	
 	private  Swimmer swimmer;
 	// get some fit results
@@ -49,18 +42,17 @@ public class DCSwimmer {
 	
 	public static boolean areFieldsLoaded;
 	
-	public DCSwimmer() {
-		//create a swimmer for our magnetic field
-		//swimmer = new Swimmer(rcompositeField);
-		// create a swimmer for the magnetic fields
-		if(areFieldsLoaded==false)
-		    getMagneticFields();
+	public DCSwimmer(RotatedCompositeField _rcompositeField, CompositeField _compositeField) {
+		
+		rcompositeField = _rcompositeField;
+		compositeField = _compositeField;
 		
 		if(isRotatedCoordinateSystem == true)
 			swimmer = new Swimmer(rcompositeField);
 		
 		if(isRotatedCoordinateSystem == false)
 			swimmer = new Swimmer(compositeField);
+
 	}
 
 	/**
@@ -160,7 +152,7 @@ public class DCSwimmer {
 		if(_pTot<Constants.MINTRKMOM  ) // fiducial cut 
 			return null;
 		
-		try {
+		try { 
 			SwimTrajectory traj = swimmer.swim(_charge, _x0, _y0, _z0, _pTot, 
 					_theta, _phi, z, accuracy,_rMax, 
 					_maxPathLength, stepSize, Swimmer.CLAS_Tolerance, hdata);
@@ -173,7 +165,7 @@ public class DCSwimmer {
 			double lastY[] = traj.lastElement();
 			
 			//System.out.println("Swimmer End Params:");
-			//System.out.println(lastY[0]+" "+lastY[1]+" "+lastY[2]+" "+lastY[3]+" "+lastY[4]+" "+lastY[5]+" .");
+			//System.out.println(lastY[0]+" "+lastY[1]+" "+lastY[2]+" "+lastY[3]+" "+lastY[4]+" "+lastY[5]+" "+lastY[6]+" "+lastY[7]+" .");
 			value[0] = lastY[0]*100; // convert back to cm
 			value[1] = lastY[1]*100; // convert back to cm
 			value[2] = lastY[2]*100; // convert back to cm
@@ -282,113 +274,12 @@ public class DCSwimmer {
 			rcompositeField.field((float)x_cm, (float)y_cm, (float)z_cm, result);
 		if(isRotatedCoordinateSystem == false)
 			compositeField.field((float)x_cm, (float)y_cm, (float)z_cm, result);
-
+		
 		return new Point3D(result[0]/10, result[1]/10, result[2]/10);
 		
 	}
 	
-	//tries to get the magnetic field assuming it is in clasJLib
-	public static synchronized  void getMagneticFields() {
-
-		 Torus torus = null;
-		 Solenoid solenoid = null;
-		//will read mag field assuming we are in a 
-		//location relative to clasJLib. This will
-		//have to be modified as appropriate.
-		
-		String clasDictionaryPath = CLASResources.getResourcePath("etc");
-		
-		 String torusFileName = clasDictionaryPath + "/data/magfield/clas12-fieldmap-torus.dat";
-		
-		File torusFile = new File(torusFileName);
-		try {
-			torus = Torus.fromBinaryFile(torusFile);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		//OK, see if we can create a Solenoid
-		String solenoidFileName = clasDictionaryPath + "/data/magfield/clas12-fieldmap-solenoid.dat";
-			//OK, see if we can create a Torus
-			if(clasDictionaryPath == "../clasJLib")
-				solenoidFileName = clasDictionaryPath + "/data/solenoid/v1.0/solenoid-srr.dat";
-			
-		File solenoidFile = new File(solenoidFileName);
-		try {
-			solenoid = Solenoid.fromBinaryFile(solenoidFile);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		/*
-		if(Constants.FieldConfig=="variable") {
-		
-			if(Constants.TORSCALE<0) {
-				if(torus.isInvertField()==false)
-					torus.setInvertField(true);
-			}
-			if(Constants.SOLSCALE<0) {
-				if(solenoid.isInvertField()==false)
-					solenoid.setInvertField(true);
-			}
-			if(Constants.TORSCALE>0) {
-				if(torus.isInvertField()==true)
-					torus.setInvertField(false);
-			}
-			if(Constants.SOLSCALE>0) {
-				if(solenoid.isInvertField()==true)
-					solenoid.setInvertField(false);
-			}
-		} */
-		rcompositeField = new RotatedCompositeField();
-		compositeField = new CompositeField();
-		//System.out.println("***** ****** CREATED A COMPOSITE ROTATED FIELD ****** **** ");
-			
-		if (torus != null) {
-			/*
-			if(Constants.TORSCALE<0) {
-				if(torus.isInvertField()==false)
-					torus.setInvertField(true);
-			}
-			
-			if(Constants.TORSCALE>0) {
-				if(torus.isInvertField()==true)
-					torus.setInvertField(false);
-			}
-			
-			torus.setScaleField(true);  */
-			torus.setScaleFactor(Constants.TORSCALE);
-			System.out.println("***** ****** ****** THE TORUS IS BEING SCALED BY "+ (Constants.TORSCALE*100) +"  %   *******  ****** **** ");
-			rcompositeField.add(torus);
-			compositeField.add(torus);
-		}
-		if (solenoid != null) {
-			/*
-			if(Constants.SOLSCALE<0) {
-				if(solenoid.isInvertField()==false)
-					solenoid.setInvertField(true);
-			}
-			
-			if(Constants.SOLSCALE>0) {
-				if(solenoid.isInvertField()==true)
-					solenoid.setInvertField(false);
-			}
-			solenoid.setScaleField(true); */
-			solenoid.setScaleFactor(Constants.SOLSCALE);
-			System.out.println(" Sol at orig = "+solenoid.fieldMagnitude(0, 0, 0));
-			System.out.println("***** ****** ****** THE SOLENOID IS BEING SCALED BY "+ (Constants.SOLSCALE*100) +"  %   *******  ****** **** ");
-			if(Constants.SOLSCALE==0)
-				Constants.useSolenoid = false;
-			if(Constants.useSolenoid == true) {				
-				rcompositeField.add(solenoid);
-				compositeField.add(solenoid);
-				System.out.println(" Compos at orig = "+compositeField.fieldMagnitude(0, 0, 0)+" "+rcompositeField.fieldMagnitude(0, 0, 0));
-			}
-		}
-		areFieldsLoaded = true;
-		//System.out.println("Fields are Loaded! with torus inverted ? "+torus.isInvertField()+
-		//		" and solenoid inverted ? "+solenoid.isInvertField());
-	}	
-		
+	
 		
 	
 	public  Swimmer getSwimmer() {

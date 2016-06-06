@@ -115,7 +115,7 @@ public class ClusterFitter {
 		}
 	}
 	
-	public void SetResidualDerivedParams(FittedCluster clus, boolean calcTimeResidual, boolean resetLRAmbig) {
+	public void SetResidualDerivedParams(FittedCluster clus, boolean calcTimeResidual, boolean resetLRAmbig, boolean local) {
 		
 		if(FitPars==null || FitArray==null)
 			return;
@@ -130,11 +130,22 @@ public class ClusterFitter {
 	    	double residual = (FitArray[2][i]-FitPars.slope()*FitArray[0][i]-FitPars.intercept());
 	    	clus.get(i).set_Residual(residual); 
 	    	//clus.get(i).set_ClusFitDoca(FitPars.slope()*FitArray[0][i]+FitPars.intercept());
-	    	double xWire = GeometryLoader.dcDetector.getSector(0).getSuperlayer(clus.get(i).get_Superlayer()-1).getLayer(clus.get(i).get_Layer()-1).getComponent(clus.get(i).get_Wire()-1).getMidpoint().x();
-	    	double trkDocaMP = -xWire + (FitPars.slope()*FitArray[0][i]+FitPars.intercept());
-	    	double trkDoca = trkDocaMP*Math.cos(Math.toRadians(6.));
 	    	
-	    	clus.get(i).set_ClusFitDoca(trkDoca);
+	    	double x =0;
+	    	double calc_doca =0;
+	    	
+	    	if(local==true) {
+		    	x = clus.get(i).get_X();
+				double cosTrkAngle = 1./Math.sqrt(1.+clus.get_clusterLineFitSlope()*clus.get_clusterLineFitSlope());		
+				calc_doca = (x-FitPars.slope()*FitArray[0][i]-FitPars.intercept())*cosTrkAngle;
+	    	}
+	    	
+	    	if(local==false) {
+		    	x = GeometryLoader.dcDetector.getSector(0).getSuperlayer(clus.get_Superlayer()-1).getLayer(clus.get(i).get_Layer()-1).getComponent(clus.get(i).get_Wire()-1).getMidpoint().x();
+				double cosTrkAngle = 1./Math.sqrt(1.+clus.get_clusterLineFitSlope()*clus.get_clusterLineFitSlope());		
+				calc_doca = (x-FitPars.slope()*FitArray[0][i]-FitPars.intercept())*cosTrkAngle*Math.cos(Math.toRadians(6.));
+	    	}
+	    	clus.get(i).set_ClusFitDoca(calc_doca);
 
 	    	
 	    	//

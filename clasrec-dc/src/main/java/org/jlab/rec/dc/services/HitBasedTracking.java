@@ -105,8 +105,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 		}
 
 		fhits = rbc.createRawHitList(hits);
-				
-		
+
 		//2) find the clusters from these hits
 			ClusterFinder clusFinder = new ClusterFinder();
 			clusters = clusFinder.FindHitBasedClusters(hits, ct, cf);
@@ -127,6 +126,7 @@ public class HitBasedTracking extends DetectorReconstruction {
 			
 			
 			rbc.updateListsListWithClusterInfo(fhits, clusters);
+			
 			//3) find the segments from the fitted clusters
 			SegmentFinder segFinder = new SegmentFinder();
 			segments =  segFinder.get_Segments(clusters, event);
@@ -227,8 +227,8 @@ public class HitBasedTracking extends DetectorReconstruction {
 			}
 			this.requireCalibration("DC");
 			// Load the fields
-			if (DCSwimmer.areFieldsLoaded == false) {
-				DCSwimmer.getMagneticFields();
+			if (Initialization.areFieldsLoaded == false) {
+				Initialization.getMagneticFields();
 			}
 			
 		}
@@ -254,12 +254,15 @@ public class HitBasedTracking extends DetectorReconstruction {
 					 Constants.DBVAR = Variation.trim().toString();
 				}	
 				
-				if(config.hasItem("MAGF", "torus")) {
-					Constants.TORSCALE = Double.parseDouble(config.asString("MAGF", "torus"));
+				System.out.println(" CONFIGURING SERVICE DCHB **********MAG************** ");
+				if(config.hasItem("MAG", "torus")) {
+					Constants.TORSCALE = config.asDouble("MAG", "torus");
 				}
-				if(config.hasItem("MAGF", "solenoid")) {
-					Constants.SOLSCALE = Double.parseDouble(config.asString("MAGF", "solenoid"))	;	System.out.println("************************* solenoid scale = "+Constants.SOLSCALE)		;	
+				
+				if(config.hasItem("MAG", "solenoid")) {
+					Constants.SOLSCALE = config.asDouble("MAG", "solenoid")	;	System.out.println("************************* solenoid scale = "+Constants.SOLSCALE)		;	
 				}
+				
 				
 				
 				if(config.hasItem("TIME", "T0")) {

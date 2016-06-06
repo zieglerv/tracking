@@ -36,6 +36,25 @@ public class RecoBankWriter {
 	}
 	public void updateListsListWithClusterInfo(List<FittedHit> fhits,
 			List<FittedCluster> clusters) {
+	
+		for(int i = 0; i<clusters.size(); i++) {
+			
+			for(int j = 0; j<clusters.get(i).size(); j++) {
+				
+				clusters.get(i).get(j).set_AssociatedClusterID(clusters.get(i).get_Id());
+				
+				for(int k =0; k<fhits.size(); k++) {
+					if(fhits.get(k).get_Id()==clusters.get(i).get(j).get_Id()) {
+						fhits.remove(k);	
+						fhits.add(clusters.get(i).get(j));
+							
+					}
+				}
+			}
+		}
+
+		
+		/*
 		List<FittedHit> clsfhits = new ArrayList<FittedHit>();
 		List<FittedHit> ufhits = new ArrayList<FittedHit>();
 		
@@ -79,7 +98,7 @@ public class RecoBankWriter {
 		
 		fhits.removeAll(fhits);
 		fhits.addAll(newfhits);
-		
+		*/
 	}
 	
 	public EvioDataBank fillHBHitsBank(EvioDataEvent event, List<FittedHit> hitlist) {
@@ -145,7 +164,7 @@ public class RecoBankWriter {
 				if(j<hitIdxArray.length)
 					hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
 				
-				double residual = cluslist.get(i).get(j).get_ClusFitDoca()/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = cluslist.get(i).get(j).get_Residual()/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
 			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, cluslist.get(i).size()-2));
@@ -205,7 +224,7 @@ public class RecoBankWriter {
 				if(j<hitIdxArray.length)
 					hitIdxArray[j] = seglist.get(i).get(j).get_Id();
 				
-				double residual = seglist.get(i).get(j).get_ClusFitDoca()/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = seglist.get(i).get(j).get_Residual()/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
 			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, seglist.get(i).size()-2));
@@ -384,11 +403,10 @@ public class RecoBankWriter {
 				if(j<hitIdxArray.length)
 					hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
 				
-				double residual = cluslist.get(i).get(j).get_ClusFitDoca()/(cluslist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = cluslist.get(i).get(j).get_Residual()/(cluslist.get(i).get(j).get_DocaErr()); 
 				chi2+= residual*residual;
 			}
 			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, cluslist.get(i).size()-2));
-			
 			
 			for(int j =0; j<hitIdxArray.length; j++) {
 				String hitStrg = "Hit";
@@ -442,12 +460,11 @@ public class RecoBankWriter {
 				if(j<hitIdxArray.length)
 					hitIdxArray[j] = seglist.get(i).get(j).get_Id();
 				
-				double residual = seglist.get(i).get(j).get_ClusFitDoca()/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
+				double residual = seglist.get(i).get(j).get_Residual()/(seglist.get(i).get(j).get_CellSize()/Math.sqrt(12.));
 				chi2+= residual*residual;
 			}
 			bank.setDouble("fitChisqProb", i, ProbChi2perNDF.prob(chi2, seglist.get(i).size()-2));
-			
-			
+						
 			for(int j =0; j<hitIdxArray.length; j++) {
 				String hitStrg = "Hit";
 				hitStrg+=(j+1);
