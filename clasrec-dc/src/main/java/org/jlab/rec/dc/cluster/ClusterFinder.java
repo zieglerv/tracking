@@ -319,38 +319,38 @@ public class ClusterFinder  {
 			
 			// resolves segments where there are only single hits in layers thereby resulting in a two-fold LR ambiguity
 			// hence there are 2 solutions to the segments
-			int SumLR =0;
+			int[] SumLn = new int[6];
 			for(FittedHit fhit : clus) {
-				SumLR += fhit.get_LeftRightAmb();	
+				SumLn[fhit.get_Layer()-1] ++;	
 			}
-			if(SumLR==clus.size() || SumLR== -clus.size()) {
+			boolean tryOtherClus = true;
+			for(int l =0; l<6; l++) {			
+				if(SumLn[l]>1)
+					tryOtherClus = false;
+			}
+			
+			if(tryOtherClus) {
 				FittedCluster Clus2 = new FittedCluster(clus.getBaseCluster());
 				for(FittedHit hit : clus) {
 					
-					if(hit.get_LeftRightAmb()>0) {
+					if(hit.get_LeftRightAmb()!=0) {
 						FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
 								hit.get_Time(), hit.get_DocaErr(), hit.get_Id()) ;
 						newhit.set_Doca(hit.get_Doca());
 						newhit.set_Id(hit.get_Id());
 						newhit.set_TrkgStatus(hit.get_TrkgStatus());						
-						newhit.set_LeftRightAmb(-1);
+						newhit.set_LeftRightAmb(-hit.get_LeftRightAmb());
 						newhit.updateHitPositionWithTime(1, true); // assume the track angle is // to the layer						
 						newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
 						Clus2.add(newhit);
 					}
-					if(hit.get_LeftRightAmb()<0) {
-						FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
-								hit.get_Time(), hit.get_DocaErr(), hit.get_Id()) ;
-						newhit.set_Doca(hit.get_Doca());
-						newhit.set_Id(hit.get_Id());
-						newhit.set_TrkgStatus(hit.get_TrkgStatus());						
-						newhit.set_LeftRightAmb(1);
-						newhit.updateHitPositionWithTime(1, true); // assume the track angle is // to the layer						
-						newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
-						Clus2.add(newhit);
-					}		
+					
 				}
-				clusters.add(Clus2);
+				cf.SetFitArray(Clus2, "TSC");
+	            cf.Fit(Clus2, true);
+	            
+				if(Math.abs(clus.get_Chisq()-Clus2.get_Chisq())<1)
+					clusters.add(Clus2);
 			} 
 			 clusters.add(clus);	
 		}
