@@ -153,10 +153,10 @@ public class DetectorDrawComponents implements IDetectorShapes {
 		shapeViews.add(3, new DetectorShapeView2D("BMT Modules"));
 		this.set_ShapeViews(shapeViews);
 		List<DetectorShapeTabView>  tabViews   = new ArrayList<DetectorShapeTabView>();
-		tabViews.add(0, new DetectorShapeTabView(800,800));  	// XY view
-		tabViews.add(1, new DetectorShapeTabView(800,800));  	// YZ view
-		tabViews.add(2, new DetectorShapeTabView(1800,1000)); 	// SVT modules
-		tabViews.add(3, new DetectorShapeTabView(800,800));  	// BMT modules
+		tabViews.add(0, new DetectorShapeTabView(500,500));  	// XY view
+		tabViews.add(1, new DetectorShapeTabView(500,500));  	// YZ view
+		tabViews.add(2, new DetectorShapeTabView(800,500)); 	// SVT modules
+		tabViews.add(3, new DetectorShapeTabView(500,500));  	// BMT modules
 		this.set_TabViews(tabViews);
 		
 		this.CreateDetectorShapes(shapeViews, tabViews, listener);

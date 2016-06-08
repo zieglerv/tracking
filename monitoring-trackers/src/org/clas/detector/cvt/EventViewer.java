@@ -2,19 +2,28 @@ package org.clas.detector.cvt;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jlab.clas.detector.DetectorCollection;
 import org.jlab.clas.detector.DetectorDescriptor;
 import org.jlab.clas.detector.DetectorType;
 import org.jlab.clas12.basic.IDetectorModule;
 import org.jlab.clas12.basic.IDetectorProcessor;
+import org.jlab.clas12.calib.DetectorModulePane;
 import org.jlab.clas12.calib.DetectorShape2D;
 import org.jlab.clas12.calib.DetectorShapeTabView;
 import org.jlab.clas12.calib.DetectorShapeView2D;
@@ -30,7 +39,8 @@ import org.root.histogram.H1D;
 import org.root.pad.TEmbeddedCanvas;
 
 
-public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetectorModule, ActionListener {
+public class EventViewer implements IDetectorProcessor,IDetectorListener, ItemListener, IDetectorModule, ActionListener {
+	
 	// Initialize Cosmics Rec
 	CVTCosmicsReconstruction reco = new CVTCosmicsReconstruction();
 	EventDecoder decoder = new EventDecoder();
@@ -45,13 +55,32 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 	DetectorShapeView2D  detectorPanel2 = null;
 	DetectorShapeView2D  detectorPanel3 = null;
 	DetectorShapeView2D  plotsPanel 	= null;
+	//
+	DetectorModulePane detectorModulePane = null;
+	JLabel regionLabel 					  = null;
+	JLabel sectorLabel 					  = null;
+	JLabel sensorLabel 					  = null;
+	JLabel groupLabel1					  = null;
+	JLabel groupLabel2					  = null;
+	JLabel groupLabel3					  = null;
+	JLabel groupLabel4					  = null;
+	JLabel groupLabel5					  = null;
     
+
+     JFormattedTextField nEventsField;
+     JFormattedTextField nSkipEventsField;
+     JFormattedTextField displayEventField;
+    
+    //
     DetectorDrawComponents detFrm 		= new DetectorDrawComponents();
     OnlineRecoFillHistograms histos 	= new OnlineRecoFillHistograms();
     DetectorEventProcessorPane evPane 	= new DetectorEventProcessorPane();
     TEmbeddedCanvas canvas 				= new TEmbeddedCanvas();
     DetectorShapeTabView  view 			= new DetectorShapeTabView();
     JFrame frame = new JFrame();
+    
+    private List<JComboBox<String>> comboBoxes = new ArrayList<JComboBox<String>>();
+    private List<String> plotName = new ArrayList<String>();
     
 	public EventViewer() {
 		// configure reconstruction
@@ -63,16 +92,47 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
     	config.addItem("SVT", "newGeometry", "true");
     	reco.configure(config);
     	
-    	
+    	 //
+        detectorModulePane = new DetectorModulePane(4000, 2000, 1);
+        detectorModulePane.addCanvas("Group");
+        detectorModulePane.getCanvas("Group").setSize(2000, 2000);
+        detectorModulePane.addCanvas("Region");
+        detectorModulePane.addCanvas("Layer");
+        detectorModulePane.addCanvas("Sensor");
+        detectorModulePane.addCanvas("Sector");
+        
+        
+       // nEventsLabel = new JLabel(nEventsString);
+       // nSkipEventsLabel = new JLabel(nSkipEventsString);
+       // displayEventLabel = new JLabel(displayEventString);
+        
+        regionLabel = new JLabel("Region");
+        sectorLabel = new JLabel("Sector");
+        sensorLabel = new JLabel("Sensor");
+        groupLabel1  = new JLabel("Tracker Maps");
+        groupLabel2  = new JLabel("Components");
+        groupLabel3  = new JLabel("Statistics");
+        groupLabel4  = new JLabel("Summary");
+        groupLabel5  = new JLabel("Track Properties");
+        
+        
+        //
+        this.detectorModulePane.getControlPanel().setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.5;
+        c.gridx = 0;
+        c.gridy = 0;
+        
     	// configure views	   
         this.plotsPanel = new DetectorShapeView2D("Histograms");
         this.plotsPanel.setLayout(new BorderLayout());
         this.plotsPanel.add(this.canvas);
         histos.CreateHistos();
-	    
+
         this.detectorPanel = new DetectorShapeView2D("CVT Views");
 	    detFrm.CreateViews(this);
-	    histos.CreateDetectorShapes(new ArrayList<DetectorCollection<H1D>>());
+	   // histos.CreateDetectorShapes(new ArrayList<DetectorCollection<H1D>>());
 	    this.detectorPanel.setLayout(new BorderLayout());
 	    
 	    this.detectorPanel2 = new DetectorShapeView2D("SVT Modules");
@@ -99,14 +159,116 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 	    this.detectorPanel.add(topView,BorderLayout.PAGE_START);
 	    this.detectorPanel2.add(ModView,BorderLayout.PAGE_START);
 	    this.detectorPanel3.add(ModView2,BorderLayout.PAGE_START);
-	    this.detectorPanel.add(this.evPane,BorderLayout.PAGE_END);
+	    this.frame.add(this.evPane,BorderLayout.PAGE_END);
 	    
-	    this.view.addDetectorLayer(this.detectorPanel);
-	    this.view.addDetectorLayer(this.detectorPanel2);
-	    this.view.addDetectorLayer(this.detectorPanel3);
+	    this.detectorModulePane.getDetectorView().addDetectorLayer(detectorPanel);
+	    this.detectorModulePane.getDetectorView().addDetectorLayer(this.detectorPanel2);
+	    this.detectorModulePane.getDetectorView().addDetectorLayer(this.detectorPanel3);
+	    //this.view.addDetectorLayer(this.detectorPanel);
+	   
+	    JComboBox<String> combo =null;
+	    //Strip plots/ tracker maps
+	    this.detectorModulePane.getControlPanel().add(groupLabel1, c);
+	    c.gridx++;
+	    combo = new JComboBox<String>();
+        this.detectorModulePane.getControlPanel().add(combo, c);
+        combo.addItem("channel status");
+        combo.addItem("occupancy");
+        combo.addItem("average strip pulse height in ADC counts");
+        combo.addItem("pulse width in ADC counts");
+        combo.addItem("new bad strips");
+        combo.setEditable(true);
+        combo.addActionListener(view);
+        combo.addItemListener(this);
+        comboBoxes.add(combo);
+        c.gridy++;
+        c.gridx =0;
+	    //Components plots
+	    this.detectorModulePane.getControlPanel().add(groupLabel2, c);
+	    c.gridx++;
+	    combo = new JComboBox<String>();
+        this.detectorModulePane.getControlPanel().add(combo, c);
+        combo.addItem("adc");
+        combo.addItem("bco");
+        combo.addItem("track-angle-corrected cluster charge");
+        combo.addItem("cluster charge");
+        combo.addItem("strip multiplicity");
+        combo.addItem("centroid residual");
+        combo.addItem("local track phi");
+        combo.addItem("local track theta");
+        combo.addItem("local track 3D angle");
+        combo.setEditable(true);
+        combo.addActionListener(view);
+        combo.addItemListener(this);
+        comboBoxes.add(combo);
+        c.gridy++;
+	    //Statistics plots
+        c.gridx=0;
+	    this.detectorModulePane.getControlPanel().add(groupLabel3, c);
+	    c.gridx++;
+	    combo = new JComboBox<String>();
+        this.detectorModulePane.getControlPanel().add(combo, c);
+        combo.addItem("adc");
+        combo.addItem("occupancy");
+        combo.addItem("cluster charge");
+        combo.addItem("strip multiplicity");
+        combo.addItem("centroid residual");
+        combo.setEditable(true);
+        combo.addActionListener(view);
+        combo.addItemListener(this);
+        comboBoxes.add(combo);
+        c.gridy++;
+        //Summary/combined plots
+        c.gridx=0;
+        this.detectorModulePane.getControlPanel().add(groupLabel4, c);
+        c.gridx++;
+	    combo = new JComboBox<String>();
+        this.detectorModulePane.getControlPanel().add(combo, c);
+        combo.addItem("occupancy");
+        combo.addItem("adc");
+        combo.addItem("cluster charge");
+        combo.addItem("centroid residual");
+        combo.addItem("strip multiplicity");
+        combo.addItem("hit multiplicity");
+        combo.addItem("cluster multiplicity");
+        combo.addItem("cross multiplicity");
+        combo.setEditable(true);
+        combo.addActionListener(view);
+        combo.addItemListener(this);
+        comboBoxes.add(combo);
+        c.gridy++;
+        // tracker object plots
+        c.gridx=0;
+        this.detectorModulePane.getControlPanel().add(groupLabel5, c);
+        c.gridx++;
+	    combo = new JComboBox<String>();
+        this.detectorModulePane.getControlPanel().add(combo, c);
+        combo.addItem("track momentum");
+        combo.addItem("track transverse momentum");
+        combo.addItem("track phi0 vs track theta0");
+        combo.addItem("track phi0");
+        combo.addItem("track theta0");
+        combo.addItem("track z0");
+        combo.addItem("track d0");
+        combo.addItem("track normalized chi2");
+        combo.addItem("track multiplicity");
+        combo.addItem("path length");
+        combo.addItem("number of hits per track");
+        combo.setEditable(true);
+        combo.addActionListener(view);
+        combo.addItemListener(this);
+        comboBoxes.add(combo);
+        c.gridy++;
+       
+	    this.view.add(detectorModulePane);
+	    //this.view.addDetectorLayer(this.detectorPanel2);
+	   // this.view.addDetectorLayer(this.detectorPanel3);
         view.addDetectorListener(this);
        
-       
+        plotName = new ArrayList<String>(comboBoxes.size()) ;
+        
+        for(int k =0; k< comboBoxes.size(); k++)
+        	plotName.add("");
         
         frame.add(this.view);
         frame.pack();
@@ -115,10 +277,28 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 
 	@Override
 	public void detectorSelected(DetectorDescriptor arg0) {
-		// TODO Auto-generated method stub
 		
+		if(plotName.get(2) == "occupancy") {
+			List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+			
+			DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(0));
+			DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(1));
+			histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Layer"), DetectorComponentsHistos_LayerTab);
+		}
 	}
 
+	@Override
+	public void itemStateChanged(ItemEvent event) {
+		for(int i =0; i< comboBoxes.size(); i++) {
+			if(event.getSource() == comboBoxes.get(i)
+	                && event.getStateChange() == ItemEvent.SELECTED) {
+				plotName.add(i,comboBoxes.get(i).getSelectedItem().toString());
+				System.out.println(" Selected "+comboBoxes.get(i).getSelectedItem().toString());
+			}
+		}
+	}
+	
+	
 	DetectorCollection<Integer> SVTHits 	= new DetectorCollection<Integer>();
     DetectorCollection<Integer> BMTHits 	= new DetectorCollection<Integer>();
     DetectorCollection<Integer> SVTStrips  	= new DetectorCollection<Integer>();
@@ -153,6 +333,12 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
 	        }
     	}
     }
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		
+		
+	}
 
 	@Override
 	public String getAuthor() {
@@ -192,11 +378,13 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
         displays.PlotCrosses(decodedEvent, detFrm.get_ShapeViews().get(0), detFrm.get_ShapeViews().get(1), detFrm.get_TabViews().get(0), detFrm.get_TabViews().get(1), svt_geo);
         displays.PlotSVTStrips(decodedEvent, SVTHits, SVTStrips,detFrm.get_ShapeViews().get(2), svt_geo);
         displays.PlotBMTStrips(decodedEvent, BMTHits, BMTStrips,detFrm.get_ShapeViews().get(3), bmt_geo);    
-        //histos.FillHistos(decodedEvent);
+        histos.FillHistos(decodedEvent);
+        
 	}
 
+
 	public static void main(String[] args){
-    	
+    	EventViewer ev = new EventViewer();
         
         /*
         frame.add(module.detectorPanel);
@@ -223,10 +411,9 @@ public class EventViewer implements IDetectorProcessor,IDetectorListener,IDetect
         //frame4.setVisible(true);
     }
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	
+	
+
+	
 
 }

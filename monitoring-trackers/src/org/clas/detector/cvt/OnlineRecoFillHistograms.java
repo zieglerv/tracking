@@ -11,6 +11,7 @@ import org.jlab.clas12.calib.DetectorShape2D;
 import org.jlab.evio.clas12.EvioDataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.root.attr.ColorPalette;
+import org.root.basic.EmbeddedCanvas;
 import org.root.histogram.H1D;
 import org.root.pad.TEmbeddedCanvas;
 
@@ -39,43 +40,44 @@ public class OnlineRecoFillHistograms implements IHistograms {
 	private List<DetectorCollection<H1D>> _DetectorComponentsHistos;	
 	private List<H1D> _Histograms;
 	
+	/**
+	 * Create List of histogram.  A detector collection contains a list of identical histograms for each sector and layer
+	 * The array of detectorcomponents corresponds to each histogram type .. here detectorComponentsHistos.get(0) is the number of hits histogram
+	 */
 	@Override
-	public void CreateDetectorShapes(List<DetectorCollection<H1D>> detectorComponentsHistos) {
+	public void CreateHistoList() {
+		List<DetectorCollection<H1D>> detectorComponentsHistos = new ArrayList<DetectorCollection<H1D>>();
 		
-		for(int regionIdx =0; regionIdx< 4; regionIdx++)
-			for(int sectorIdx = 0; sectorIdx < org.jlab.rec.cvt.svt.Constants.NSECT[2*regionIdx+1]; sectorIdx++) 
-				for(int sly =0; sly<2; sly++) {
-					DetectorCollection<H1D>  dC0 = new DetectorCollection<H1D>();
-					DetectorCollection<H1D>  dC1 = new DetectorCollection<H1D>();
-					DetectorCollection<H1D>  dC2 = new DetectorCollection<H1D>();
-					
+		DetectorCollection<H1D>  dC0 = new DetectorCollection<H1D>();
+		DetectorCollection<H1D>  dC1 = new DetectorCollection<H1D>();
+		DetectorCollection<H1D>  dC2 = new DetectorCollection<H1D>();
+		
+		for(int regionIdx =0; regionIdx< 4; regionIdx++) 
+			for(int sectorIdx = 0; sectorIdx < org.jlab.rec.cvt.svt.Constants.NSECT[2*regionIdx+1]; sectorIdx++)  {
+				dC2.add(sectorIdx, regionIdx, 0,
+						new H1D(DetectorDescriptor.getName("NumberOfCrosses", sectorIdx, regionIdx,0),
+								20, 0, 20)); // whole module
+				
+				for(int sly =0; sly<2; sly++) {					
 					dC0.add(sectorIdx, 2*regionIdx+sly, 0,
 							new H1D(DetectorDescriptor.getName("NumberOfHits", sectorIdx, 2*regionIdx+sly,0),
-									100, 0, 100));	
-					
+									100, 0, 100));						
 					dC1.add(sectorIdx, 2*regionIdx+sly, 0,
 							new H1D(DetectorDescriptor.getName("NumberOfCluster", sectorIdx, 2*regionIdx+sly,0),
 									100, 0, 100));	
-					dC2.add(sectorIdx, regionIdx, 0,
-							new H1D(DetectorDescriptor.getName("NumberOfCrosses", sectorIdx, regionIdx,0),
-									20, 0, 20)); // whole module
 					
-
-					detectorComponentsHistos.add(dC0);	
-					detectorComponentsHistos.add(dC1);						
-					detectorComponentsHistos.add(dC2);	
-					
+				}
 			}
+		detectorComponentsHistos.add(dC0);	
+		detectorComponentsHistos.add(dC1);						
+		detectorComponentsHistos.add(dC2);	
+		
+		this.set_DetectorComponentsHistos(detectorComponentsHistos);
 		
 	}
 	
 	public void CreateHistos() {
-		List<DetectorCollection<H1D>> detectorComponentsHistos = new ArrayList<DetectorCollection<H1D>>();
-		detectorComponentsHistos.add(0, new DetectorCollection<H1D>());
-		detectorComponentsHistos.add(1, new DetectorCollection<H1D>());
-		detectorComponentsHistos.add(2, new DetectorCollection<H1D>());
 		
-		this.set_DetectorComponentsHistos(detectorComponentsHistos);
 		
 		List<H1D> summaryHistograms = new ArrayList<H1D>(4);
 		summaryHistograms.add(new H1D("NumberOfHits", 100, 0, 100));
@@ -86,7 +88,7 @@ public class OnlineRecoFillHistograms implements IHistograms {
 		
 		this.set_Histograms(summaryHistograms);
 				
-		this.CreateDetectorShapes(detectorComponentsHistos) ;		
+		this.CreateHistoList() ;		
 		
 	}
 	
@@ -95,26 +97,20 @@ public class OnlineRecoFillHistograms implements IHistograms {
      * When the detector is clicked, this function is called
      * @param desc the descriptor
      */
-	public void DetectorSelected(DetectorDescriptor desc, TEmbeddedCanvas canvas) {
-		 canvas.divide(1,3);
-	        if(_DetectorComponentsHistos.get(0).hasEntry(desc.getSector(),desc.getLayer(),0)){ // nb hits
-	            H1D h1 = _DetectorComponentsHistos.get(0).get(desc.getSector(),desc.getLayer(),0);
+	public void DetectorSelected(DetectorDescriptor desc, EmbeddedCanvas canvas, List<DetectorCollection<H1D>> DetectorComponentsHistos) {
+		
+		int nCanvasDivisions = DetectorComponentsHistos.size();
+		 canvas.divide(1, nCanvasDivisions);
+		 
+		 for(int i =0; i< nCanvasDivisions; i++) {
+	        if(DetectorComponentsHistos.get(i).hasEntry(desc.getSector(),desc.getLayer(),0)){ 
+	            H1D h1 = DetectorComponentsHistos.get(i).get(desc.getSector(),desc.getLayer(),0);
 	            h1.setTitle(h1.getName());
-	            canvas.cd(0);
+	            canvas.cd(i);
 	            canvas.draw(h1);
 	        }
-	        if(_DetectorComponentsHistos.get(1).hasEntry(desc.getSector(),desc.getLayer(),0)){ // nb clusters
-	            H1D h1 = _DetectorComponentsHistos.get(0).get(desc.getSector(),desc.getLayer(),0);
-	            h1.setTitle(h1.getName());
-	            canvas.cd(1);
-	            canvas.draw(h1);
-	        }
-	        if(_DetectorComponentsHistos.get(2).hasEntry(desc.getSector(),desc.getLayer(),0)){ // nb crosses
-	            H1D h1 = _DetectorComponentsHistos.get(0).get(desc.getSector(),desc.getLayer(),0);
-	            h1.setTitle(h1.getName());
-	            canvas.cd(2);
-	            canvas.draw(h1);
-	        }	
+		 }
+	 
 	}
 
 	@Override
@@ -127,6 +123,7 @@ public class OnlineRecoFillHistograms implements IHistograms {
 	}
 	
 	public void FillHistos(EvioDataEvent event) {
+		
 		 if(event.hasBank("BSTRec::Hits")==true){
 			 double[][] array = new double[24][8];
 	            EvioDataBank bank = (EvioDataBank) event.getBank("BSTRec::Hits");
@@ -137,10 +134,11 @@ public class OnlineRecoFillHistograms implements IHistograms {
 	                array[sector-1][layer-1]++;
 	            }
 	            for(int i = 0; i<24; i++)
-	            	for(int j = 0; j<8; j++)
+	            	for(int j = 0; j<8; j++) 
 	            		if(array[i][j]>0)
 	            			_DetectorComponentsHistos.get(0).get(i,j,0).fill(array[i][j]);
 		 }
+		 
 		 if(event.hasBank("BSTRec::Clusters")==true){
 			 double[][] array = new double[24][8];
 	            EvioDataBank bank = (EvioDataBank) event.getBank("BSTRec::Clusters");
@@ -155,8 +153,8 @@ public class OnlineRecoFillHistograms implements IHistograms {
 	            		if(array[i][j]>0)
 	            			_DetectorComponentsHistos.get(1).get(i,j,0).fill(array[i][j]);
 		 }
-		 if(event.hasBank("BSTRec::Crosses")==true){
-			 double[][] array = new double[24][8];
+	/*	 if(event.hasBank("BSTRec::Crosses")==true){
+			 double[][] array = new double[24][4];
 	            EvioDataBank bank = (EvioDataBank) event.getBank("BSTRec::Crosses");
 	            int rows = bank.rows();
 	            for(int loop = 0; loop < rows; loop++){
@@ -165,10 +163,10 @@ public class OnlineRecoFillHistograms implements IHistograms {
 	                array[sector-1][layer-1]++;
 	            }
 	            for(int i = 0; i<24; i++)
-	            	for(int j = 0; j<8; j++)
+	            	for(int j = 0; j<4; j++)
 	            		if(array[i][j]>0)
 	            			_DetectorComponentsHistos.get(2).get(i,j,0).fill(array[i][j]);
-		 }
+		 } */
 	}
 
 	
