@@ -46,6 +46,8 @@ public class Decoder {
 	    	
 	    	decodedEvent.appendBank(bank);
 	    	//decodedEvent.show();
+	    }  else {
+	    	decodedEvent.appendBank(event.getBank("BMT::dgtz"));
 	    }
         if(event.hasBank("BST::dgtz")==false){
         	//System.out.println("==================== Decoding SVT =====================");
@@ -70,7 +72,9 @@ public class Decoder {
         	      bank.setInt("hitn", loop, hitno);
         	}
         	decodedEvent.appendBank(bank);
-        }
+        } else {
+	    	decodedEvent.appendBank(event.getBank("BST::dgtz"));
+	    }
 	    
 		return decodedEvent;
 	}
