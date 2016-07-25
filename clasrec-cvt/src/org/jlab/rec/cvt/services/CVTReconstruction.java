@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.jlab.clasrec.main.DetectorReconstruction;
 import org.jlab.clasrec.utils.ServiceConfiguration;
-import org.jlab.data.io.DataBank;
 import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.banks.HitReader;
@@ -51,7 +50,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 			System.out.println("Event Number = "+eventNb);
 		
 		HitReader hitRead = new HitReader();
-		hitRead.fetch_SVTHits(event,adcConv);
+		hitRead.fetch_SVTHits(event,adcConv,-1,-1);
 		hitRead.fetch_BMTHits(event, adcConv, BMTGeom);
 		
 		List<Hit> hits = new ArrayList<Hit>();
@@ -154,7 +153,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 		List<Track> trkcands = new ArrayList<Track>();
 		
 		trkcands = trkcandFinder.getHelicalTrack(crosslist, SVTGeom, BMTGeom); 
-		
+			
 		if(trkcands.size()==0) {
 			// create the clusters and fitted hits banks
 			RecoBankWriter.appendCVTBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, null);
@@ -175,6 +174,8 @@ public class CVTReconstruction extends DetectorReconstruction{
 			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
 				System.out.println("Saving tracks !");
 		}
+		
+		
 		
 	}
 	@Override
@@ -232,6 +233,11 @@ public class CVTReconstruction extends DetectorReconstruction{
 			String DB = config.asString("CVT", "debug");
 			boolean kFlag = Boolean.parseBoolean(DB);
 			org.jlab.rec.cvt.Constants.DEBUGMODE = kFlag;
+		}
+		if(config.hasItem("SVT", "LayerEffs")) {
+			String DB = config.asString("SVT", "LayerEffs");
+			boolean kFlag = Boolean.parseBoolean(DB);
+			org.jlab.rec.cvt.svt.Constants.LAYEREFFS= kFlag;
 		}
 	}
 	

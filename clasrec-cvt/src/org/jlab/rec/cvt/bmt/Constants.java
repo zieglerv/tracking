@@ -61,7 +61,7 @@ public class Constants {
 	public static  double phi14cut = 35.;
 	public static  double radcut = 100.;
 	public static  double drdzcut =150.;
-		
+	public static  double LYRTHICKN = 4.; 	
     public static synchronized void Load() {
 		if (areConstantsLoaded ) return;
 

@@ -70,11 +70,7 @@ public class TrajectoryFinder {
 
 				Point3D I = helix.getPointAtRadius(org.jlab.rec.cvt.svt.Constants.MODULERADIUS[a][0]);
 				
-				double trackPhiAtLayer = I.toVector3D().phi();
-				if(trackPhiAtLayer<0)
-					trackPhiAtLayer+=2.*Math.PI;
-				
-				int sec = svt_geo.findSectorFromAngle(a+1,trackPhiAtLayer);
+				int sec = svt_geo.findSectorFromAngle(a+1,I);
 				Sectors[a] = sec;
 			}
 			
@@ -136,10 +132,10 @@ public class TrajectoryFinder {
 			double R = 0;
 			
 			if(l%2==0) {
-				R = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[BMTRegIdx];
+				R = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[BMTRegIdx]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN;
 			}
 			if(l%2==1) {
-				R = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[BMTRegIdx];
+				R = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[BMTRegIdx]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN;
 			}
 			Point3D InterPoint = helix.getPointAtRadius(R);
 			Vector3D trkDir = helix.getTrackDirectionAtRadius(R);
@@ -634,9 +630,9 @@ public class TrajectoryFinder {
 		
 		double R = 0;
 		if(l%2==1)
-			R = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[l/2];
+			R = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[l/2]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN;
 		if(l%2==0)
-			R = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[l/2];
+			R = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[l/2]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN;
 	    // solve for intersection of line with cylinder of radius R
 		// x = _yxslope2*y +_yxinterc2; x^2+y^2 = R^2
 		double Delta = _yxslope2*_yxslope2*_yxinterc2*_yxinterc2 + (R*R-_yxinterc2*_yxinterc2)*(_yxslope2*_yxslope2+1);		

@@ -109,7 +109,9 @@ public class CrossMaker {
 		
 		// For BMT start id at 1000
 		int pid = 1000;
-		for(Cluster inlayerclus : innerlayrclus){						
+		for(Cluster inlayerclus : innerlayrclus){	
+			if(inlayerclus.get_TotalEnergy()<1)
+				continue;
 			// Z detector --> meas phi
 			// define new cross 
 			Cross this_cross = new Cross("BMT", "Z", inlayerclus.get_Sector(), inlayerclus.get_Region(),pid++);
@@ -117,16 +119,16 @@ public class CrossMaker {
 			this_cross.set_Cluster1(inlayerclus); // this is the inner shell
 			//the uncorrected x,y position of the Z detector cluster centroid.  This is calculated from the measured strips 
 			// in the cluster prior to taking Lorentz angle correction into account
-			double x0 = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.cos(inlayerclus.get_Phi0());
-			double y0 = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.sin(inlayerclus.get_Phi0());
+			double x0 = (org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN)*Math.cos(inlayerclus.get_Phi0());
+			double y0 = (org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN)*Math.sin(inlayerclus.get_Phi0());
 			double x0Er = -org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.sin(inlayerclus.get_Phi0())*inlayerclus.get_PhiErr0();
 			double y0Er = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.cos(inlayerclus.get_Phi0())*inlayerclus.get_PhiErr0();
 			// set only the coordinates for which there is a measurement
 			this_cross.set_Point0(new Point3D(x0,y0,Double.NaN));	
 			this_cross.set_PointErr0(new Point3D(x0Er,y0Er,Double.NaN));	
 			//the x,y position of the Z detector cluster centroid.  This is calculated from the Lorentz angle corrected strips 
-			double x = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.cos(inlayerclus.get_Phi());
-			double y = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.sin(inlayerclus.get_Phi());
+			double x = (org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN)*Math.cos(inlayerclus.get_Phi());
+			double y = (org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN)*Math.sin(inlayerclus.get_Phi());
 			double xEr = -org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.sin(inlayerclus.get_Phi())*inlayerclus.get_PhiErr();
 			double yEr = org.jlab.rec.cvt.bmt.Constants.CRZRADIUS[inlayerclus.get_Region()-1]*Math.cos(inlayerclus.get_Phi())*inlayerclus.get_PhiErr();
 			// set only the coordinates for which there is a measurement (x,y)
@@ -140,7 +142,10 @@ public class CrossMaker {
 			
 		}
 		
-		for(Cluster outlayerclus : outerlayrclus){							
+		for(Cluster outlayerclus : outerlayrclus){	
+			if(outlayerclus.get_TotalEnergy()<1) { 
+				continue;				
+			}
 			// C detector --> meas z
 			// define new cross 
 			Cross this_cross = new Cross("BMT", "C", outlayerclus.get_Sector(), outlayerclus.get_Region(),pid++);

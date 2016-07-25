@@ -301,6 +301,9 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 		this.set_Dir(dirAtBstPlane);
 		this.set_PointErr(interPointErr);
 		
+		//System.out.println("[Cross] in setCrossPars interPoint "+interPoint.toString());
+		//if(dirAtBstPlane!=null)
+		//	System.out.println("                              dirAtBstPlane "+dirAtBstPlane.toString());
 	}
 
 	

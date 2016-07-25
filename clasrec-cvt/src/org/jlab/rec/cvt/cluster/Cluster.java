@@ -205,6 +205,8 @@ public class Cluster extends ArrayList<FittedHit> {
 			    if(strpEn>=Emax) {
 					Emax = strpEn;
 					seed = strpNb;
+					if(this.get_DetectorType()=="Z") 
+						seed = strpNb0;
 				}
 			    
 			}

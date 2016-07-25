@@ -3,15 +3,19 @@ package org.jlab.rec.cvt.track;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jlab.evio.clas12.EvioDataBank;
+import org.jlab.evio.clas12.EvioDataEvent;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.Constants;
+import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.cross.CrossList;
 import org.jlab.rec.cvt.fit.HelicalTrackFitter;
 import org.jlab.rec.cvt.fit.StraightTrackFitter;
 import org.jlab.rec.cvt.trajectory.Helix;
 import org.jlab.rec.cvt.trajectory.Ray;
+import org.jlab.rec.cvt.trajectory.StateVec;
 import org.jlab.rec.cvt.trajectory.Trajectory;
 import org.jlab.rec.cvt.trajectory.TrajectoryFinder;
 
@@ -413,8 +417,10 @@ public class TrackCandListFinder {
 		
 		//make lists
 		for(Cross c : arrayList) {
+			
 			if(c.get_Detector()=="SVT") 
 				SVTcrossesInTrk.add(c);
+			
 			if(c.get_Detector()=="BMT") { // Micromegas
 				if(c.get_DetectorType()=="C") {//C-detector --> only Z defined
 					BMTCdetcrossesInTrk.add(c); 
@@ -483,7 +489,7 @@ public class TrackCandListFinder {
 		
 		for(int j= shift+j0; j<shift+j0+BMTCdetcrossesInTrk.size(); j++) {
 			Z[j] = BMTCdetcrossesInTrk.get(j-shift-j0).get_Point().z();
-			Rho[j] = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[BMTCdetcrossesInTrk.get(j-shift-j0).get_Region()-1];
+			Rho[j] = org.jlab.rec.cvt.bmt.Constants.CRCRADIUS[BMTCdetcrossesInTrk.get(j-shift-j0).get_Region()-1]+org.jlab.rec.cvt.bmt.Constants.LYRTHICKN;
 			ErrRho[j] = 0.01; // check this error on thickness measurement					
 			ErrZ[j] = BMTCdetcrossesInTrk.get(j-shift-j0).get_PointErr().z();		
 			
@@ -859,6 +865,6 @@ public class TrackCandListFinder {
 					resetUnusedCross(crossesToFit.get(j), svt_geo);
 					crossesToFit.remove(j);
 				}
-		
 		}
+
 }

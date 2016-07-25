@@ -347,8 +347,13 @@ public class RecoBankWriter {
 			for(int j = 0; j<trkcands.get(i).size(); j++) {		
 				if(trkcands.get(i).get(j).get_Detector()=="SVT")
 					crossIdxArray[trkcands.get(i).get(j).get_Region()-1] = trkcands.get(i).get(j).get_Id();
-				if(trkcands.get(i).get(j).get_Detector()=="BMT")
-					crossIdxArray[trkcands.get(i).get(j).get_Region()-1+Constants.CVTCONFIGSTARTREG] = trkcands.get(i).get(j).get_Id();
+				if(trkcands.get(i).get(j).get_Detector()=="BMT") {
+					if(Double.isNaN(trkcands.get(i).get(j).get_PointErr().z()) ){
+						crossIdxArray[trkcands.get(i).get(j).get_Region()-2+Constants.CVTCONFIGSTARTREG] = trkcands.get(i).get(j).get_Id();
+					} else {
+						crossIdxArray[trkcands.get(i).get(j).get_Region()-1+Constants.CVTCONFIGSTARTREG] = trkcands.get(i).get(j).get_Id();
+					}
+				}
 			}
 			bank.setDouble("circlefit_chi2_per_ndf", i,trkcands.get(i).get_circleFitChi2PerNDF() );
 			bank.setDouble("linefit_chi2_per_ndf", i,trkcands.get(i).get_lineFitChi2PerNDF() );
@@ -537,11 +542,11 @@ public class RecoBankWriter {
 		DataBank bank8 = RecoBankWriter.fillHelicalTracksTrajectoryBank((EvioDataEvent) event, trks);
 		if(bank8!=null)
 			cvtbanks.add(bank8);
-		
-		
+				
 	
-		if(svtbanks.size()==3)
+		if(svtbanks.size()==3) {
 			event.appendBanks(svtbanks.get(0),svtbanks.get(1), svtbanks.get(2));
+		}
 		if(svtbanks.size()==2)
 			event.appendBanks(svtbanks.get(0),svtbanks.get(1));
 		if(svtbanks.size()==1)
@@ -606,6 +611,7 @@ public class RecoBankWriter {
 		
 		if(svtbanks.size()==3)
 			event.appendBanks(svtbanks.get(0),svtbanks.get(1), svtbanks.get(2));
+			
 		if(svtbanks.size()==2)
 			event.appendBanks(svtbanks.get(0),svtbanks.get(1));
 		if(svtbanks.size()==1)

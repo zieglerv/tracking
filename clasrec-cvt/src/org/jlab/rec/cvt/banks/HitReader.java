@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.jlab.data.io.DataEvent;
 import org.jlab.evio.clas12.EvioDataBank;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.bmt.Geometry;
 import org.jlab.rec.cvt.hit.ADCConvertor;
@@ -84,7 +85,7 @@ public class HitReader {
 		int[] layer = bankDGTZ.getInt("layer");
 		int[] strip = bankDGTZ.getInt("strip");
 		int[] ADC = bankDGTZ.getInt("ADC");
-
+		
 		// exit if the array is empty
 		int size = layer.length;
 		if(size==0)
@@ -134,7 +135,7 @@ public class HitReader {
 	 * @param adcConv converter from adc to daq values
 	 * @param geo the SVT geometry
 	 */
-	public void fetch_SVTHits(DataEvent event, ADCConvertor adcConv) {
+	public void fetch_SVTHits(DataEvent event, ADCConvertor adcConv, int omitLayer, int omitHemisphere) {
 		
 		if(event.hasBank("BST::dgtz")==false) {
 			//System.err.println("there is no BST bank ");
@@ -157,7 +158,20 @@ public class HitReader {
 		if(event.hasBank("BST::dgtz")==true) {
 			
 			for(int i = 0; i<size; i++){
-			    // if the strip is out of range ski[
+				double angle = 2.*Math.PI*((double)(sector[i]-1)/(double)org.jlab.rec.cvt.svt.Constants.NSECT[layer[i]-1]) + org.jlab.rec.cvt.svt.Constants.PHI0[layer[i]-1];
+			    int  hemisphere = (int) Math.signum(Math.sin(angle) );
+			    if(sector[i]==7 && layer[i]>6)
+			    	hemisphere=1;
+			    if(sector[i]==19 && layer[i]>6)
+			    	hemisphere=-1;
+			    if(omitHemisphere==-2) {
+			    	if(layer[i]==omitLayer)
+			    		continue;
+			    } else {
+			    	if(hemisphere==omitHemisphere && layer[i]==omitLayer)
+			    		continue;
+			    }
+			    // if the strip is out of range skip
 				if(strip[i]<1)
 					continue;
 				// create the strip object with the adc value converted to daq value used for cluster-centroid estimate

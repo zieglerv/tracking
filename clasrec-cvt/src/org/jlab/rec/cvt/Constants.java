@@ -218,9 +218,7 @@ public class Constants {
 
 	
 	public static final int CVTCONFIGSTARTREG = 2; // for 4SVT+1BMT
-	
-	
-	
+
 	public static synchronized void Load() {
 		if (areConstantsLoaded) return;
 		

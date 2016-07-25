@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 
 
 
+
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.trajectory.Helix;
@@ -43,30 +44,35 @@ public class Geometry {
 		
 		public Point3D getPlaneModuleOrigin(int sector, int layer) {
 			//shift the local origin to the physical orign instead of active area
-			Point3D point0 = new Point3D(transformToFrame( sector,  layer, -(42.000-40.052), 0, 0, "lab", ""));
+			Point3D point0 = new Point3D(transformToFrame( sector,  layer, 0, 0, 0, "lab", ""));
 			return point0;
 		}
 		public Point3D getPlaneModuleEnd(int sector, int layer) {
 			//shift the local origin to the physical orign instead of active area
-			Point3D point0 = new Point3D(transformToFrame( sector,  layer, 42.000, 0, 0, "lab", ""));
+			Point3D point0 = new Point3D(transformToFrame( sector,  layer, Constants.ACTIVESENWIDTH, 0, 0, "lab", ""));
 			return point0;
 		}
 		
 		
 		
 		//*** 
-		public  int findSectorFromAngle(int layer, double trackPhiAtLayer) {
+		public  int findSectorFromAngle(int layer, Point3D trkPoint) {
 			int Sect = Constants.NSECT[layer-1];
 			for(int s = 0; s<Constants.NSECT[layer-1]-1; s++) {
 				int sector = s+1;
-				double phi1 = getPlaneModuleOrigin(sector, layer).toVector3D().phi();
-				double phi2 = getPlaneModuleOrigin(sector+1, layer).toVector3D().phi();
-				if(phi1<0)
-					phi1+=2.*Math.PI;
-				if(phi2<0)
-					phi2+=2.*Math.PI;
+				Vector3D orig = new Vector3D(getPlaneModuleOrigin(sector, layer).x(),getPlaneModuleOrigin(sector, layer).y(), 0);
+				Vector3D end =  new Vector3D(getPlaneModuleEnd(sector, layer).x(),getPlaneModuleEnd(sector, layer).y(),0);
+				Vector3D trk = new Vector3D(trkPoint.x(),trkPoint.y(),0);
+				orig.unit();
+				end.unit();
+				trk.unit();
 				
-				if(trackPhiAtLayer>=phi1 && trackPhiAtLayer<=phi2)
+				double phi1 = orig.dot(trk);
+				double phi2 = trk.dot(end);
+				double phiRange = orig.dot(end);
+				
+				
+				if(Math.acos(phi1)<Math.acos(phiRange) && Math.acos(phi2)<Math.acos(phiRange))
 					Sect = sector;
 			}
 			return Sect;
@@ -264,7 +270,7 @@ public class Geometry {
 
 		public double calcNearestStrip(double X, double Y, double Z, int layer, int sect) {
 			
-			Point3D LocPoint = this.transformToFrame( sect, layer, X, Y, Z, "local", "");
+			Point3D LocPoint = this.transformToFrame( sect, layer, X, Y, Z, "local", ""); 
 			
 			double x = LocPoint.x();
 			double z = LocPoint.z();
@@ -585,9 +591,6 @@ public class Geometry {
 			return Point;
 		}
 		
-		 public static void main (String arg[]) throws FileNotFoundException {
-	    	 
-		 }
 		 
 		public double[][] getStripEndPoints(int strip, int slyr) { //1 top, 0 bottom
 			
@@ -646,6 +649,22 @@ public class Geometry {
 
 		}
 
-
 		
+		public static void main (String arg[]) throws FileNotFoundException {
+			Constants.Load();
+			
+	    	Geometry geo = new Geometry();
+	    	int l = 1;
+	    	int s = 6;
+	    	double s10 = geo.calcNearestStrip(0., Constants.MODULERADIUS[l-1][s-1], 0, l, s);
+	    	double s20 = geo.calcNearestStrip(0., Constants.MODULERADIUS[l][s-1], 0, l+1, s);
+	    	
+	    	double s1 = geo.calcNearestStrip(0.5, Constants.MODULERADIUS[l-1][s-1], 0, l, s);
+	    	double s2 = geo.calcNearestStrip(0.5, Constants.MODULERADIUS[l][s-1], 0, l+1, s);
+	    	
+	    	
+	    	System.out.println("D "+geo.getLocCoord(s10, s20)[0]+","+geo.getLocCoord(s10, s20)[1]+"  ;  "+geo.getLocCoord(s1, s2)[0]+","+geo.getLocCoord(s1, s2)[1]);
+	    
+		 }
+		 
 }

@@ -48,10 +48,11 @@ public class Constants {
 	//----------------
 	// the unit is mm		
 	//----------------
-	public static final double SILICONWIDTH  = 0.320;    // Silicon sensor width
+	public static final double SILICONTHICK  = 0.320;    // Silicon sensor width
 	
 	public static final double ACTIVESENWIDTH = 40.052; 
 	public static double LAYRGAP = 3.547; 
+	//public static double LAYRGAP = 3.262; //<-- GEMC value--> should be 3.236
 	public static double ACTIVESENLEN = 109.955; 
 	static double TOTSENLEN = 111.625;
 	static double MICROGAP = 0.112;
@@ -86,7 +87,7 @@ public class Constants {
 	static double Z_eff_roha = Math.pow((7.84/100.)*Math.pow(1, 2.94) + (64.5/100.)*Math.pow(6, 2.94)+(8.38/100.)*Math.pow(7, 2.94)+(19.12/100.)*Math.pow(8, 2.94), (1./2.94));
 	
 	// empirical scaling factor from MC
-    public static double detMatZ_ov_A_timesThickn =  0.97*(14.*2*SILICONWIDTH/28.0855+0*(Z_eff_roha*RohacellThick/12.0588)+6*CaThick/12.0107 );
+    public static double detMatZ_ov_A_timesThickn =  0.97*(14.*2*SILICONTHICK/28.0855+0*(Z_eff_roha*RohacellThick/12.0588)+6*CaThick/12.0107 );
 	//...................
 	//Code for identifying BST in making an ID for a bst intersection
 	public static int BSTidCode=1;
@@ -96,7 +97,7 @@ public class Constants {
 	public static  double phi13cut = 35.; 
 	public static  double phi14cut = 35.;
 	public static  double radcut = 100.;
-	public static  double dzdrcut =150.;
+	public static  double dzdrcut= 200.;// used to be 150
 
 	
 	//BST misalignments
@@ -146,11 +147,11 @@ public class Constants {
 	
 	public static int BSTEXCLUDEDFITREGION = 0;
 	
-	public static double RMLAYER = 0;
-
 	public static boolean newGeometry = true;
 
-
+	public static boolean LAYEREFFS = false;
+	
+	
 	
 	public static synchronized void Load() {
 		if (areConstantsLoaded) return;
@@ -194,30 +195,32 @@ public class Constants {
 		
 		
 		for(int s = 0; s <NSECT[0]; s++) {
-			MODULERADIUS[0][s] = 65.285 - MODULEPOSFAC*SILICONWIDTH;
+			MODULERADIUS[0][s] = 65.285 - MODULEPOSFAC*SILICONTHICK;
 		}
 		for(int s = 0; s <NSECT[2]; s++) {
-			MODULERADIUS[2][s] = 92.945 - MODULEPOSFAC*SILICONWIDTH;
+			MODULERADIUS[2][s] = 92.945 - MODULEPOSFAC*SILICONTHICK;
 		}
 		for(int s = 0; s <NSECT[4]; s++) {
-			MODULERADIUS[4][s] = 120.365 - MODULEPOSFAC*SILICONWIDTH;
+			MODULERADIUS[4][s] = 120.365 - MODULEPOSFAC*SILICONTHICK;
 		}
 		for(int s = 0; s <NSECT[6]; s++) {
-			MODULERADIUS[6][s] = 161.275 - MODULEPOSFAC*SILICONWIDTH;
+			MODULERADIUS[6][s] = 161.275 - MODULEPOSFAC*SILICONTHICK;
 		}
 		for(int s = 0; s <NSECT[1]; s++) {
-			MODULERADIUS[1][s] = 68.832 + MODULEPOSFAC*SILICONWIDTH ;
+			MODULERADIUS[1][s] = 68.832 + MODULEPOSFAC*SILICONTHICK ;
 		}
 		for(int s = 0; s <NSECT[3]; s++) {
-			MODULERADIUS[3][s] = 96.492 + MODULEPOSFAC*SILICONWIDTH;
+			MODULERADIUS[3][s] = 96.492 + MODULEPOSFAC*SILICONTHICK;
 		}
 		for(int s = 0; s <NSECT[5]; s++) {
-			MODULERADIUS[5][s] = 123.912 + MODULEPOSFAC*SILICONWIDTH;
+			MODULERADIUS[5][s] = 123.912 + MODULEPOSFAC*SILICONTHICK;
 		}
 		for(int s = 0; s <NSECT[7]; s++) {
-			MODULERADIUS[7][s] = 164.822 + MODULEPOSFAC*SILICONWIDTH;	
+			MODULERADIUS[7][s] = 164.822 + MODULEPOSFAC*SILICONTHICK;	
 		}
-
+		
+		LAYRGAP = MODULERADIUS[1][0] - MODULERADIUS[0][0] ;
+		
 		{
 			ArrayList<ArrayList<Shape3D>> modules = new ArrayList<ArrayList <Shape3D> >();
 			Geometry geo = new Geometry();

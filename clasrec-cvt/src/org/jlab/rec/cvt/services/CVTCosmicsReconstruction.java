@@ -50,17 +50,17 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 			System.out.println("Event Number = "+eventNb);
 		
 		HitReader hitRead = new HitReader();
-		hitRead.fetch_SVTHits(event,adcConv);
+		hitRead.fetch_SVTHits(event,adcConv,-1,-1);
 		hitRead.fetch_BMTHits(event, adcConv, BMTGeom);
 		
 		List<Hit> hits = new ArrayList<Hit>();
 		//I) get the hits
 		List<Hit>  svt_hits = hitRead.get_SVTHits();
-		if(svt_hits.size()>0)
+		if(svt_hits!=null && svt_hits.size()>0)
 			hits.addAll(svt_hits);
 		
 		List<Hit>  bmt_hits = hitRead.get_BMTHits();
-		if(bmt_hits.size()>0)
+		if(bmt_hits!=null && bmt_hits.size()>0)
 			hits.addAll(bmt_hits);
 		
 		if(org.jlab.rec.cvt.Constants.DEBUGMODE)
@@ -157,7 +157,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		TrackCandListFinder trkcandFinder = new TrackCandListFinder();
 		cosmics = trkcandFinder.getStraightTracks(crosslist, crosses.get(1), SVTGeom, BMTGeom);
 		
-		
+				
 		if(cosmics.size()==0) {
 			RecoBankWriter.appendCVTCosmicsBanks((EvioDataEvent) event, SVThits, BMThits, SVTclusters, BMTclusters, crosses, null);
 			if(org.jlab.rec.cvt.Constants.DEBUGMODE)
@@ -201,8 +201,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		
 		
 	}
-	@Override
-	
+	@Override	
 	public void configure(ServiceConfiguration config) {
 		
 		System.out.println(" CONFIGURING SERVICE CVT Cosmics ************************************** ");
@@ -247,6 +246,12 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 		if(config.hasItem("SVT", "Step")) {
 			org.jlab.rec.cvt.svt.Constants.deltaThresholds = Integer.parseInt(config.asString("SVT", "Step"));
 			System.out.println("\n\n**********Step" + org.jlab.rec.cvt.svt.Constants.deltaThresholds  + "  *************");
+		}
+		
+		if(config.hasItem("SVT", "LayerEffs")) {
+			String DB = config.asString("SVT", "LayerEffs");
+			boolean kFlag = Boolean.parseBoolean(DB);
+			org.jlab.rec.cvt.svt.Constants.LAYEREFFS= kFlag;
 		}
 		
 	}

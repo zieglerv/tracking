@@ -156,7 +156,7 @@ public class Geometry {
 		//For CR6C, this function returns the Z position of the strip center
 		int group=0;
 		int limit=Constants.CRCGROUP[num_region][group];
-		double zc=Constants.CRCZMIN[num_region]+Constants.CRCOFFSET[num_region]+Constants.CRCWIDTH[num_region][group]/2.;
+		double zc=Constants.CRCZMIN[num_region]+Constants.CRCOFFSET[num_region] + Constants.CRCWIDTH[num_region][group]/2.;
 		  
 		if (num_strip>0){
 		  for (int j=1;j<num_strip+1;j++){
@@ -393,7 +393,7 @@ public class Geometry {
 	}
 	
 	// Correct strip position before clustering
-	public int getLorentzCorrectedZtrip(int sector, int layer, int theMeasuredZStrip) {
+	public int getLorentzCorrectedZStrip(int sector, int layer, int theMeasuredZStrip) {
 		
 		 double theMeasuredPhi = this.CRZStrip_GetPhi(sector, layer, theMeasuredZStrip);
 		 double theLorentzCorrectedAngle = this.LorentzAngleCorr( theMeasuredPhi, layer);
@@ -410,8 +410,8 @@ public class Geometry {
 		double trk_z = 0;
 		
 		int layer = 5;
-		
-		
+		System.out.println(geo.CRCStrip_GetZ(6, 267)+" strip "+geo.getCStrip(6, -65.));
+		/*
 		int num_region = (int) (layer+1)/2 - 1; // region index (0...2) 0=layers 1&2, 1=layers 3&4, 2=layers 5&6
 		int strip_group = 0;
 		int ClosestStrip =-1;
@@ -453,7 +453,7 @@ public class Geometry {
 		 double theLorentzCorrectedAngle = geo.LorentzAngleCorr( theMeasuredPhi, 6);
 		 System.out.println(" corrected phi = "+Math.toDegrees(theLorentzCorrectedAngle));
 		 int theLorentzCorrectedStrip = geo.getZStrip(5, theLorentzCorrectedAngle);
-		 System.out.println(theMeasuredZStrip+" "+theLorentzCorrectedStrip);
+		 System.out.println(theMeasuredZStrip+" "+theLorentzCorrectedStrip); */
 		 /*
 		 double phiC = geo.CRZStrip_GetPhi(3,6,216);
 		 double x = Constants.CRCRADIUS[2]*Math.cos(phiC);

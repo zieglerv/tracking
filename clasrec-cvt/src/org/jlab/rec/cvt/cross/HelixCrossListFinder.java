@@ -67,10 +67,10 @@ public class HelixCrossListFinder {
 	  	
 	  	// loop over the regions and find cross combinatorial combinations of a minimum of 3 crosses out of 4
 	 	if(theListsByRegion.size()==4) {	 		
-		 	for(int i1 = 0; i1< theListsByRegion.get(0).size(); i1++) {
-		  		for(int i2 = 0; i2< theListsByRegion.get(1).size(); i2++) {
-		  			for(int i3 = 0; i3< theListsByRegion.get(2).size(); i3++) {
-		  				for(int i4 = 0; i4< theListsByRegion.get(3).size(); i4++) {
+		 	for(int i1 = 0; i1< theListsByRegion.get(0).size(); i1++) {  
+		  		for(int i2 = 0; i2< theListsByRegion.get(1).size(); i2++) {  
+		  			for(int i3 = 0; i3< theListsByRegion.get(2).size(); i3++) {  
+		  				for(int i4 = 0; i4< theListsByRegion.get(3).size(); i4++) {  
 		  					// look first for a track seed with 4 crosses
 		  					Seed trkCand = 
 		  							this.findCandUsingFourCrosses(theListsByRegion.get(0).get(i1),
@@ -98,6 +98,9 @@ public class HelixCrossListFinder {
 				  							theListsByRegion.get(r2-1).get(l2), theListsByRegion.get(r3-1).get(l3));
 				  					
 				  					if(trkCand!=null && crossList.ContainsNot(trkCnds,trkCand)) {
+				  						if(trkCand.size()<3)
+				  							continue;
+				  						
 				  						if(bmt_crosses.size()>0) {
 				  							// if the seed is found, match to micromegas				  							
 					  					    ArrayList<Seed> trkCands = this.findCandUsingMicroMegas(trkCand, bmt_crosses);					  												  						
@@ -115,16 +118,20 @@ public class HelixCrossListFinder {
 	 	}
 	 	// repeat above procedure is there is only 3 crosses available
 	 	if(theListsByRegion.size()==3) {	 		
+	 		
 		 	for(int i1 = 0; i1< theListsByRegion.get(0).size(); i1++) {
 		  		for(int i2 = 0; i2< theListsByRegion.get(1).size(); i2++) {
 		  			for(int i3 = 0; i3< theListsByRegion.get(2).size(); i3++) {
 		  				Seed trkCand = 
 		  							this.findCandUsingThreeCrosses(theListsByRegion.get(0).get(i1),theListsByRegion.get(1).get(i2),theListsByRegion.get(2).get(i3));
+		  				
 	  					if(trkCand!=null) 
 	  						if(bmt_crosses.size()>0) {
 	  							// if the seed is found, match to micromegas
 		  						ArrayList<Seed> trkCands = this.findCandUsingMicroMegas(trkCand, bmt_crosses);	
 		  						trkCnds.addAll(trkCands);
+	  						} else {
+	  							trkCnds.add(trkCand);
 	  						}
 		  			}
 		  		}
@@ -256,6 +263,7 @@ public class HelixCrossListFinder {
     	
 		// selection for first 3 hits:	
     	Seed ct3 = findCandUsingThreeCrosses(c1,c2,c3);
+    	
     	if(ct3==null)
     		return null;
     	
@@ -331,16 +339,16 @@ public class HelixCrossListFinder {
 			 return null;				 
 		 double phi13 = Math.abs(get_PointInfo(c1,c3,null)[2]);  
 		 if(phi13>Constants.phi13cut)
-			 return null; 	
+			 return null; 	 
 		 double rad123 = get_PointInfo(c1,c2,c3)[3]; 
 		 if(Math.abs(rad123)<Constants.radcut)
-			 return null; 		
+			 return null; 		 
 		 // get the tandip values				 
 		 double dzdr1 = get_PointInfo(c1,null,null)[1]/get_PointInfo(c1,null,null)[0];
 		 double dzdr2 = get_PointInfo(c2,null,null)[1]/get_PointInfo(c2,null,null)[0]; 
 		 double dzdr3 = get_PointInfo(c3,null,null)[1]/get_PointInfo(c3,null,null)[0];
 			 
-		 double dzdrsum = dzdr1 + dzdr2 + dzdr3;
+		 double dzdrsum = dzdr1 + dzdr2 + dzdr3; 
 		 // impose selection criteria
 		 if( ( Math.abs((dzdr1-dzdrsum/3.)/(dzdrsum/3.)) >Constants.dzdrcut) || 
 		     ( Math.abs((dzdr2-dzdrsum/3.)/(dzdrsum/3.)) >Constants.dzdrcut) || 
