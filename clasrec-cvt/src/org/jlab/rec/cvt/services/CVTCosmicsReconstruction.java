@@ -33,7 +33,7 @@ public class CVTCosmicsReconstruction extends DetectorReconstruction{
 
    
     public CVTCosmicsReconstruction() {
-    	super("CVTCosmics", "ziegler", "1.0");
+    	super("CVTCosmics", "ziegler", "2.0");
     	
     }
 	

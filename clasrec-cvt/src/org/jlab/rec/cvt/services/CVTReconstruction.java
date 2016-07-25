@@ -34,7 +34,7 @@ public class CVTReconstruction extends DetectorReconstruction{
 
    
     public CVTReconstruction() {
-    	super("CVT", "ziegler", "1.0");
+    	super("CVT", "ziegler", "2.0");
     }
    
 	
