@@ -21,8 +21,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JButton;
 
 import org.jlab.clas.detector.DetectorCollection;
@@ -135,7 +133,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         c.weightx = 0.5;
         c.gridx = 0;
         c.gridy = 0;
-
+        
         // configure views	   
         this.plotsPanel = new DetectorShapeView2D("Histograms");
         this.plotsPanel.setLayout(new BorderLayout());
@@ -434,7 +432,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
     }
 
     public void plotScalers(int fileNr) {
-        File dir = new File("/Volumes/data/work/clasRoot");
+        File dir = new File("/Users/ziegler/scalers");
         try {
             File fin = new File(dir.getCanonicalPath() + File.separator + "gotratest" + fileNr + ".txt");
             readScalersFile(fin);
