@@ -21,37 +21,39 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
+
 import javax.swing.JButton;
 
-import org.jlab.clas.detector.DetectorCollection;
-import org.jlab.clas.detector.DetectorDescriptor;
-import org.jlab.clas.detector.DetectorType;
-import org.jlab.clas12.basic.IDetectorModule;
-import org.jlab.clas12.basic.IDetectorProcessor;
-import org.jlab.clas12.calib.DetectorModulePane;
-import org.jlab.clas12.calib.DetectorShape2D;
-import org.jlab.clas12.calib.DetectorShapeTabView;
-import org.jlab.clas12.calib.DetectorShapeView2D;
-import org.jlab.clas12.calib.IDetectorListener;
-import org.jlab.clas12.detector.EventDecoder;
-import org.jlab.clas12.detector.FADCMaxFinder;
-import org.jlab.clasrec.main.DetectorEventProcessorPane;
-import org.jlab.clasrec.utils.ServiceConfiguration;
-import org.jlab.data.io.DataEvent;
-import org.jlab.evio.clas12.EvioDataEvent;
+import org.clas.detector.DetectorModulePane;
+import org.clas.detector.DetectorShapeView2D;
+import org.clas.detector.DetectorShapeTabView;
+import org.clas.detector.RawEventViewer;
+import org.jlab.detector.base.DetectorCollection;
+import org.jlab.detector.base.DetectorDescriptor;
+import org.jlab.detector.view.DetectorShape2D;
 import org.jlab.rec.cvt.services.CVTCosmicsReconstruction;
-import org.root.basic.EmbeddedCanvas;
-import org.root.histogram.H1D;
-import org.root.histogram.H2D;
-import org.root.pad.TEmbeddedCanvas;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.decode.CodaEventDecoder;
+import org.jlab.detector.decode.DetectorDataDgtz;
+import org.jlab.detector.decode.DetectorDecoderView;
+import org.jlab.detector.decode.DetectorEventDecoder;
+import org.jlab.detector.view.DetectorListener;
+import org.jlab.detector.view.DetectorPane2D;
+import org.jlab.groot.data.H1F;
+import org.jlab.groot.data.H2F;
+import org.jlab.groot.graphics.EmbeddedCanvas;
+import org.jlab.io.base.DataEvent;
+import org.jlab.io.base.DataEventType;
+import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.task.DataSourceProcessorPane;
+import org.jlab.io.task.IDataEventListener;
 
-public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemListener, IDetectorModule, ActionListener {
+public class EventViewer implements DetectorListener, ItemListener, IDataEventListener, ActionListener {
 
     // Initialize Cosmics Rec
     CVTCosmicsReconstruction reco = new CVTCosmicsReconstruction();
-    EventDecoder decoder = new EventDecoder();
-    Decoder deco = new Decoder();
-
+    
     DetectorDrawOnlineRecoComponents displays = new DetectorDrawOnlineRecoComponents();
     org.jlab.rec.cvt.svt.Geometry svt_geo = new org.jlab.rec.cvt.svt.Geometry();
     org.jlab.rec.cvt.bmt.Geometry bmt_geo = new org.jlab.rec.cvt.bmt.Geometry();
@@ -79,8 +81,8 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
     //
     DetectorDrawComponents detFrm = new DetectorDrawComponents();
     OnlineRecoFillHistograms histos = new OnlineRecoFillHistograms();
-    DetectorEventProcessorPane evPane = new DetectorEventProcessorPane();
-    TEmbeddedCanvas canvas = new TEmbeddedCanvas();
+    DataSourceProcessorPane  evPane = new DataSourceProcessorPane();
+    EmbeddedCanvas canvas = new EmbeddedCanvas();
     DetectorShapeTabView view = new DetectorShapeTabView();
     JFrame frame = new JFrame();
 
@@ -88,19 +90,15 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
 //    private List<String> plotName = new ArrayList<String>();
     private long eventNr = 0;
     private List<String> plotName;
-    static H2D hScaler = new H2D("scalers", "scalers", 264, 0, 264, 128, 0, 128);
+    static H2F hScaler = new H2F("scalers", "scalers", 264, 0, 264, 128, 0, 128);
     static EmbeddedCanvas scalersPane = new EmbeddedCanvas();
 
 
     public EventViewer() {
         // configure reconstruction
-        decoder.addFitter(DetectorType.BMT,
-                new FADCMaxFinder());
+        
         reco.init();
-        ServiceConfiguration config = new ServiceConfiguration();
-        config.addItem("DAQ", "data", "true");
-        config.addItem("SVT", "newGeometry", "true");
-        reco.configure(config);
+        
 
         //
         detectorModulePane = new DetectorModulePane(4000, 2000, 1);
@@ -142,7 +140,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
 
         this.detectorPanel = new DetectorShapeView2D("CVT Views");
         detFrm.CreateViews(this);
-        // histos.CreateDetectorShapes(new ArrayList<DetectorCollection<H1D>>());
+        // histos.CreateDetectorShapes(new ArrayList<DetectorCollection<H1F>>());
         this.detectorPanel.setLayout(new BorderLayout());
 
         this.detectorPanel2 = new DetectorShapeView2D("SVT Modules");
@@ -151,7 +149,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         this.detectorPanel3 = new DetectorShapeView2D("BMT Modules");
         this.detectorPanel3.setLayout(new BorderLayout());
 
-        this.evPane.addProcessor(this);
+        this.evPane.addEventListener(this);
         JPanel topView = new JPanel();
         topView.setLayout(new FlowLayout());
 
@@ -188,7 +186,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         combo.addItem("pulse width in ADC counts");
         combo.addItem("new bad strips");
         combo.setEditable(true);
-        combo.addActionListener(view);
+  //      combo.addActionListener(view);
         combo.addItemListener(this);
         comboBoxes.add(combo);
         c.gridy++;
@@ -210,7 +208,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         combo.addItem("local track 3D angle");
         combo.addItem("track-angle-corrected cluster charge");
         combo.setEditable(true);
-        combo.addActionListener(view);
+  //      combo.addActionListener(view);
         combo.addItemListener(this);
         comboBoxes.add(combo);
         c.gridy++;
@@ -226,7 +224,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         combo.addItem("strip multiplicity");
         combo.addItem("centroid residual");
         combo.setEditable(true);
-        combo.addActionListener(view);
+  //      combo.addActionListener(view);
         combo.addItemListener(this);
         comboBoxes.add(combo);
         c.gridy++;
@@ -245,7 +243,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         combo.addItem("cluster multiplicity");
         combo.addItem("cross multiplicity");
         combo.setEditable(true);
-        combo.addActionListener(view);
+    //    combo.addActionListener(view);
         combo.addItemListener(this);
         comboBoxes.add(combo);
         c.gridy++;
@@ -267,7 +265,8 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         combo.addItem("path length");
         combo.addItem("number of hits per track");
         combo.setEditable(true);
-        combo.addActionListener(view);
+     //   combo.addComponentListener(view);
+    //    combo.addActionListener(view);
         combo.addItemListener(this);
         comboBoxes.add(combo);
         c.gridy++;
@@ -294,37 +293,36 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         frame.pack();
         frame.setVisible(true);
         scalersPane = detectorModulePane.getCanvas("Scalers");
-        scalersPane.setLogZ(true);
-        hScaler.setXTitle("Chip");
-        hScaler.setYTitle("Channel");
+      //  scalersPane.setLogZ(true);
+      //  hScaler.setXTitle("Chip");
+      //  hScaler.setYTitle("Channel");
     }
 
-    @Override
     public void detectorSelected(DetectorDescriptor arg0) {
 
         if (this.plotName.get(1) == "adc") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(3));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "bco") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(4));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "occupancy") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(11));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "multiplicity") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(0));
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(1));
@@ -332,42 +330,42 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         }
 
         if (this.plotName.get(1) == "cluster charge") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(5));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "strip multiplicity") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(6));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "centroid residual") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(7));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "local track phi") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(8));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "local track theta") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(9));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
         }
 
         if (this.plotName.get(1) == "local track 3D angle") {
-            List<DetectorCollection<H1D>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1D>>();
+            List<DetectorCollection<H1F>> DetectorComponentsHistos_LayerTab = new ArrayList<DetectorCollection<H1F>>();
 
             DetectorComponentsHistos_LayerTab.add(histos.get_DetectorComponentsHistos().get(10));
             histos.DetectorSelected(arg0, detectorModulePane.getCanvas("Sensor"), DetectorComponentsHistos_LayerTab);
@@ -391,7 +389,7 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
     DetectorCollection<Integer> BMTStrips = new DetectorCollection<Integer>();
 
     @Override
-    public void update(DetectorShape2D shape) {
+    public void processShape(DetectorShape2D shape) {
         if (shape.getDescriptor().getType() == DetectorType.BST) {
             if (this.SVTHits.hasEntry(shape.getDescriptor().getSector(),
                     shape.getDescriptor().getLayer(), shape.getDescriptor().getComponent()) == true) {
@@ -483,52 +481,28 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         scalersPane.draw(hScaler);
     }
 
-    @Override
-    public String getAuthor() {
-        // TODO Auto-generated method stub
-        return "ziegler";
-    }
+    
 
+   
     @Override
-    public String getDescription() {
-        return "Central Tracker Monitoring";
-    }
-
-    @Override
-    public JPanel getDetectorPanel() {
-        return this.detectorPanel;
-    }
-
-    @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return "ziegler";
-    }
-
-    @Override
-    public DetectorType getType() {
-        // TODO Auto-generated method stub
-        return DetectorType.SVT;
-    }
-
-    @Override
-    public void processEvent(DataEvent de
+    public void dataEventAction(DataEvent de
     ) {
         this.eventNr++;
         EvioDataEvent event = (EvioDataEvent) de;
-        EvioDataEvent decodedEvent = deco.DecodeEvent(event, decoder);
+        EvioDataEvent decodedEvent = null ;
+        //= deco.DecodeEvent(event, decoder);
         //decodedEvent.show();
 
-        reco.processEvent(decodedEvent);
+        reco.processDataEvent(decodedEvent);
         displays.PlotCrosses(decodedEvent, detFrm.get_ShapeViews().get(0), detFrm.get_ShapeViews().get(1), detFrm.get_TabViews().get(0), detFrm.get_TabViews().get(1), svt_geo);
         displays.PlotSVTStrips(decodedEvent, SVTHits, SVTStrips, detFrm.get_ShapeViews().get(2), svt_geo);
         displays.PlotBMTStrips(decodedEvent, BMTHits, BMTStrips, detFrm.get_ShapeViews().get(3), bmt_geo);
-        histos.FillHistos(decodedEvent, this.detectorModulePane, this.eventNr, this.plotName);
+       // histos.FillHistos(decodedEvent, this.detectorModulePane, this.eventNr, this.plotName);
     }
 
     public static void main(String[] args) {
         EventViewer ev = new EventViewer();
-
+        
         /*
         frame.add(module.detectorPanel);
         frame.pack();
@@ -552,5 +526,20 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
         //frame4.pack();
         //frame4.setVisible(true);
     }
+
+	
+	@Override
+	public void resetEventListener() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void timerUpdate() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 
 }

@@ -3,18 +3,20 @@ package org.clas.detector.cvt;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.clas.detector.IHistograms;
-import org.jlab.clas.detector.DetectorCollection;
-import org.jlab.clas.detector.DetectorDescriptor;
-import org.jlab.clas12.calib.DetectorModulePane;
-import org.jlab.clas12.calib.DetectorShape2D;
-import org.jlab.evio.clas12.EvioDataBank;
-import org.jlab.evio.clas12.EvioDataEvent;
-import org.root.attr.ColorPalette;
-import org.root.basic.EmbeddedCanvas;
-import org.root.histogram.H1D;
-import org.root.histogram.H2D;
+import org.jlab.detector.base.DetectorCollection;
+import org.jlab.detector.base.DetectorDescriptor;
+import org.jlab.detector.view.DetectorShape2D;
+import org.jlab.groot.base.ColorPalette;
+import org.jlab.groot.data.H1F;
+import org.jlab.groot.data.H2F;
+import org.jlab.groot.graphics.EmbeddedCanvas;
+import org.jlab.groot.graphics.EmbeddedPad;
+import org.jlab.io.evio.EvioDataBank;
+import org.jlab.io.evio.EvioDataEvent;
+
 
 public class OnlineRecoFillHistograms implements IHistograms {
 
@@ -22,44 +24,44 @@ public class OnlineRecoFillHistograms implements IHistograms {
         // TODO Auto-generated constructor stub
     }
 
-    public List<DetectorCollection<H1D>> get_DetectorComponentsHistos() {
+    public List<DetectorCollection<H1F>> get_DetectorComponentsHistos() {
         return _DetectorComponentsHistos;
     }
 
-    public void set_DetectorComponentsHistos(List<DetectorCollection<H1D>> _DetectorComponentsHistos) {
+    public void set_DetectorComponentsHistos(List<DetectorCollection<H1F>> _DetectorComponentsHistos) {
         this._DetectorComponentsHistos = _DetectorComponentsHistos;
     }
 
-    public List<H1D> get_Histograms() {
+    public List<H1F> get_Histograms() {
         return _Histograms;
     }
 
-    public List<H1D> get_trackHistograms() {
+    public List<H1F> get_trackHistograms() {
         return _trackHistograms;
     }
 
-    public List<H2D> get_2DHistograms() {
+    public List<H2F> get_2DHistograms() {
         return _TwoDHistograms;
     }
 
-    public void set_Histograms(List<H1D> _Histograms) {
+    public void set_Histograms(List<H1F> _Histograms) {
         this._Histograms = _Histograms;
     }
 
-    public void set_trackHistograms(List<H1D> _trackHistograms) {
+    public void set_trackHistograms(List<H1F> _trackHistograms) {
         this._trackHistograms = _trackHistograms;
     }
 
-    public void set_2DHistograms(List<H2D> _TwoDHistograms) {
+    public void set_2DHistograms(List<H2F> _TwoDHistograms) {
         this._TwoDHistograms = _TwoDHistograms;
     }
 
-    private List<DetectorCollection<H1D>> _DetectorComponentsHistos;
-    private List<H1D> _Histograms;
-    private List<H1D> _trackHistograms;
-    private List<H2D> _TwoDHistograms;
+    private List<DetectorCollection<H1F>> _DetectorComponentsHistos;
+    private List<H1F> _Histograms;
+    private List<H1F> _trackHistograms;
+    private List<H2F> _TwoDHistograms;
     private double[][] arrayADC = new double[256][132];
-    private H1D componentHistogram;
+    private H1F componentHistogram;
 
     /**
      * Create List of histogram. A detector collection contains a list of
@@ -69,60 +71,60 @@ public class OnlineRecoFillHistograms implements IHistograms {
      */
     @Override
     public void CreateHistoList() {
-        List<DetectorCollection<H1D>> detectorComponentsHistos = new ArrayList<DetectorCollection<H1D>>();
+        List<DetectorCollection<H1F>> detectorComponentsHistos = new ArrayList<DetectorCollection<H1F>>();
 
-        DetectorCollection<H1D> dC0 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC1 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC2 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC3 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC4 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC5 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC6 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC7 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC8 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC9 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC10 = new DetectorCollection<H1D>();
-        DetectorCollection<H1D> dC11 = new DetectorCollection<H1D>();
+        DetectorCollection<H1F> dC0 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC1 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC2 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC3 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC4 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC5 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC6 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC7 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC8 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC9 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC10 = new DetectorCollection<H1F>();
+        DetectorCollection<H1F> dC11 = new DetectorCollection<H1F>();
 
         for (int regionIdx = 0; regionIdx < 4; regionIdx++) {
             for (int sectorIdx = 0; sectorIdx < org.jlab.rec.cvt.svt.Constants.NSECT[2 * regionIdx + 1]; sectorIdx++) {
                 dC2.add(sectorIdx, regionIdx, 0,
-                        new H1D(DetectorDescriptor.getName("NumberOfCrosses", sectorIdx, regionIdx, 0),
+                        new H1F(DetectorDescriptor.getName("NumberOfCrosses", sectorIdx, regionIdx, 0),
                                 20, 0, 20)); // whole module
 
                 for (int sly = 0; sly < 2; sly++) {
                     dC0.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("NumberOfHits", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("NumberOfHits", sectorIdx, 2 * regionIdx + sly, 0),
                                     100, 0, 100));
                     dC1.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("NumberOfCluster", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("NumberOfCluster", sectorIdx, 2 * regionIdx + sly, 0),
                                     100, 0, 100));
                     dC3.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("ADC", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("ADC", sectorIdx, 2 * regionIdx + sly, 0),
                                     8, 0, 8));
                     dC4.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("bco", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("bco", sectorIdx, 2 * regionIdx + sly, 0),
                                     256, 0, 256));
                     dC5.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("clusterCharge", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("clusterCharge", sectorIdx, 2 * regionIdx + sly, 0),
                                     300, 0, 300));
                     dC6.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("stripMultiplicity", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("stripMultiplicity", sectorIdx, 2 * regionIdx + sly, 0),
                                     30, 0, 30));
                     dC7.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("centroidResidual", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("centroidResidual", sectorIdx, 2 * regionIdx + sly, 0),
                                     100, -10, 10));
                     dC8.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("localPhi", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("localPhi", sectorIdx, 2 * regionIdx + sly, 0),
                                     180, -180, 180));
                     dC9.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("localTheta", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("localTheta", sectorIdx, 2 * regionIdx + sly, 0),
                                     180, 0, 180));
                     dC10.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("localTrackAngle", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("localTrackAngle", sectorIdx, 2 * regionIdx + sly, 0),
                                     180, 0, 180));
                     dC11.add(sectorIdx, 2 * regionIdx + sly, 0,
-                            new H1D(DetectorDescriptor.getName("strip", sectorIdx, 2 * regionIdx + sly, 0),
+                            new H1F(DetectorDescriptor.getName("strip", sectorIdx, 2 * regionIdx + sly, 0),
                                     256, 1, 257));
 
                 }
@@ -147,43 +149,43 @@ public class OnlineRecoFillHistograms implements IHistograms {
 
     public void CreateHistos() {
 
-        List<H1D> summaryHistograms = new ArrayList<H1D>(8);
-        summaryHistograms.add(new H1D("strip", 256, 1, 257));
-        summaryHistograms.add(new H1D("adc", 8, 0, 8));
-        summaryHistograms.add(new H1D("clusterCharge", 100, 0, 300));
-        summaryHistograms.add(new H1D("centroidResidual", 100, -10, 10));
-        summaryHistograms.add(new H1D("stripMultiplicity", 50, 0, 50));
-        summaryHistograms.add(new H1D("numberOfHits", 100, 0, 100));
-        summaryHistograms.add(new H1D("numberOfClusters", 100, 0, 100));
-        summaryHistograms.add(new H1D("numberOfCrosses", 20, 0, 20));
+        List<H1F> summaryHistograms = new ArrayList<H1F>(8);
+        summaryHistograms.add(new H1F("strip", 256, 1, 257));
+        summaryHistograms.add(new H1F("adc", 8, 0, 8));
+        summaryHistograms.add(new H1F("clusterCharge", 100, 0, 300));
+        summaryHistograms.add(new H1F("centroidResidual", 100, -10, 10));
+        summaryHistograms.add(new H1F("stripMultiplicity", 50, 0, 50));
+        summaryHistograms.add(new H1F("numberOfHits", 100, 0, 100));
+        summaryHistograms.add(new H1F("numberOfClusters", 100, 0, 100));
+        summaryHistograms.add(new H1F("numberOfCrosses", 20, 0, 20));
         for (int i = 0; i < 8; ++i) {
-            summaryHistograms.get(i).setYTitle("Entries");
+            //summaryHistograms.get(i).setYTitle("Entries");
             summaryHistograms.get(i).setFillColor(5);
         }
 
         this.set_Histograms(summaryHistograms);
 
-        List<H1D> trackHistograms = new ArrayList<H1D>(4);
-        trackHistograms.add(new H1D("trackPhi", 180, -180, 180));
-        trackHistograms.add(new H1D("trackTheta", 180, 0, 180));
-        trackHistograms.add(new H1D("normalizedChi2", 100, 0, 100));
-        trackHistograms.add(new H1D("numberOfTracks", 10, 0, 10));
+        List<H1F> trackHistograms = new ArrayList<H1F>(4);
+        trackHistograms.add(new H1F("trackPhi", 180, -180, 180));
+        trackHistograms.add(new H1F("trackTheta", 180, 0, 180));
+        trackHistograms.add(new H1F("normalizedChi2", 100, 0, 100));
+        trackHistograms.add(new H1F("numberOfTracks", 10, 0, 10));
         for (int i = 0; i < 4; ++i) {
-            trackHistograms.get(i).setYTitle("Entries");
+           // trackHistograms.get(i).setYTitle("Entries");
             trackHistograms.get(i).setFillColor(3);
         }
 
         this.set_trackHistograms(trackHistograms);
 
-        List<H2D> mapHistograms = new ArrayList<H2D>(5);
-        mapHistograms.add(new H2D("channelStatus", 256, 0, 256, 132, 0, 132));
-        mapHistograms.add(new H2D("occupancy", 256, 0, 256, 132, 0, 132));
-        mapHistograms.add(new H2D("pulseHeight", 256, 0, 256, 132, 0, 132));
-        mapHistograms.add(new H2D("pulseWidth", 256, 0, 256, 132, 0, 132));
-        mapHistograms.add(new H2D("newBadStrips", 256, 0, 256, 132, 0, 132));
+        List<H2F> mapHistograms = new ArrayList<H2F>(5);
+        mapHistograms.add(new H2F("channelStatus", 256, 0, 256, 132, 0, 132));
+        mapHistograms.add(new H2F("occupancy", 256, 0, 256, 132, 0, 132));
+        mapHistograms.add(new H2F("pulseHeight", 256, 0, 256, 132, 0, 132));
+        mapHistograms.add(new H2F("pulseWidth", 256, 0, 256, 132, 0, 132));
+        mapHistograms.add(new H2F("newBadStrips", 256, 0, 256, 132, 0, 132));
         for (int i = 0; i < 5; ++i) {
-            mapHistograms.get(i).setXTitle("Channel");
-            mapHistograms.get(i).setYTitle("Sensor");
+           // mapHistograms.get(i).setXTitle("Channel");
+           // mapHistograms.get(i).setYTitle("Sensor");
         }
 
         this.set_2DHistograms(mapHistograms);
@@ -198,14 +200,14 @@ public class OnlineRecoFillHistograms implements IHistograms {
      *
      * @param desc the descriptor
      */
-    public void DetectorSelected(DetectorDescriptor desc, EmbeddedCanvas canvas, List<DetectorCollection<H1D>> DetectorComponentsHistos) {
+    public void DetectorSelected(DetectorDescriptor desc, EmbeddedCanvas canvas, List<DetectorCollection<H1F>> DetectorComponentsHistos) {
 
         int nCanvasDivisions = DetectorComponentsHistos.size();
         canvas.divide(1, nCanvasDivisions);
-
+       
         for (int i = 0; i < nCanvasDivisions; i++) {
             if (DetectorComponentsHistos.get(i).hasEntry(desc.getSector(), desc.getLayer(), 0)) {
-                H1D h1 = DetectorComponentsHistos.get(i).get(desc.getSector(), desc.getLayer(), 0);
+                H1F h1 = DetectorComponentsHistos.get(i).get(desc.getSector(), desc.getLayer(), 0);
                 this.componentHistogram = DetectorComponentsHistos.get(i).get(desc.getSector(), desc.getLayer(), 0);
                 this.componentHistogram.setTitle(h1.getName());
                 this.componentHistogram.setFillColor(4);
@@ -227,12 +229,12 @@ public class OnlineRecoFillHistograms implements IHistograms {
         }
     }
 
-    public void FillHistos(EvioDataEvent event, DetectorModulePane pane, long eventNr, List<String> plotName) {
+    public void FillHistos(EvioDataEvent event, TreeMap<String,EmbeddedCanvas> pane, long eventNr, List<String> plotName) {
 
-        EmbeddedCanvas canvasMaps = pane.getCanvas("Map");
-        EmbeddedCanvas canvasTrack = pane.getCanvas("Track");
-        EmbeddedCanvas canvasComponent = pane.getCanvas("Sensor");
-        EmbeddedCanvas canvasSummary = pane.getCanvas("Summary");
+        EmbeddedCanvas canvasMaps = pane.get("Map");
+        EmbeddedCanvas canvasTrack = pane.get("Track");
+        EmbeddedCanvas canvasComponent = pane.get("Sensor");
+        EmbeddedCanvas canvasSummary = pane.get("Summary");
 //        canvasMaps.setAxisTitleFontSize(16);
 //        canvasMaps.setAxisFontSize(16);
 //        canvasMaps.setTitleFontSize(16);
@@ -513,7 +515,7 @@ public class OnlineRecoFillHistograms implements IHistograms {
             if (plotName.get(0) == "occupancy") {
                 canvasMaps.draw(_TwoDHistograms.get(1));
             } else if (plotName.get(0) == "average strip pulse height in ADC counts") {
-                canvasMaps.setLogZ(true);
+                //canvasMaps.setLogZ(true);
                 canvasMaps.draw(_TwoDHistograms.get(2));
             }
             if (plotName.get(4) == "track phi0") {
@@ -521,10 +523,10 @@ public class OnlineRecoFillHistograms implements IHistograms {
             } else if (plotName.get(4) == "track theta0") {
                 canvasTrack.draw(_trackHistograms.get(1), "S");
             } else if (plotName.get(4) == "track normalized chi2") {
-                canvasTrack.setLogZ(true);
+                //canvasTrack.setLogZ(true);
                 canvasTrack.draw(_trackHistograms.get(2), "S");
             } else if (plotName.get(4) == "track multiplicity") {
-                canvasTrack.setLogZ(true);
+               // canvasTrack.setLogZ(true);
                 canvasTrack.draw(_trackHistograms.get(3), "S");
             }
             if (plotName.get(3) == "occupancy") {
@@ -577,5 +579,7 @@ public class OnlineRecoFillHistograms implements IHistograms {
         }
         return sector + shift[layer - 1] - 1;
     }
+
+	
 
 }

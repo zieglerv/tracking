@@ -1,10 +1,11 @@
 package org.clas.detector.cvt;
-import org.jlab.clas.detector.DetectorCollection;
-import org.jlab.clas12.calib.DetectorShapeTabView;
-import org.jlab.clas12.calib.DetectorShapeView2D;
-import org.jlab.evio.clas12.EvioDataBank;
-import org.jlab.evio.clas12.EvioDataEvent;
+
+import org.clas.detector.DetectorShapeView2D;
+import org.clas.detector.DetectorShapeTabView;
+import org.jlab.detector.base.DetectorCollection;
 import org.jlab.geom.prim.Path3D;
+import org.jlab.io.evio.EvioDataBank;
+import org.jlab.io.evio.EvioDataEvent;
 
 public class DetectorDrawOnlineRecoComponents {
 
@@ -18,6 +19,7 @@ public class DetectorDrawOnlineRecoComponents {
     	Hits.clear();
     	Strips.clear();
     	Module.clearPaths();
+    	
         double HALFASENW = org.jlab.rec.cvt.svt.Constants.ACTIVESENWIDTH/2; 
         
         if(event.hasBank("BSTRec::Hits")==true){

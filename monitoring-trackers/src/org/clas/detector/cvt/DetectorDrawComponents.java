@@ -3,12 +3,12 @@ package org.clas.detector.cvt;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.clas.detector.DetectorShapeView2D;
 import org.clas.detector.IDetectorShapes;
-import org.jlab.clas.detector.DetectorType;
-import org.jlab.clas12.calib.DetectorShape2D;
-import org.jlab.clas12.calib.DetectorShapeTabView;
-import org.jlab.clas12.calib.DetectorShapeView2D;
-import org.jlab.clas12.calib.IDetectorListener;
+import org.clas.detector.DetectorShapeTabView;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.view.DetectorListener;
+import org.jlab.detector.view.DetectorShape2D;
 
 public class DetectorDrawComponents implements IDetectorShapes {
 
@@ -34,7 +34,7 @@ public class DetectorDrawComponents implements IDetectorShapes {
 	}
 	@Override
 	public void CreateDetectorShapes(List<DetectorShapeView2D> shapeViews,
-			List<DetectorShapeTabView> tabViews, IDetectorListener listener) {
+			List<DetectorShapeTabView> tabViews, DetectorListener listener) {
 		// Modules
 		// SVT module
 		
@@ -145,7 +145,7 @@ public class DetectorDrawComponents implements IDetectorShapes {
         tabViews.get(0).addDetectorListener(listener);
 	}
 	
-	public void CreateViews(IDetectorListener listener) {
+	public void CreateViews(DetectorListener listener) {
 		List<DetectorShapeView2D> shapeViews = new ArrayList<DetectorShapeView2D>();
 		shapeViews.add(0, new DetectorShapeView2D("CVT XY View"));
 		shapeViews.add(1, new DetectorShapeView2D("CVT XZ View"));
@@ -161,7 +161,7 @@ public class DetectorDrawComponents implements IDetectorShapes {
 		
 		this.CreateDetectorShapes(shapeViews, tabViews, listener);
 		
-		
+		System.out.println("Views Created");
 	}
 
 }

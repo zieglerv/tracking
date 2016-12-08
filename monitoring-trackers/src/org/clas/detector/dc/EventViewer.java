@@ -426,16 +426,15 @@ public class EventViewer implements IDetectorProcessor, IDetectorListener, ItemL
     }
 
     @Override
-    public void processEvent(DataEvent de
-    ) {
+    public void processEvent(DataEvent de ) {
         this.eventNr++;
         EvioDataEvent event = (EvioDataEvent) de;
         EvioDataEvent decodedEvent = deco.DecodeEvent(event, decoder, table);
         //decodedEvent.show();
 
-        reco.processEvent(decodedEvent);
+        reco.dataEventAction(decodedEvent);
         displays.PlotAllHits(decodedEvent, detFrm.get_ShapeViews(), detFrm.get_TabViews());
-        reco2.processEvent(decodedEvent);
+        reco2.dataEventAction(decodedEvent);
         displays.PlotCrosses(decodedEvent, detFrm.get_ShapeViews().get(0), detFrm.get_TabViews().get(0));
         histos.FillHistos(decodedEvent, this.detectorModulePane, this.eventNr, this.plotName);
        
