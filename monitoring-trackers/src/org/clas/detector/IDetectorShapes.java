@@ -5,7 +5,6 @@ import java.util.List;
 import org.jlab.detector.view.DetectorListener;
 import org.jlab.detector.view.DetectorPane2D;
 
-
 public interface IDetectorShapes {
 
 

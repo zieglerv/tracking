@@ -11,7 +11,6 @@ import javax.swing.JTabbedPane;
 
 import org.jlab.groot.graphics.EmbeddedCanvas;
 
-
 /**
  *
  * @author gavalian

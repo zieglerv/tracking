@@ -10,7 +10,6 @@ import javax.swing.JTabbedPane;
 
 import org.jlab.detector.view.DetectorListener;
 import org.jlab.detector.view.DetectorPane2D;
-
 public class DetectorShapeTabView extends JPanel {
 	private		      JTabbedPane tabbedPane;
 	private final     TreeMap<String, DetectorShapeView2D>  detectorView = new TreeMap<String, DetectorShapeView2D>();

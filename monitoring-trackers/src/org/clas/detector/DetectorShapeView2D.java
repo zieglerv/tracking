@@ -23,7 +23,6 @@ import org.jlab.detector.view.DetectorShape2D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Path3D;
 import org.jlab.geom.prim.Point3D;
-
 /**
  *
  * @author gavalian

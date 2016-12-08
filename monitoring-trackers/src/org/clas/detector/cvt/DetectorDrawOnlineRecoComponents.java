@@ -14,7 +14,6 @@ public class DetectorDrawOnlineRecoComponents {
 	}
 	
 	
-	
     public void PlotSVTStrips(EvioDataEvent event, DetectorCollection<Integer> Hits, DetectorCollection<Integer> Strips, DetectorShapeView2D Module, org.jlab.rec.cvt.svt.Geometry geo) {
     	Hits.clear();
     	Strips.clear();

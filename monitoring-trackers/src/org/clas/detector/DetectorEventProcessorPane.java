@@ -30,7 +30,6 @@ import org.jlab.io.evio.EvioETSource;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.task.DataSourceProcessor;
 import org.jlab.utils.FileUtils;
-
 /**
  *
  * @author gavalian

@@ -97,7 +97,6 @@ public class EventViewer implements DetectorListener, ItemListener, IDataEventLi
         // configure reconstruction
         reco.init();
         
-
         //
         detectorModulePane = new DetectorModulePane(4000, 2000, 1);
         detectorModulePane.addCanvas("Map");

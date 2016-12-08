@@ -12,7 +12,6 @@ import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.groot.graphics.EmbeddedPad;
 
 
-
 public interface IHistograms {
 	
 	public void CreateHistoList();

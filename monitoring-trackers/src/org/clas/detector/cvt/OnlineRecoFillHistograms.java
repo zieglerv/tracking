@@ -23,7 +23,6 @@ public class OnlineRecoFillHistograms implements IHistograms {
     public OnlineRecoFillHistograms() {
         // TODO Auto-generated constructor stub
     }
-
     public List<DetectorCollection<H1F>> get_DetectorComponentsHistos() {
         return _DetectorComponentsHistos;
     }

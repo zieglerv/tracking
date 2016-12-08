@@ -12,7 +12,6 @@ import org.jlab.detector.view.DetectorShape2D;
 
 public class DetectorDrawComponents implements IDetectorShapes {
 
-	
 	public DetectorDrawComponents() {
 		// TODO Auto-generated constructor stub
 	}
