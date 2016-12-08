@@ -93,10 +93,8 @@ public class EventViewer implements DetectorListener, ItemListener, IDataEventLi
     static H2F hScaler = new H2F("scalers", "scalers", 264, 0, 264, 128, 0, 128);
     static EmbeddedCanvas scalersPane = new EmbeddedCanvas();
 
-
     public EventViewer() {
         // configure reconstruction
-        
         reco.init();
         
 
