@@ -1,14 +1,14 @@
 package org.clas.detector.dc;
 import java.util.List;
 
-import org.jlab.clas.detector.DetectorType;
-import org.jlab.clas12.calib.DetectorShape2D;
-import org.jlab.clas12.calib.DetectorShapeTabView;
-import org.jlab.clas12.calib.DetectorShapeView2D;
-import org.jlab.evio.clas12.EvioDataBank;
-import org.jlab.evio.clas12.EvioDataEvent;
+import org.clas.detector.DetectorShapeTabView;
+import org.clas.detector.DetectorShapeView2D;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.view.DetectorShape2D;
 import org.jlab.geom.prim.Path3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.io.evio.EvioDataBank;
+import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.rec.dc.GeometryLoader;
 
 

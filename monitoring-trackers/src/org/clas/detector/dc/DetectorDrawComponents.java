@@ -3,20 +3,30 @@ package org.clas.detector.dc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.clas.detector.DetectorShapeTabView;
+import org.clas.detector.DetectorShapeView2D;
 import org.clas.detector.IDetectorShapes;
-import org.jlab.clas.detector.DetectorType;
-import org.jlab.clas12.calib.DetectorShape2D;
-import org.jlab.clas12.calib.DetectorShapeTabView;
-import org.jlab.clas12.calib.DetectorShapeView2D;
-import org.jlab.clas12.calib.IDetectorListener;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.view.DetectorListener;
+import org.jlab.detector.view.DetectorShape2D;
+import org.jlab.rec.dc.CalibrationConstantsLoader;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.GeometryLoader;
+import org.jlab.rec.dc.timetodistance.TableLoader;
+import org.jlab.rec.dc.trajectory.DCSwimmer;
 
 public class DetectorDrawComponents implements IDetectorShapes {
 
 	
 	public DetectorDrawComponents() {
-		// TODO Auto-generated constructor stub
+		Constants.Load(true, true, 0); // set the T2D Grid for Cosmics data only so far....
+		
+		//CalibrationConstantsLoader.Load(newRun, "default");
+		CalibrationConstantsLoader.Load(11, "default");
+		TableLoader.Fill();
+		
+		GeometryLoader.Load(11, "default");
+	
 	}
 	
 	private List<DetectorShapeView2D> _ShapeViews;
@@ -36,10 +46,7 @@ public class DetectorDrawComponents implements IDetectorShapes {
 	}
 	@Override
 	public void CreateDetectorShapes(List<DetectorShapeView2D> shapeViews,
-			List<DetectorShapeTabView> tabViews, IDetectorListener listener) {
-		
-		Constants.newGeometry = true;
-		GeometryLoader.Load();
+			List<DetectorShapeTabView> tabViews, DetectorListener listener) {
 		
 		for(int s =0; s< 6; s++) {
 					
@@ -112,7 +119,7 @@ public class DetectorDrawComponents implements IDetectorShapes {
 		
 	}
 	
-	public void CreateViews(IDetectorListener listener) {
+	public void CreateViews(DetectorListener listener) {
 		List<DetectorShapeView2D> shapeViews = new ArrayList<DetectorShapeView2D>();
 		shapeViews.add(0, new DetectorShapeView2D("sectors"));
 		for(int s =1; s<=6; s++)
